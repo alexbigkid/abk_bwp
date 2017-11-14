@@ -18,5 +18,11 @@
         <key>Minute</key>
         <integer>0</integer>
     </dict>
+    <key>StandardErrorPath</key>
+    <string>/tmp/com.abk.bingwallpaper.py.stderr</string>
+    <key>StandardOutPath</key>
+    <string>/tmp/com.abk.bingwallpaper.py.stdout</string>
+    <key>WorkingDirectory</key>
+    <string>/tmp/</string>
 </dict>
 </plist>

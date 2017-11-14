@@ -7,17 +7,20 @@ import shutil
 import urllib2
 import json
 import subprocess
+import datetime
 from os.path import expanduser
 
-# set wallpaper on Mac
+# set wallpaper on Mac using AppleScript
 SCRIPT = """/usr/bin/osascript<<END
 tell application "Finder"
 set desktop picture to POSIX file "%s"
 end tell
 END"""
 
+dt = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+
 def set_desktop_background(filename):
-	subprocess.Popen(SCRIPT%filename, shell=True)
+	subprocess.call(SCRIPT % filename, shell=True)
 
 def ensure_dir(dir_name):
 	if not os.path.exists(dir_name):
@@ -35,7 +38,7 @@ ensure_dir(dir_src)
 ensure_dir(dir_dst)
 
 for file in os.listdir(dir_src):
-	print file #testing purposes only
+	print ("[%s] Archiving current background image %s to %s" % (dt, file, dir_dst))
 	src_file = os.path.join(dir_src, file)
 	dst_file = os.path.join(dir_dst, file)
 	shutil.move(src_file, dst_file)
@@ -47,12 +50,12 @@ name = (obj['images'][0]['fullstartdate'])
 url = 'http://www.bing.com' + url + '_1920x1080.jpg'
 path = dir_src+'/'+name+'.jpg'
 
-print ("Downloading %s to %s" % (url, path))
+print ("[%s] Downloading %s to %s" % (dt, url, path))
 f = open(path, 'w')
 pic = urllib2.urlopen(url)
 f.write(pic.read())
 f.close()
 
-print ("Setting background to %s" % (path))
+print ("[%s] Setting background to %s\n" % (dt, path))
 set_desktop_background(path)
 
