@@ -19,5 +19,3 @@ elif _platform == "win32" or _platform == "win64":
 
 
 set_bing_wallpaper()
-
-
