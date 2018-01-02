@@ -24,7 +24,7 @@ class BingWallPaper:
 			self.logger.setLevel(logLevel)
 
 		# Create a Formatter for formatting the log messages
-		formatter = logging.Formatter('%(name)s: %(levelname)s: %(message)s')
+		formatter = logging.Formatter('%(name)s:%(levelname)s:%(message)s')
 
 		# Create Handler
 		handler = logging.StreamHandler()
@@ -41,13 +41,13 @@ class BingWallPaper:
 
 	def DefinePixDirs(self):
 		self.logger.debug("-> DefinePixDirs")
-		home_dir = abkCommon.get_home_dir()
-		self.logger.info("home dir: %s", home_dir)
-		srcDir = home_dir+"/Pictures/BingWallpapersNew"
-		dstDir = home_dir+"/Pictures/BingWallpapersOld"
+		homeDir = abkCommon.GetHomeDir()
+		self.logger.info("homeDir: %s", homeDir)
+		srcDir = homeDir+"/Pictures/BingWallpapersNew"
+		dstDir = homeDir+"/Pictures/BingWallpapersOld"
 
-		abkCommon.ensure_dir(srcDir)
-		abkCommon.ensure_dir(dstDir)
+		abkCommon.EnsureDir(srcDir)
+		abkCommon.EnsureDir(dstDir)
 		self.logger.debug("<- DefinePixDirs(srcDir=%s, dstDir=%s)", srcDir, dstDir)
 		return srcDir, dstDir
 
@@ -55,19 +55,19 @@ class BingWallPaper:
 		self.logger.debug("-> MoveOldBackgroundPix(%s, %s)", src, dst)
 		for file in os.listdir(src):
 			self.logger.info("file to move %s", file)
-			src_file = os.path.join(src, file)
-			dst_file = os.path.join(dst, file)
-			shutil.move(src_file, dst_file)
+			srcFile = os.path.join(src, file)
+			dstFile = os.path.join(dst, file)
+			shutil.move(srcFile, dstFile)
 		self.logger.debug("<- MoveOldBackgroundPix")
 	
-	def DownloadBingImage(self, dst_dir):
-		self.logger.debug("-> DownloadBingImage(%s)", dst_dir)
+	def DownloadBingImage(self, dstDir):
+		self.logger.debug("-> DownloadBingImage(%s)", dstDir)
 		response = urllib2.urlopen("http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en-US")
 		obj = json.load(response)
 		url = (obj['images'][0]['urlbase'])
 		name = (obj['images'][0]['fullstartdate'])
 		url = 'http://www.bing.com' + url + '_1920x1080.jpg'
-		fullFileName = os.path.join(dst_dir, name+'.jpg')
+		fullFileName = os.path.join(dstDir, name+'.jpg')
 
 		self.logger.info("Downloading %s to %s", url, fullFileName)
 		f = open(fullFileName, 'w')
@@ -77,8 +77,8 @@ class BingWallPaper:
 		self.logger.debug("<- DownloadBingImage(fullFileName=%s)", fullFileName)
 		return fullFileName
 
-	def set_desktop_background(self, filename):
-		self.logger.debug("-> set_desktop_background(%s)", filename)
+	def setDesktopBackground(self, fileName):
+		self.logger.debug("-> setDesktopBackground(%s)", fileName)
 		#----- Start platform dependency  -----
 		if _platform == "darwin":
 			# MAC OS X ------------------------
@@ -88,7 +88,7 @@ tell application "Finder"
 set desktop picture to POSIX file "%s"
 end tell
 END"""
-			subprocess.call(SCRIPT_MAC%filename, shell=True)
+			subprocess.call(SCRIPT_MAC%fileName, shell=True)
 
 		elif _platform == "linux" or _platform == "linux2":
 			# linux ---------------------------
@@ -98,9 +98,12 @@ END"""
 			# Windows or Windows 64-bit -----
 			self.logger.info("Windows environment")
 		#----- End platform dependency  -----
-		
-		self.logger.info("Set background to %s", filename)
-		self.logger.debug("<- set_desktop_background()")
+		else:
+			self.logger.error("Not known OS environment")
+			raise NameError("Not known OS environment")
+
+		self.logger.info("Set background to %s", fileName)
+		self.logger.debug("<- setDesktopBackground()")
 
 def main():
 	parser = argparse.ArgumentParser(description='Sets picture from Bing as background')
@@ -114,7 +117,7 @@ def main():
 	(srcDir, dstDir) = bwp.DefinePixDirs()
 	bwp.MoveOldBackgroundPix(srcDir, dstDir)
 	fileName = bwp.DownloadBingImage(srcDir)
-	bwp.set_desktop_background(fileName)
+	bwp.setDesktopBackground(fileName)
 
 if __name__ == '__main__':
 	main()
