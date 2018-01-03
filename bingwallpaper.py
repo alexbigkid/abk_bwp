@@ -1,5 +1,5 @@
 # http://www.owenrumney.co.uk/2014/09/13/Update_Bing_Desktop_For_Mac.html
-# modified by Alex Berger
+# Modified by Alex Berger @ http://www.ABKphoto.com
 
 import os
 import errno
@@ -9,29 +9,22 @@ import urllib2
 import json
 import subprocess
 import logging
-#import logging.config
 from sys import platform as _platform
 import abkPackage
 from abkPackage import abkCommon
 
-#logging_conf = 'logging.conf'
 class BingWallPaper:
 	def __init__(self, logLevel):
-		# Create the Logger
 		self.logger = logging.getLogger(__name__)
 		#print("logLevel = %s", logLevel)
 		if logLevel != "NONE":
 			self.logger.setLevel(logLevel)
 
-		# Create a Formatter for formatting the log messages
 		formatter = logging.Formatter('%(name)s:%(levelname)s:%(message)s')
 
-		# Create Handler
 		handler = logging.StreamHandler()
-		# Add the Formatter to the Handler
 		handler.setFormatter(formatter)
 	
-		# Add the Handler to the Logger
 		self.logger.addHandler(handler)
 		self.logger.debug("-> BingWallPaper")
 
