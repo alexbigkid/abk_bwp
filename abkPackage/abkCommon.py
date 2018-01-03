@@ -30,15 +30,43 @@ def EnsureDir(dirName):
 
 def EnsureLinkExists(src, dst):
 	logger.debug("-> EnsureLinkExists(%s, %s)", src, dst)
-	logger.info("src=%s, dst=%s", src, dst)
 	if not os.path.islink(dst):
 		logger.info("creating link %s to %s" % (dst, src) )
 		try:
 			os.symlink(src, dst)
 		except OSError as error:
 			if error.errno != errno.EEXIST:
+				logger.error("create link failed with error =%d", error.errno)
 				raise
 	else:
 		logger.info("link %s exists, do nothing" % (dst) )
 	logger.debug("<- EnsureLinkExists")
-          
+
+def RemoveLink(fileName):
+	logger.debug("-> RemoveLink(fileName=%s)", fileName)
+	if os.path.islink(fileName):
+		try:
+			os.unlink(fileName)
+			logger.info("deleted link %s", fileName )
+		except OSError as error:
+			logger.error("failed to delete link %s, with error=%d", fileName, error.errno)
+			pass
+	else:
+		logger.info("link %s does not exist, do nothing", fileName )
+	logger.debug("<- RemoveLink")
+
+def DeleteDir(dir2delete):
+	logger.debug("-> DeleteDir(dir2delete=%s)", dir2delete)
+	if os.path.isdir(dir2delete):
+		if len(os.listdir(dir2delete)) == 0:
+			try:
+				os.rmdir(dir2delete)
+				logger.info("deleted dir %s", dir2delete)
+			except OSError as ex:
+				if ex.errno == errno.ENOTEMPTY:
+					logger.error("directory %s is not empty", dir2delete)
+		else:
+			logger.debug("dir %s is not empty", dir2delete)
+			for fileName in os.listdir(dir2delete):
+				logger.debug("file=%s", fileName)
+	logger.debug("<- DeleteDir")

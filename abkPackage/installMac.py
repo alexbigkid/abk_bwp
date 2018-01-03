@@ -12,7 +12,7 @@ def CreatePlistFile(hour, minute, script_name):
     logger.debug("-> CreatePlistFile(%s, %s, %s)", hour, minute, script_name)
     user_name = abkCommon.GetUserName()
     plist_label = "com."+user_name+"."+script_name
-    plist_name = plist_label+"."+"plist"
+    plist_name = plist_label+".plist"
     fh = open(plist_name, "w")
     lines2write = [
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n",
@@ -52,16 +52,14 @@ def CreatePlistLink(full_file_name):
     logger.debug("<- CreatePlistLink(%s)", dst_file_name)
     return dst_file_name
 
-def ScheduleBingwallpaperJob(plist_name, plist_lable):
-    logger.debug("-> ScheduleBingwallpaperJob(%s, %s)", plist_name, plist_lable)
-    file_name = os.path.basename(plist_name)
-    logger.debug("file_name = %s", file_name)
+def ScheduleBingwallpaperJob(plistName, plistLable):
+    logger.debug("-> ScheduleBingwallpaperJob(plistName=%s, plistLable=%s)", plistName, plistLable)
 
     cmdList = []
-    cmdList.append("launchctl stop "+plist_lable)
-    cmdList.append("launchctl unload -w "+plist_name)
-    cmdList.append("launchctl load -w "+plist_name)
-    cmdList.append("launchctl start "+plist_lable)
+    cmdList.append("launchctl stop "+plistLable)
+    cmdList.append("launchctl unload -w "+plistName)
+    cmdList.append("launchctl load -w "+plistName)
+    cmdList.append("launchctl start "+plistLable)
 
     for cmd in cmdList:
         try:
@@ -73,7 +71,7 @@ def ScheduleBingwallpaperJob(plist_name, plist_lable):
     logger.debug("<- ScheduleBingwallpaperJob")
 
 
-def platFormDependantSetup(hour, minute, pyFullName):
+def Setup(hour, minute, pyFullName):
     logger.debug("-> platFormDependantSetup(%s, %s, %s)", hour, minute, pyFullName)
     scriptName = os.path.basename(pyFullName)
     scriptPath = os.path.dirname(pyFullName)

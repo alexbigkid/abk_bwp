@@ -3,7 +3,8 @@
 # 2. Platform dependant operation - create platfrom dependent environment
 #   2.1. Mac
 #       2.1.1. create a plist file for scheduled job in current directory 
-#       2.2.2. create a link in ~/Library/LaunchAgents/com.<userName>.bingwallpaper.py.list to the plist in current directory
+#       2.1.2. create a link in ~/Library/LaunchAgents/com.<userName>.bingwallpaper.py.list to the plist in current directory
+#       2.1.3. stop, unload, load and start the job via plist file
 #   2.2 Linux
 #       2.2.1. NOT READY YET
 #   2.3 Windows
@@ -15,7 +16,6 @@
 import os
 import logging
 import logging.config
-#import shutil
 import json
 from sys import platform as _platform
 import abkPackage
@@ -33,13 +33,13 @@ def readConfigFile(confFile):
     logger.debug("<- readConfigFile(hour=%s, minute=%s, pyScriptName=%s)", config['hour'], config['minute'], config['pyScriptName'])
     return (config['hour'], config['minute'], config['pyScriptName'])
 
-def linkPythonScript (file_name):
-    logger.debug("-> linkPythonScript(%s)", file_name)
-    bin_dir = os.path.join(abkCommon.GetHomeDir(), "bin")
-    abkCommon.EnsureDir(bin_dir)
-    curr_dir = abkCommon.GetCurrentDir(__file__)
-    src = os.path.join(curr_dir, file_name)
-    dst = os.path.join(bin_dir, file_name)
+def linkPythonScript (fileName):
+    logger.debug("-> linkPythonScript(%s)", fileName)
+    binDir = os.path.join(abkCommon.GetHomeDir(), "bin")
+    abkCommon.EnsureDir(binDir)
+    currDir = abkCommon.GetCurrentDir(__file__)
+    src = os.path.join(currDir, fileName)
+    dst = os.path.join(binDir, fileName)
     abkCommon.EnsureLinkExists(src, dst)
     logger.debug("<- linkPythonScript(src=%s)", src)
     return src
@@ -66,7 +66,7 @@ def main():
 
     logger.info("hour2run: %s, minute2run: %s, pyScriptName: %s", hour2run, minute2run, pyScriptName)
     pyFullName = linkPythonScript(pyScriptName)
-    installXxx.platFormDependantSetup(hour2run, minute2run, pyFullName)
+    installXxx.Setup(hour2run, minute2run, pyFullName)
     logger.debug("<- main()")
 
 if __name__ == '__main__':
