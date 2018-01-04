@@ -55,13 +55,6 @@ def CreatePlistLink(full_file_name):
 def StopAndUnloadBingwallpaperJob(plistName, plistLable):
     logger.debug("-> StopAndUnloadBingwallpaperJob(plistName=%s, plistLable=%s)", plistName, plistLable)
 
-    old_stderr = sys.stderr
-    old_stdout = sys.stdout
-    f = open(os.devnull, 'w')
-    sys.stderr = f
-    sys.sdtout = f
- 
- 
     cmdList = []
     cmdList.append("launchctl list | grep "+plistLable)
     cmdList.append("launchctl stop "+plistLable)
@@ -74,16 +67,6 @@ def StopAndUnloadBingwallpaperJob(plistName, plistLable):
         except subprocess.CalledProcessError as e:
             logger.error("command '%s' failed, returned: %d", cmd, e.returncode)
             pass
-
-
-    cmd = "launchctl unload -w "+plistName
-    retCode = subprocess.check_call(cmd, shell=True)
-    logger.info("command '%s' succeeded, returned: %s", cmd, str(retCode))
-
-
-    f.close()
-    sys.stderr = old_stderr
-    sys.stdout = old_stdout
 
     logger.debug("<- StopAndUnloadBingwallpaperJob")
     
