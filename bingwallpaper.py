@@ -19,6 +19,8 @@ class BingWallPaper:
 		#print("logLevel = %s", logLevel)
 		if logLevel != "NONE":
 			self.logger.setLevel(logLevel)
+		else:
+			self.logger.disabled = True
 
 		formatter = logging.Formatter('%(name)s:%(levelname)s:%(message)s')
 
