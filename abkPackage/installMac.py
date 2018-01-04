@@ -60,13 +60,13 @@ def StopAndUnloadBingwallpaperJob(plistName, plistLable):
     cmdList.append("launchctl stop "+plistLable)
     cmdList.append("launchctl unload -w "+plistName)
 
-    for cmd in cmdList:
-        try:
+    try:
+        for cmd in cmdList:
             retCode = subprocess.check_call(cmd, shell=True)
-            logger.info("command '%s' succeeded, returned: %s", cmd, str(retCode))
-        except subprocess.CalledProcessError as e:
-            logger.error("command '%s' failed, returned: %d", cmd, e.returncode)
-            pass
+            logger.info("command '%s' succeeded, returned: %d", cmd, retCode)
+    except subprocess.CalledProcessError as e:
+        logger.error("command '%s' failed, returned: %d", cmd, e.returncode)
+        pass
 
     logger.debug("<- StopAndUnloadBingwallpaperJob")
     
@@ -77,14 +77,14 @@ def LoadAndStartBingwallpaperJob(plistName, plistLable):
     cmdList.append("launchctl load -w "+plistName)
     cmdList.append("launchctl start "+plistLable)
 
-    for cmd in cmdList:
-        try:
+    try:
+        for cmd in cmdList:
             retCode = subprocess.check_call(cmd, shell=True)
             logger.info("command '%s' succeeded, returned: %s", cmd, str(retCode))
-        except subprocess.CalledProcessError as e:
-            logger.info("command '%s' failed, returned: %d", cmd, e.returncode)
-        except:
-            logger.info("command '%s' failed", cmd)
+    except subprocess.CalledProcessError as e:
+        logger.info("command '%s' failed, returned: %d", cmd, e.returncode)
+    except:
+        logger.info("command '%s' failed", cmd)
 
     logger.debug("<- LoadAndStartBingwallpaperJob")
 

@@ -15,19 +15,21 @@ def GetPlistNames(scriptName):
     logger.debug("<- GetPlistNames(plistLable=%s, plistName=%s)", plistLable, plistName)    
     return (plistLable, plistName)
 
-def StopAndUnloadBingwallpaperJob(plistFullName, plistLable):
-    logger.debug("-> StopAndUnloadBingwallpaperJob(plistFullName=%s, plistLable=%s)", plistFullName, plistLable)
+def StopAndUnloadBingwallpaperJob(plistName, plistLable):
+    logger.debug("-> StopAndUnloadBingwallpaperJob(plistName=%s, plistLable=%s)", plistName, plistLable)
 
     cmdList = []
+    cmdList.append("launchctl list | grep "+plistLable)
     cmdList.append("launchctl stop "+plistLable)
-    cmdList.append("launchctl unload -w "+plistFullName)
+    cmdList.append("launchctl unload -w "+plistName)
 
-    for cmd in cmdList:
-        try:
+    try:
+        for cmd in cmdList:
             retCode = subprocess.check_call(cmd, shell=True)
-            logger.info("command '%s' succeeded, returned: %s", cmd, str(retCode))
-        except subprocess.CalledProcessError as e:
-            logger.error("command '%s' failed, returned: %d", cmd, e.returncode)
+            logger.info("command '%s' succeeded, returned: %d", cmd, retCode)
+    except subprocess.CalledProcessError as e:
+        logger.error("command '%s' failed, returned: %d", cmd, e.returncode)
+        pass
 
     logger.debug("<- StopAndUnloadBingwallpaperJob")
 
