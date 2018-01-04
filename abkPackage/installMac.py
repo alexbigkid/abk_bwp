@@ -1,5 +1,5 @@
 import os
-#from subprocess import call, check_output
+import sys
 import subprocess
 import abkPackage
 from abkPackage import abkCommon
@@ -52,12 +52,45 @@ def CreatePlistLink(full_file_name):
     logger.debug("<- CreatePlistLink(%s)", dst_file_name)
     return dst_file_name
 
-def ScheduleBingwallpaperJob(plistName, plistLable):
-    logger.debug("-> ScheduleBingwallpaperJob(plistName=%s, plistLable=%s)", plistName, plistLable)
+def StopAndUnloadBingwallpaperJob(plistName, plistLable):
+    logger.debug("-> StopAndUnloadBingwallpaperJob(plistName=%s, plistLable=%s)", plistName, plistLable)
 
+    old_stderr = sys.stderr
+    old_stdout = sys.stdout
+    f = open(os.devnull, 'w')
+    sys.stderr = f
+    sys.sdtout = f
+ 
+ 
     cmdList = []
+    cmdList.append("launchctl list | grep "+plistLable)
     cmdList.append("launchctl stop "+plistLable)
     cmdList.append("launchctl unload -w "+plistName)
+
+    for cmd in cmdList:
+        try:
+            retCode = subprocess.check_call(cmd, shell=True)
+            logger.info("command '%s' succeeded, returned: %s", cmd, str(retCode))
+        except subprocess.CalledProcessError as e:
+            logger.error("command '%s' failed, returned: %d", cmd, e.returncode)
+            pass
+
+
+    cmd = "launchctl unload -w "+plistName
+    retCode = subprocess.check_call(cmd, shell=True)
+    logger.info("command '%s' succeeded, returned: %s", cmd, str(retCode))
+
+
+    f.close()
+    sys.stderr = old_stderr
+    sys.stdout = old_stdout
+
+    logger.debug("<- StopAndUnloadBingwallpaperJob")
+    
+def LoadAndStartBingwallpaperJob(plistName, plistLable):
+    logger.debug("-> LoadAndStartBingwallpaperJob(plistName=%s, plistLable=%s)", plistName, plistLable)
+
+    cmdList = []
     cmdList.append("launchctl load -w "+plistName)
     cmdList.append("launchctl start "+plistLable)
 
@@ -67,8 +100,10 @@ def ScheduleBingwallpaperJob(plistName, plistLable):
             logger.info("command '%s' succeeded, returned: %s", cmd, str(retCode))
         except subprocess.CalledProcessError as e:
             logger.info("command '%s' failed, returned: %d", cmd, e.returncode)
+        except:
+            logger.info("command '%s' failed", cmd)
 
-    logger.debug("<- ScheduleBingwallpaperJob")
+    logger.debug("<- LoadAndStartBingwallpaperJob")
 
 
 def Setup(hour, minute, pyFullName):
@@ -77,9 +112,10 @@ def Setup(hour, minute, pyFullName):
     scriptPath = os.path.dirname(pyFullName)
     logger.info("scriptName = %s", scriptName)
     logger.info("scriptPath = %s", scriptPath)
-    (pListLable, plistName) =  CreatePlistFile(hour, minute, scriptName)
+    (plistLable, plistName) =  CreatePlistFile(hour, minute, scriptName)
     plistFullName = os.path.join(scriptPath, plistName)
     logger.info("plist_full_name = %s", plistFullName)
     dstPlistName = CreatePlistLink(plistFullName)
-    ScheduleBingwallpaperJob(dstPlistName, pListLable)
+    StopAndUnloadBingwallpaperJob(dstPlistName, plistLable)
+    LoadAndStartBingwallpaperJob(dstPlistName, plistLable)
     logger.debug("<- platFormDependantSetup")
