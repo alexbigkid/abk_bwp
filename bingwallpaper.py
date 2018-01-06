@@ -13,6 +13,8 @@ from sys import platform as _platform
 import abkPackage
 from abkPackage import abkCommon
 
+configFile = 'config.json'
+
 class BingWallPaper:
 	def __init__(self, logLevel):
 		self.logger = logging.getLogger(__name__)
@@ -23,7 +25,6 @@ class BingWallPaper:
 			self.logger.disabled = True
 
 		formatter = logging.Formatter('%(name)s:%(levelname)s:%(message)s')
-
 		handler = logging.StreamHandler()
 		handler.setFormatter(formatter)
 	
@@ -33,6 +34,19 @@ class BingWallPaper:
 	def __del__(self):
 		self.logger.debug("<- BingWallPaper")
 
+	def readLinkConfigFile(self, confFile):
+		self.logger.debug("-> readLinkConfigFile(%s)", confFile)
+		if os.path.islink(__file__):
+			linkFile = os.readlink(__file__)
+			linkPath = os.path.dirname(linkFile)
+			self.logger.info("linkPath = %s", linkPath)
+			confFile = os.path.join(linkPath, confFile)
+			self.logger.info("confFile = %s", confFile)
+		with open(confFile) as jsonData:
+			config = json.load(jsonData)
+		jsonData.close()
+		self.logger.debug("<- readLinkConfigFile(numOfImages2Keep=%d)", config['numOfImages2Keep'])
+		return config['numOfImages2Keep']
 
 	def DefinePixDirs(self):
 		self.logger.debug("-> DefinePixDirs")
@@ -46,13 +60,37 @@ class BingWallPaper:
 		self.logger.debug("<- DefinePixDirs(srcDir=%s, dstDir=%s)", srcDir, dstDir)
 		return srcDir, dstDir
 
-	def MoveOldBackgroundPix(self, src, dst):
-		self.logger.debug("-> MoveOldBackgroundPix(%s, %s)", src, dst)
-		for file in os.listdir(src):
-			self.logger.info("file to move %s", file)
-			srcFile = os.path.join(src, file)
-			dstFile = os.path.join(dst, file)
+	def MoveOldBackgroundPix(self, src, dst, num):
+		self.logger.debug("-> MoveOldBackgroundPix(%s, %s, %d)", src, dst, num)
+		for srcFile in os.listdir(src):
+			self.logger.info("srcFile to move %s", srcFile)
+			srcFile = os.path.join(src, srcFile)
+			dstFile = os.path.join(dst, srcFile)
 			shutil.move(srcFile, dstFile)
+		
+		listOfFiles = []
+		for f in os.listdir(dst):
+			if f.endswith('.jpg'):
+				listOfFiles.append(f)
+		listOfFiles.sort()
+		self.logger.debug("listOfFile = [%s]" % ', '.join(map(str, listOfFiles)))
+		numberOfJpgs = len(listOfFiles)
+		self.logger.info("numberOfJpgs = %d", numberOfJpgs)
+		if numberOfJpgs > num:
+			jpgs2delete =  listOfFiles[0:numberOfJpgs-num]
+			self.logger.info("jpgs2delete = [%s]" % ', '.join(map(str, jpgs2delete)))
+			num2delete = len(jpgs2delete)
+			self.logger.info("jpgs2delete = %d", num2delete)
+			for delFile in jpgs2delete:
+				self.logger.info("deleting file = %s", delFile)
+				try:
+					os.unlink(os.path.join(dst, delFile))
+				except:
+					self.logger.error("deleting %s failed", delFile)
+		else:
+			self.logger.info("no images to delete")
+			
+
 		self.logger.debug("<- MoveOldBackgroundPix")
 	
 	def DownloadBingImage(self, dstDir):
@@ -110,7 +148,8 @@ def main():
 		bwp = BingWallPaper("NONE")
 
 	(srcDir, dstDir) = bwp.DefinePixDirs()
-	bwp.MoveOldBackgroundPix(srcDir, dstDir)
+	numOfImages = bwp.readLinkConfigFile(configFile)
+	bwp.MoveOldBackgroundPix(srcDir, dstDir, numOfImages)
 	fileName = bwp.DownloadBingImage(srcDir)
 	bwp.setDesktopBackground(fileName)
 

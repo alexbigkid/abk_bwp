@@ -15,8 +15,11 @@ To delete the schedule of the download of the bing image,
 execute 'python uninstall.py' in your terminal.
 
 Config:
+config.json - is file for configuration.
 By default the job for downloading the bing image is set to 8:30am.
-In order to change the the time, please modify the config.json file.
+In order to change the time, please modify the config.json file.
+If you like to keep more images you can increase the number of images to keep
+Default is 365 days - 1 year of images
 
 Python tracing:
 In order to debug python scripts, you could enable the traces in the
