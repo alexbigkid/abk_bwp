@@ -52,24 +52,17 @@ class BingWallPaper:
 		self.logger.debug("-> DefinePixDirs")
 		homeDir = abkCommon.GetHomeDir()
 		self.logger.info("homeDir: %s", homeDir)
-		srcDir = homeDir+"/Pictures/BingWallpapersNew"
-		dstDir = homeDir+"/Pictures/BingWallpapersOld"
+		pixDir = homeDir+"/Pictures/BingWallpapers"
 
-		abkCommon.EnsureDir(srcDir)
-		abkCommon.EnsureDir(dstDir)
-		self.logger.debug("<- DefinePixDirs(srcDir=%s, dstDir=%s)", srcDir, dstDir)
-		return srcDir, dstDir
+		abkCommon.EnsureDir(pixDir)
+		self.logger.debug("<- DefinePixDirs(pixDir=%s)", pixDir)
+		return pixDir
 
-	def MoveOldBackgroundPix(self, src, dst, num):
-		self.logger.debug("-> MoveOldBackgroundPix(%s, %s, %d)", src, dst, num)
-		for srcFile in os.listdir(src):
-			self.logger.info("srcFile to move %s", srcFile)
-			srcFile = os.path.join(src, srcFile)
-			dstFile = os.path.join(dst, srcFile)
-			shutil.move(srcFile, dstFile)
+	def TrimNumberOfPix(self, pixDir, num):
+		self.logger.debug("-> TrimNumberOfPix(%s, %d)", pixDir, num)
 		
 		listOfFiles = []
-		for f in os.listdir(dst):
+		for f in os.listdir(pixDir):
 			if f.endswith('.jpg'):
 				listOfFiles.append(f)
 		listOfFiles.sort()
@@ -84,14 +77,14 @@ class BingWallPaper:
 			for delFile in jpgs2delete:
 				self.logger.info("deleting file = %s", delFile)
 				try:
-					os.unlink(os.path.join(dst, delFile))
+					os.unlink(os.path.join(pixDir, delFile))
 				except:
 					self.logger.error("deleting %s failed", delFile)
 		else:
 			self.logger.info("no images to delete")
 			
 
-		self.logger.debug("<- MoveOldBackgroundPix")
+		self.logger.debug("<- TrimNumberOfPix")
 	
 	def DownloadBingImage(self, dstDir):
 		self.logger.debug("-> DownloadBingImage(%s)", dstDir)
@@ -147,10 +140,10 @@ def main():
 	else:
 		bwp = BingWallPaper("NONE")
 
-	(srcDir, dstDir) = bwp.DefinePixDirs()
+	(pixDir) = bwp.DefinePixDirs()
 	numOfImages = bwp.readLinkConfigFile(configFile)
-	bwp.MoveOldBackgroundPix(srcDir, dstDir, numOfImages)
-	fileName = bwp.DownloadBingImage(srcDir)
+	bwp.TrimNumberOfPix(pixDir, numOfImages)
+	fileName = bwp.DownloadBingImage(pixDir)
 	bwp.setDesktopBackground(fileName)
 
 if __name__ == '__main__':
