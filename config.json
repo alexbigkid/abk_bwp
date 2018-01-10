@@ -2,5 +2,6 @@
     "hour": "8"
     ,"minute": "30"
     ,"pyScriptName": "bingwallpaper.py"
+    ,"imagesDirrectory": "Pictures/BingWallpapers"
     ,"numOfImages2Keep": 365
 }

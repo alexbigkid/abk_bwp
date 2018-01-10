@@ -45,15 +45,14 @@ class BingWallPaper:
 		with open(confFile) as jsonData:
 			config = json.load(jsonData)
 		jsonData.close()
-		self.logger.debug("<- readLinkConfigFile(numOfImages2Keep=%d)", config['numOfImages2Keep'])
-		return config['numOfImages2Keep']
+		self.logger.debug("<- readLinkConfigFile(imagesDirrectory=%s, numOfImages2Keep=%d)", config['imagesDirrectory'], config['numOfImages2Keep'])
+		return (config['imagesDirrectory'], config['numOfImages2Keep'])
 
-	def DefinePixDirs(self):
-		self.logger.debug("-> DefinePixDirs")
+	def DefinePixDirs(self, imagesDir):
+		self.logger.debug("-> DefinePixDirs(imagesDir=%s)", imagesDir)
 		homeDir = abkCommon.GetHomeDir()
 		self.logger.info("homeDir: %s", homeDir)
-		pixDir = homeDir+"/Pictures/BingWallpapers"
-
+		pixDir = os.path.join(homeDir, imagesDir)
 		abkCommon.EnsureDir(pixDir)
 		self.logger.debug("<- DefinePixDirs(pixDir=%s)", pixDir)
 		return pixDir
@@ -140,8 +139,8 @@ def main():
 	else:
 		bwp = BingWallPaper("NONE")
 
-	(pixDir) = bwp.DefinePixDirs()
-	numOfImages = bwp.readLinkConfigFile(configFile)
+	(imagesDir, numOfImages) = bwp.readLinkConfigFile(configFile)
+	(pixDir) = bwp.DefinePixDirs(imagesDir)
 	bwp.TrimNumberOfPix(pixDir, numOfImages)
 	fileName = bwp.DownloadBingImage(pixDir)
 	bwp.setDesktopBackground(fileName)
