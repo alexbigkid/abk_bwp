@@ -13,6 +13,7 @@
 # Created by Alex Berger @ http://www.ABKphoto.com
 
 import os
+import shutil
 import logging
 import logging.config
 import json
@@ -23,16 +24,26 @@ from abkPackage import abkCommon
 configFile = 'config.json'
 loggingConf = 'logging.conf'
 
-def getPyScriptNameFromConfig(confFile):
-    logger.debug("-> getPyScriptNameFromConfig(%s)", confFile)
+def readConfigFile(confFile):
+    logger.debug("-> readConfigFile(confFile=%s)", confFile)
     with open(confFile) as json_data:
         config = json.load(json_data)
     json_data.close()
-    logger.debug("<- getPyScriptNameFromConfig(pyScriptName=%s)", config['pyScriptName'])
-    return config['pyScriptName']
+    logger.debug("<- readConfigFile(pyScriptName=%s, imagesDirrectory=%s)", config['pyScriptName'], config['imagesDirrectory'])
+    return (config['pyScriptName'], config['imagesDirrectory'])
+
+def deleteImageDir(imagesDir):
+    logger.debug("-> deleteImageDir(imagesDir=%s)", imagesDir)
+    if(os.path.isdir(imagesDir)):
+        try:
+            shutil.rmtree(imagesDir)
+        except:
+			self.logger.error("deleting image directory %s failed", imagesDir)
+
+    logger.debug("<- deleteImageDir")
 
 def unlinkPythonScript (fileName):
-    logger.debug("-> unlinkPythonScript(%s)", fileName)
+    logger.debug("-> unlinkPythonScript(fileName=%s)", fileName)
     binDir = os.path.join(abkCommon.GetHomeDir(), "bin")
     currDir = abkCommon.GetCurrentDir(__file__)
     src = os.path.join(currDir, fileName)
@@ -44,8 +55,9 @@ def unlinkPythonScript (fileName):
 
 def main():
     logger.debug("-> main()")
-    pyScriptName = getPyScriptNameFromConfig(configFile)
-    logger.info("pyScriptName: %s", pyScriptName)
+    (pyScriptName, imagesDir) = readConfigFile(configFile)
+    imageFullPath = os.path.join(abkCommon.GetHomeDir(), imagesDir)
+    deleteImageDir(imageFullPath)
     unlinkPythonScript(pyScriptName)
 
     #>>>>>>>>>> platform dependency 
