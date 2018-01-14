@@ -33,17 +33,6 @@ def readConfigFile(confFile):
     logger.debug("<- readConfigFile(hour=%s, minute=%s, pyScriptName=%s)", config['hour'], config['minute'], config['pyScriptName'])
     return (config['hour'], config['minute'], config['pyScriptName'])
 
-def linkPythonScript (fileName):
-    logger.debug("-> linkPythonScript(%s)", fileName)
-    binDir = os.path.join(abkCommon.GetHomeDir(), "bin")
-    abkCommon.EnsureDir(binDir)
-    currDir = abkCommon.GetCurrentDir(__file__)
-    src = os.path.join(currDir, fileName)
-    dst = os.path.join(binDir, fileName)
-    abkCommon.EnsureLinkExists(src, dst)
-    logger.debug("<- linkPythonScript(src=%s)", src)
-    return src
-
 def main():
     logger.debug("-> main()")
     (hour2run, minute2run, pyScriptName) = readConfigFile(configFile)
@@ -56,17 +45,15 @@ def main():
     elif _platform == "linux" or _platform == "linux2":
         # linux ---------------------------
         logger.info("Linux environment")
-        #from abkPackage import installLnx as installXxx
+        from abkPackage import installLnx as installXxx
 
     elif _platform == "win32" or _platform == "win64":
         # Windows or Windows 64-bit -----
         logger.info("Windows environment")
-        #from abkPackage import installWin as installXxx
+        from abkPackage import installWin as installXxx
         #<<<<<<<<<< platform dependency 
 
-    logger.info("hour2run: %s, minute2run: %s, pyScriptName: %s", hour2run, minute2run, pyScriptName)
-    pyFullName = linkPythonScript(pyScriptName)
-    installXxx.Setup(hour2run, minute2run, pyFullName)
+    installXxx.Setup(hour2run, minute2run, pyScriptName)
     logger.debug("<- main()")
 
 if __name__ == '__main__':

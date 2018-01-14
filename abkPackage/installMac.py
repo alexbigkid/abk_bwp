@@ -7,6 +7,16 @@ import logging
 import logging.config
 logger = logging.getLogger(__name__)
 
+def linkPythonScript (fileName):
+    logger.debug("-> linkPythonScript(%s)", fileName)
+    binDir = os.path.join(abkCommon.GetHomeDir(), "bin")
+    abkCommon.EnsureDir(binDir)
+    currDir = abkCommon.GetCurrentDir(__file__)
+    src = os.path.join(currDir, fileName)
+    dst = os.path.join(binDir, fileName)
+    abkCommon.EnsureLinkExists(src, dst)
+    logger.debug("<- linkPythonScript(src=%s)", src)
+    return src
 
 def CreatePlistFile(hour, minute, script_name):
     logger.debug("-> CreatePlistFile(%s, %s, %s)", hour, minute, script_name)
@@ -89,8 +99,9 @@ def LoadAndStartBingwallpaperJob(plistName, plistLable):
     logger.debug("<- LoadAndStartBingwallpaperJob")
 
 
-def Setup(hour, minute, pyFullName):
-    logger.debug("-> platFormDependantSetup(%s, %s, %s)", hour, minute, pyFullName)
+def Setup(hour, minute, pyScriptName):
+    logger.debug("-> platFormDependantSetup(%s, %s, %s)", hour, minute, pyScriptName)
+    pyFullName = linkPythonScript(pyScriptName)
     scriptName = os.path.basename(pyFullName)
     scriptPath = os.path.dirname(pyFullName)
     logger.info("scriptName = %s", scriptName)
