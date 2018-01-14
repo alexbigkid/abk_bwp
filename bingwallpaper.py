@@ -82,7 +82,6 @@ class BingWallPaper:
 		else:
 			self.logger.info("no images to delete")
 			
-
 		self.logger.debug("<- TrimNumberOfPix")
 	
 	def DownloadBingImage(self, dstDir):
@@ -95,7 +94,7 @@ class BingWallPaper:
 		fullFileName = os.path.join(dstDir, name+'.jpg')
 
 		self.logger.info("Downloading %s to %s", url, fullFileName)
-		f = open(fullFileName, 'w')
+		f = open(fullFileName, 'wb')
 		pic = urllib2.urlopen(url)
 		f.write(pic.read())
 		f.close()
@@ -122,6 +121,20 @@ END"""
 		elif _platform == "win32" or _platform == "win64":
 			# Windows or Windows 64-bit -----
 			self.logger.info("Windows environment")
+			import ctypes
+			import platform
+
+			winNum =  platform.uname()[2]
+			self.logger.info("os info: %s", platform.uname())
+			self.logger.info("win#: %s", winNum)
+			if(int(winNum) >= 10):
+				try:
+					ctypes.windll.user32.SystemParametersInfoW(20, 0, fileName, 3)
+					self.logger.info("Background image set to: %s", fileName)
+				except:
+					self.logger.error("Was not able to set background image to: %s", fileName)
+			else:
+				self.logger.error("Windows 10 and above is supported, you are using Windows %s", winNum)
 		#----- End platform dependency  -----
 		else:
 			self.logger.error("Not known OS environment")
