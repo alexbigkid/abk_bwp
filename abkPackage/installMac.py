@@ -92,9 +92,9 @@ def LoadAndStartBingwallpaperJob(plistName, plistLable):
             retCode = subprocess.check_call(cmd, shell=True)
             logger.info("command '%s' succeeded, returned: %s", cmd, str(retCode))
     except subprocess.CalledProcessError as e:
-        logger.info("command '%s' failed, returned: %d", cmd, e.returncode)
+        logger.critical("command '%s' failed, returned: %d", cmd, e.returncode)
     except:
-        logger.info("command '%s' failed", cmd)
+        logger.critical("command '%s' failed", cmd)
 
     logger.debug("<- LoadAndStartBingwallpaperJob")
 

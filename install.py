@@ -51,7 +51,7 @@ def main():
         # Windows or Windows 64-bit -----
         logger.info("Windows environment")
         from abkPackage import installWin as installXxx
-        #<<<<<<<<<< platform dependency 
+    #<<<<<<<<<< platform dependency 
 
     installXxx.Setup(hour2run, minute2run, pyScriptName)
     logger.debug("<- main()")

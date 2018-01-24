@@ -30,7 +30,6 @@ def StopAndUnloadBingwallpaperJob(plistName, plistLable):
     except subprocess.CalledProcessError as e:
         logger.error("command '%s' failed, returned: %d", cmd, e.returncode)
         pass
-
     logger.debug("<- StopAndUnloadBingwallpaperJob")
 
 def DeletePlistFile(scriptName):
@@ -43,8 +42,7 @@ def DeletePlistFile(scriptName):
             logger.error("failed to delete file %s, with error=%d", scriptName, error.errno)
             pass
     else:
-        logger.info("file %s does not exot", scriptName)
-        
+        logger.info("file %s does not exist", scriptName)    
     logger.debug("<- DeletePlistFile")
 
 

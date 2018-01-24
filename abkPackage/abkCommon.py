@@ -34,9 +34,10 @@ def EnsureDir(dirName):
 def EnsureLinkExists(src, dst):
 	logger.debug("-> EnsureLinkExists(%s, %s)", src, dst)
 	if not os.path.islink(dst):
-		logger.info("creating link %s to %s" % (dst, src) )
+		logger.info("creating link %s to %s" % (dst, src))
 		try:
 			os.symlink(src, dst)
+			logger.info("created link %s to %s" % (dst, src))
 		except OSError as error:
 			if error.errno != errno.EEXIST:
 				logger.error("create link failed with error =%d", error.errno)
