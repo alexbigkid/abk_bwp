@@ -3,7 +3,7 @@ import logging.config
 logger = logging.getLogger(__name__)
 
 def Setup(hour, minute, pyScriptName):
-    logger.debug("-> platFormDependantSetup(%s, %s, %s)", hour, minute, pyScriptName)
+    logger.debug("-> Setup(%s, %s, %s)", hour, minute, pyScriptName)
     logger.info("Windows installation is not supported yet")
     # pyFullName = linkPythonScript(pyScriptName)
     # scriptName = os.path.basename(pyFullName)
@@ -16,4 +16,4 @@ def Setup(hour, minute, pyScriptName):
     # dstPlistName = CreatePlistLink(plistFullName)
     # StopAndUnloadBingwallpaperJob(dstPlistName, plistLable)
     # LoadAndStartBingwallpaperJob(dstPlistName, plistLable)
-    logger.debug("<- platFormDependantSetup")
+    logger.debug("<- Setup")

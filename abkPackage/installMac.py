@@ -11,7 +11,7 @@ def linkPythonScript (fileName):
     logger.debug("-> linkPythonScript(%s)", fileName)
     binDir = os.path.join(abkCommon.GetHomeDir(), "bin")
     abkCommon.EnsureDir(binDir)
-    currDir = abkCommon.GetCurrentDir(__file__)
+    currDir = abkCommon.GetParentDir(__file__)
     src = os.path.join(currDir, fileName)
     dst = os.path.join(binDir, fileName)
     abkCommon.EnsureLinkExists(src, dst)
@@ -100,7 +100,7 @@ def LoadAndStartBingwallpaperJob(plistName, plistLable):
 
 
 def Setup(hour, minute, pyScriptName):
-    logger.debug("-> platFormDependantSetup(%s, %s, %s)", hour, minute, pyScriptName)
+    logger.debug("-> Setup(%s, %s, %s)", hour, minute, pyScriptName)
     pyFullName = linkPythonScript(pyScriptName)
     scriptName = os.path.basename(pyFullName)
     scriptPath = os.path.dirname(pyFullName)
@@ -112,4 +112,4 @@ def Setup(hour, minute, pyScriptName):
     dstPlistName = CreatePlistLink(plistFullName)
     StopAndUnloadBingwallpaperJob(dstPlistName, plistLable)
     LoadAndStartBingwallpaperJob(dstPlistName, plistLable)
-    logger.debug("<- platFormDependantSetup")
+    logger.debug("<- Setup")

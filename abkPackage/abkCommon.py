@@ -18,6 +18,9 @@ def GetHomeDir():
 def GetCurrentDir(fileName):
 	return os.path.dirname(os.path.realpath(fileName))
 
+def GetParentDir(fileName):
+	return os.path.dirname(os.path.dirname(fileName))
+
 def EnsureDir(dirName):
 	logger.debug("-> EnsureDir(%s)", dirName)
 	if not os.path.exists(dirName):
