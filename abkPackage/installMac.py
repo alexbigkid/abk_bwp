@@ -55,8 +55,10 @@ def CreatePlistFile(hour, minute, script_name):
 def CreatePlistLink(full_file_name):
     logger.debug("-> CreatePlistLink(%s)", full_file_name)
     file_name = os.path.basename(full_file_name)
-    home_dir = abkCommon.GetHomeDir()
-    dst_file_name = os.path.join(home_dir+"/Library/LaunchAgents", file_name)
+    plist_install_dir = abkCommon.GetHomeDir()
+    plist_install_dir = plist_install_dir+"/Library/LaunchAgents"
+    abkCommon.EnsureDir(plist_install_dir)
+    dst_file_name = os.path.join(plist_install_dir, file_name)
     logger.info("src= %s, dst= %s", full_file_name, dst_file_name)
     abkCommon.EnsureLinkExists(full_file_name, dst_file_name)
     logger.debug("<- CreatePlistLink(%s)", dst_file_name)
