@@ -14,9 +14,16 @@
     <key>StartCalendarInterval</key>
     <dict>
         <key>Hour</key>
-        <integer>8</integer>
+        <integer>7</integer>
         <key>Minute</key>
-        <integer>0</integer>
+        <integer>30</integer>
     </dict>
+    <key>KeepAlive</key>
+    <dict>
+	    <key>SuccessfulExit</key>
+	    <false/>
+    </dict>
+    <key>TimeOut</key>
+    <integer>30</integer>
 </dict>
 </plist>
