@@ -7,7 +7,7 @@
     <key>ProgramArguments</key>
     <array>
         <string>python</string>
-        <string>/Users/abk/bin/bingwallpaper.py</string>
+        <string>/Users/abk/abkBin/bingwallpaper.py</string>
         <string>-l</string>
         <string>DEBUG</string>
     </array>

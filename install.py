@@ -1,5 +1,5 @@
 # This script will:
-# 1. create a link bingwallpaper.py in home_dir/bin directory to current dir
+# 1. create a link bingwallpaper.py in home_dir/abkBin directory to current dir
 # 2. Platform dependant operation - create platfrom dependent environment
 #   2.1. Mac
 #       2.1.1. create a plist file for scheduled job in current directory 

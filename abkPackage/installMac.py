@@ -34,7 +34,7 @@ def CreatePlistFile(hour, minute, script_name):
         "    <key>ProgramArguments</key>\n",
         "    <array>\n",
         "        <string>python</string>\n",
-        "        <string>/Users/"+user_name+"/bin/"+script_name+"</string>\n",
+        "        <string>/Users/"+user_name+"/abkBin/"+script_name+"</string>\n",
         "    </array>\n",
         "    <key>RunAtLoad</key>\n",
         "    <true/>\n",
