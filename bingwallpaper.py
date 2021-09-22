@@ -5,7 +5,7 @@ import os
 import errno
 import argparse
 import shutil
-import urllib2
+from urllib.request import urlopen
 import json
 import subprocess
 import logging
@@ -90,8 +90,7 @@ class BingWallPaper:
 
     def DownloadBingImage(self, dstDir):
         self.logger.debug("-> DownloadBingImage(%s)", dstDir)
-        response = urllib2.urlopen(
-            "http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en-US")
+        response = urlopen("http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en-US")
         obj = json.load(response)
         url = (obj['images'][0]['urlbase'])
         name = (obj['images'][0]['fullstartdate'])
@@ -100,7 +99,7 @@ class BingWallPaper:
 
         self.logger.info("Downloading %s to %s", url, fullFileName)
         f = open(fullFileName, 'wb')
-        pic = urllib2.urlopen(url)
+        pic = urlopen(url)
         f.write(pic.read())
         f.close()
         self.logger.debug(

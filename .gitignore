@@ -104,5 +104,4 @@ ENV/
 
 #abk ignores
 .vscode/
-com.abk.bingwallpaper.py.plist
-
+com.*.bingwallpaper.py.plist
