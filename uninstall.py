@@ -4,12 +4,12 @@
 #   2.1. Mac
 #       2.1.1. stop and unload the job via plist file
 #       2.1.2. delete a link in ~/Library/LaunchAgents/com.<userName>.bingwallpaper.py.list to the plist in current directory
-#       2.1.3. delete a plist file for scheduled job in current directory 
+#       2.1.3. delete a plist file for scheduled job in current directory
 #   2.2 Linux
 #       2.2.1. NOT READY YET
 #   2.3 Windows
 #       2.3.1. NOT READY YET
-#  
+#
 # Created by Alex Berger @ http://www.ABKphoto.com
 
 import os
@@ -38,7 +38,7 @@ def deleteImageDir(imagesDir):
         try:
             shutil.rmtree(imagesDir)
         except:
-			self.logger.error("deleting image directory %s failed", imagesDir)
+            logger.error("deleting image directory %s failed", imagesDir)
 
     logger.debug("<- deleteImageDir")
 
@@ -60,7 +60,7 @@ def main():
     deleteImageDir(imageFullPath)
     unlinkPythonScript(pyScriptName)
 
-    #>>>>>>>>>> platform dependency 
+    #>>>>>>>>>> platform dependency
     if _platform == "darwin":
         # Mac OS X ------------------------
         logger.info("Mac OS X environment")
@@ -75,7 +75,7 @@ def main():
         # Windows or Windows 64-bit -----
         logger.info("Windows environment")
         #from abkPackage import uninstallWin as uninstallXxx
-        #<<<<<<<<<< platform dependency 
+        #<<<<<<<<<< platform dependency
 
     currDir = abkCommon.GetCurrentDir(__file__)
     logger.info("currDir=%s", currDir)
