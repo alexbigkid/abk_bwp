@@ -6,7 +6,7 @@
     <string>com.abk.bingwallpaper.py</string>
     <key>ProgramArguments</key>
     <array>
-        <string>python</string>
+        <string>python3</string>
         <string>/Users/abk/abkBin/bingwallpaper.py</string>
     </array>
     <key>RunAtLoad</key>

@@ -33,7 +33,7 @@ def CreatePlistFile(hour, minute, script_name):
         "    <string>"+plist_label+"</string>\n",
         "    <key>ProgramArguments</key>\n",
         "    <array>\n",
-        "        <string>python</string>\n",
+        "        <string>python3</string>\n",
         "        <string>/Users/"+user_name+"/abkBin/"+script_name+"</string>\n",
         "    </array>\n",
         "    <key>RunAtLoad</key>\n",
@@ -81,7 +81,7 @@ def StopAndUnloadBingwallpaperJob(plistName, plistLable):
         pass
 
     logger.debug("<- StopAndUnloadBingwallpaperJob")
-    
+
 def LoadAndStartBingwallpaperJob(plistName, plistLable):
     logger.debug("-> LoadAndStartBingwallpaperJob(plistName=%s, plistLable=%s)", plistName, plistLable)
 
