@@ -1,0 +1,46 @@
+name: BingWallPaper
+
+on:
+    push:
+        branches:
+            - master
+
+env:
+    ENV: prod
+
+jobs:
+    Deploy:
+        name: Run on ${{ matrix.os }}
+        runs-on: ${{ matrix.os }}
+        strategy:
+            matrix:
+                # os: [ubuntu-latest]
+                os: [ ubuntu-latest, macOS-latest, windows-latest ]
+
+        steps:
+            - name: checkout repo
+              uses: actions/checkout@v2
+            - name: setup python
+              uses: actions/setup-python@v2
+              with:
+                python-version: 3.8
+            - name: Python Info
+              run: |
+                echo ""
+                echo "------------------------"
+                echo "Python version"
+                echo "------------------------"
+                python --version
+                echo ""
+                echo "------------------------"
+                echo "Python3 version"
+                echo "------------------------"
+                python3 --version
+            - name: install dependencies
+              run: make install_dev
+            - name: run unit tests
+              run: make test_ff
+            # coverage has a problem with windows so not running it if windows OS
+            - name: run coverage
+              if: "!contains(matrix.os, 'windows')"
+              run: make coverage
