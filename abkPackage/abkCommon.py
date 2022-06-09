@@ -5,9 +5,9 @@ import getpass
 import logging
 import logging.config
 import timeit
-import yaml
 
 # Third party imports
+import yaml
 from optparse import OptionParser, Values
 from colorama import Fore, Style
 
