@@ -36,8 +36,9 @@ jobs:
                 echo "Python3 version"
                 echo "------------------------"
                 python3 --version
-            - name: install dependencies
-              run: make install_dev
+            # no dependencies needed for now
+            # - name: install dependencies
+            #   run: make install_dev
             - name: run unit tests
               run: make test_ff
             # coverage has a problem with windows so not running it if windows OS
