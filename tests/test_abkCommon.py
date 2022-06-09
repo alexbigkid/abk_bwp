@@ -16,33 +16,55 @@ from abkPackage import abkCommon
 from abkPackage.abkCommon import CommandLineOptions
 
 
+
+@unittest.skipIf(sys.platform.startswith("win"), "should not run on Windows")
 @mock.patch('os.environ')
 class TestGetpassGetuser(unittest.TestCase):
     """Tests for GetUserName function"""
 
     def test_Getuser__username_takes_username_from_env(self, environ):
-        expected_name = 'some_name_001'
-        environ.get.return_value = expected_name
-        self.assertEqual(expected_name, abkCommon.GetUserName())
+        expected_user_name = 'user_name_001'
+        environ.get.return_value = expected_user_name
+        actual_user_name = abkCommon.GetUserName()
+        self.assertEqual(actual_user_name, expected_user_name, 'ERROR: unexpected user name')
 
 
     def test_Getuser__username_priorities_of_env_values(self, environ):
         environ.get.return_value = None
         abkCommon.GetUserName()
         self.assertEqual(
-            environ.get.call_args_list,
-            [mock.call(x) for x in ('LOGNAME', 'USER', 'LNAME', 'USERNAME')])
+            [mock.call(x) for x in ('LOGNAME', 'USER', 'LNAME', 'USERNAME')],
+            environ.get.call_args_list
+        )
 
 
     def test_Getuser__username_falls_back_to_pwd(self, environ):
-        expected_name = 'some_name_003'
+        expected_user_name = 'user_name_003'
         environ.get.return_value = None
         with mock.patch('os.getuid') as uid, mock.patch('pwd.getpwuid') as getpw:
             uid.return_value = 42
-            getpw.return_value = [expected_name]
-            self.assertEqual(expected_name, abkCommon.GetUserName())
+            getpw.return_value = [expected_user_name]
+            self.assertEqual(abkCommon.GetUserName(), expected_user_name)
             getpw.assert_called_once_with(42)
 
+
+
+
+class TestGetHomeDir(unittest.TestCase):
+    """Tests for GetHomeDir function"""
+
+    @patch.dict(os.environ, {'HOME': 'users_home_dir_001'})
+    def test_GetHomeDir__returns_users_homedir_from_env(self):
+        exp_home_dir = 'users_home_dir_001'
+        act_home_dir = abkCommon.GetHomeDir()
+        self.assertEqual(exp_home_dir, act_home_dir, 'ERROR: unexpected home dir returned')
+
+
+    # @patch.dict(os.environ, {'HOME': ''})
+    # def test_GetHomeDir__returns_users_homedir_from_env(self):
+    #     exp_home_dir = 'users_home_dir'
+    #     act_home_dir = abkCommon.GetHomeDir()
+    #     self.assertEqual(exp_home_dir, act_home_dir, 'ERROR: Not correct home dir returned')
 
 
 
