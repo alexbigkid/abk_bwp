@@ -6,7 +6,6 @@ import os
 import sys
 import unittest
 from unittest import mock
-from unittest.mock import mock_open, patch, call
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -53,19 +52,11 @@ class TestGetpassGetuser(unittest.TestCase):
 class TestGetHomeDir(unittest.TestCase):
     """Tests for GetHomeDir function"""
 
-    @patch.dict(os.environ, {'HOME': 'users_home_dir_001'})
+    @mock.patch.dict(os.environ, {'HOME': 'users_home_dir_001'})
     def test_GetHomeDir__returns_users_homedir_from_env(self):
         exp_home_dir = 'users_home_dir_001'
         act_home_dir = abkCommon.GetHomeDir()
         self.assertEqual(exp_home_dir, act_home_dir, 'ERROR: unexpected home dir returned')
-
-
-    # @patch.dict(os.environ, {'HOME': ''})
-    # def test_GetHomeDir__returns_users_homedir_from_env(self):
-    #     exp_home_dir = 'users_home_dir'
-    #     act_home_dir = abkCommon.GetHomeDir()
-    #     self.assertEqual(exp_home_dir, act_home_dir, 'ERROR: Not correct home dir returned')
-
 
 
 class TestCommandLineOptions(unittest.TestCase):
@@ -109,7 +100,7 @@ loggers:
 
 
     def test_CommandLineOptions__setup_logger_throws_given_invalid_yaml_file(self) -> None:
-        with patch("builtins.open", mock_open(read_data='{"notValid": 2}')) as mock_file:
+        with mock.patch("builtins.open", mock.mock_open(read_data='{"notValid": 2}')) as mock_file:
             with self.assertRaises(ValueError) as context:
                 self.clo.options.config_log_file = 'valid.yaml'
                 self.clo._setup_logging()
