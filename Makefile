@@ -12,18 +12,11 @@ install: upgrade_setuptools
 install_user: upgrade_setup
 	pip install --user --requirement requirements.txt
 
-install_venv:
-	pipenv install
-
 install_dev: upgrade_setuptools
 	pip install --requirement requirements_dev.txt
 
 install_dev_user: upgrade_setup
 	pip install --user --requirement requirements_dev.txt
-
-install_venv_dev:
-	pipenv update
-	pipenv install --dev
 
 test:
 	python -m unittest discover --start-directory tests
