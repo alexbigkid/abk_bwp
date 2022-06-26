@@ -2,6 +2,8 @@
 
 # Standard library imports
 import getpass
+from io import StringIO
+import logging
 import os
 import sys
 import unittest
@@ -14,6 +16,8 @@ from optparse import OptionParser, Values
 from abkPackage import abkCommon
 from abkPackage.abkCommon import CommandLineOptions
 
+
+GENERAL_EXCEPTION_MSG = 'General Exception Raised'
 
 
 @unittest.skipIf(sys.platform.startswith("win"), "should not run on Windows")
@@ -101,14 +105,23 @@ loggers:
 
     def test_CommandLineOptions__setup_logger_throws_given_invalid_yaml_file(self) -> None:
         with mock.patch("builtins.open", mock.mock_open(read_data='{"notValid": 2}')) as mock_file:
-            with self.assertRaises(ValueError) as context:
+            with self.assertRaises(ValueError) as mock_ve:
                 self.clo.options.config_log_file = 'valid.yaml'
                 self.clo._setup_logging()
-            self.assertEqual('valid.yaml is not a valid yaml format', str(context.exception))
+            self.assertEqual('valid.yaml is not a valid yaml format', str(mock_ve.exception))
             mock_file.assert_called_with('valid.yaml', 'r')
             self.assertEqual(self.clo.logger, None)
 
 
+    def test_CommandLineOptions__succeeds(self) -> None:
+        with mock.patch("builtins.open", mock.mock_open(read_data=self.yaml_file)) as mock_file:
+            self.clo.options.config_log_file = 'valid.yaml'
+            with mock.patch('logging.config.dictConfig') as mock_dictConfig:
+                self.clo._setup_logging()
+        mock_file.assert_called_once()
+        mock_file.assert_called_with('valid.yaml', 'r')
+        mock_dictConfig.assert_called_once()
+        self.assertTrue(isinstance(self.clo.logger, logging.Logger))
 
 
 if __name__ == '__main__':
