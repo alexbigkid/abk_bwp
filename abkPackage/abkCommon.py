@@ -156,13 +156,13 @@ class CommandLineOptions(object):
         (self.options, self._args) = parser.parse_args()
 
         if len(self._args) != 0:
-            parser.error("wrong number of arguments")
+            raise ValueError(f'{len(self._args)} is wrong number of args, should be 0')
         self._setup_logging()
-        self.logger.info(f"options: {self.options}")
-        self.logger.info(f"args: {self._args}")
-        self.logger.info(f"options.verbose: {self.options.verbose}")
-        self.logger.info(f"options.log_into_file: {self.options.log_into_file}")
-        self.logger.info(f"__version__: {__version__}")
+        self.logger.info(f'{self.options=}')
+        self.logger.info(f'{self._args=}')
+        self.logger.info(f'{self.options.verbose=}')
+        self.logger.info(f'{self.options.log_into_file=}')
+        self.logger.info(f'{__version__=}')
 
 
     def _setup_logging(self) -> None:

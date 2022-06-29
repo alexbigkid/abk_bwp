@@ -12,7 +12,7 @@ from unittest import mock
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Third party imports
-from optparse import OptionParser, Values
+from optparse import Values
 from abkPackage import abkCommon
 from abkPackage.abkCommon import CommandLineOptions
 
@@ -122,6 +122,28 @@ loggers:
         mock_file.assert_called_with('valid.yaml', 'r')
         mock_dictConfig.assert_called_once()
         self.assertTrue(isinstance(self.clo.logger, logging.Logger))
+
+
+    def test_CommandLineOptions_handle_options_throws_when_incorrect_number_of_args(self) -> None:
+        with mock.patch('optparse.OptionParser.parse_args') as mock_parse_args:
+            with self.assertRaises(ValueError) as mock_arg_check:
+                mock_parse_args.return_value = ({'verbose': True, 'log_into_file': False, 'config_log_file': './valid.yaml'}, ['IncorrectNotEmpty'])
+                self.clo.handle_options()
+            self.assertEqual(str(mock_arg_check.exception), f'1 is wrong number of args, should be 0')
+
+
+    # def test_CommandLineOptions_handle_succeeds(self) -> None:
+    #     with mock.patch('abkCOmmon.OptionParser.parse_args') as mock_parse_args:
+    #         mock_parse_args.return_value = ({'verbose': True, 'log_into_file': False, 'config_log_file': './valid.yaml'}, [])
+    #         with mock.patch("builtins.open", mock.mock_open(read_data=self.yaml_file)) as mock_file:
+    #             self.clo.options.config_log_file = 'valid.yaml'
+    #             with mock.patch('logging.config.dictConfig') as mock_dictConfig:
+    #                 self.clo.handle_options()
+    #         mock_file.assert_called_once()
+    #         mock_file.assert_called_with('valid.yaml', 'r')
+    #         mock_dictConfig.assert_called_once()
+    #         self.assertTrue(isinstance(self.clo.logger, logging.Logger))
+
 
 
 if __name__ == '__main__':
