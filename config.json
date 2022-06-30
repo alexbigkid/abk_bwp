@@ -1,7 +1,12 @@
 {
-    "hour": "8"
-    ,"minute": "0"
-    ,"pyScriptName": "bingwallpaper.py"
-    ,"imagesDirrectory": "Pictures/BingWallpapers"
-    ,"numOfImages2Keep": 365
+    "hour": "8",
+    "minute": "0",
+    "pyScriptName": "bingwallpaper.py",
+    "imagesDirrectory": "Pictures/BingWallpapers",
+    "numOfImages2Keep": 365,
+    "ftv": {
+        "ip_address": "192.168.0.119",
+        "image_change_frequency": 300,
+        "enable": false
+    }
 }
