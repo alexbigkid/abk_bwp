@@ -42,8 +42,7 @@ clean:
 # those rules should be universal
 # ----------------------------
 coverage:
-	# coverage run --source src --omit src/__init__.py -m unittest discover --start-directory tests
-	coverage run --source abkPackage --omit abkPackage/__init__.py -m unittest discover --start-directory tests
+	coverage run --source ./,abkPackage --omit abkPackage/__init__.py,./tests/* -m unittest discover --start-directory tests
 	@echo
 	coverage report
 	coverage xml

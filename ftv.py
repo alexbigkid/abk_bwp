@@ -1,16 +1,18 @@
+import os
 import sys
 import logging
 
 from colorama import Fore, Style
 
-sys.path.append('/Users/aberger/.pyenv/versions/bwp/lib/python3.10/site-packages/')
+# sys.path.append('/Users/aberger/.pyenv/versions/bwp/lib/python3.10/site-packages/')
 
 import samsungtvws
-# from samsungtvws import SamsungTVWS
-from samsungtvws import SamsungTVArt
+from samsungtvws import SamsungTVWS
+# from samsungtvws import SamsungTVArt
 
 
-class AbkFrameTV(object):
+
+class FTV(object):
 
     def __init__(self):
         # Increase debug level
@@ -19,18 +21,32 @@ class AbkFrameTV(object):
         logging.basicConfig(level=logging.INFO)
 
 
+    def get_environment_variable_value(self, env_variable: str) -> str:
+        """Get environment variable value from shell
+        Args:
+            env_variable (str): name of the environment variable to load
+        Returns:
+            str: the value of the variable
+        """
+        if env_variable in os.environ:
+            return os.environ[env_variable]
+        else:
+            return ''
+
     def load_ftv_settings(self, file_name:str) -> None:
         self._ftv_ip_address = '192.168.0.119'
-
+        self._api_token = self.get_environment_variable_value('ABK_SH_API_TOKEN')
+        print(f'\n ---- ABK: ABK_SH_API_TOKEN: {self._api_token}')
+        # self._api_token = f'{os.path.dirname(os.path.realpath(__file__))}{ABK_SH_API_TOKEN_FILE_NAME}'
 
     @property
-    # def ftv(self) -> SamsungTVWS:
-    def ftv(self) -> SamsungTVArt:
+    def ftv(self) -> SamsungTVWS:
+    # def ftv(self) -> SamsungTVArt:
         if self._ftv == None:
             if not self._ftv_ip_address:
                 self.load_ftv_settings('ftv_settings.json')
-            # self._ftv = SamsungTVWS(self._ftv_ip_address)
-            self._ftv = SamsungTVArt(host=self._ftv_ip_address)
+            self._ftv = SamsungTVWS(self._ftv_ip_address, token=self._api_token)
+            # self._ftv = SamsungTVArt(host=self._ftv_ip_address, token=self._api_token)
         return self._ftv
 
 
@@ -124,7 +140,7 @@ class AbkFrameTV(object):
 def main():
     exit_code = 0
     try:
-        abk_ftv = AbkFrameTV()
+        abk_ftv = FTV()
         abk_ftv.is_art_mode_supported()
         abk_ftv.ftv.shortcuts().power()
         # abk_ftv.list_art_on_tv()
