@@ -135,6 +135,9 @@ class FTV(object):
         self.ftv.art().set_photo_filter(file_name, filter_name)
 
 
+    def change_daily_images(self):
+        pass
+
 
 def main():
     exit_code = 0
