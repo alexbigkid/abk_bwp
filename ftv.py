@@ -14,6 +14,17 @@ from samsungtvws import SamsungTVWS
 
 class FTV(object):
 
+
+    @property
+    def ftv(self) -> SamsungTVWS:
+        if self._ftv == None:
+            if not self._ftv_ip_address:
+                self.load_ftv_settings('ftv_settings.json')
+            # self._ftv = SamsungTVWS(self._ftv_ip_address, port=self._port, token=self._api_token)
+            self._ftv = SamsungTVWS(self._ftv_ip_address, token=self._api_token)
+        return self._ftv
+
+
     def __init__(self):
         # Increase debug level
         self._ftv = None
@@ -28,26 +39,14 @@ class FTV(object):
         Returns:
             str: the value of the variable
         """
-        if env_variable in os.environ:
-            return os.environ[env_variable]
-        else:
-            return ''
+        return os.environ[env_variable] if env_variable in os.environ else ''
 
     def load_ftv_settings(self, file_name:str) -> None:
         self._ftv_ip_address = '192.168.0.119'
         self._api_token = self.get_environment_variable_value('ABK_SH_API_TOKEN')
+        self._port = 8002
         print(f'\n ---- ABK: ABK_SH_API_TOKEN: {self._api_token}')
         # self._api_token = f'{os.path.dirname(os.path.realpath(__file__))}{ABK_SH_API_TOKEN_FILE_NAME}'
-
-    @property
-    def ftv(self) -> SamsungTVWS:
-    # def ftv(self) -> SamsungTVArt:
-        if self._ftv == None:
-            if not self._ftv_ip_address:
-                self.load_ftv_settings('ftv_settings.json')
-            self._ftv = SamsungTVWS(self._ftv_ip_address, token=self._api_token)
-            # self._ftv = SamsungTVArt(host=self._ftv_ip_address, token=self._api_token)
-        return self._ftv
 
 
     def is_art_mode_supported(self) -> bool:
@@ -142,9 +141,9 @@ def main():
     try:
         abk_ftv = FTV()
         abk_ftv.is_art_mode_supported()
-        abk_ftv.ftv.shortcuts().power()
+        # abk_ftv.ftv.shortcuts().power()
         # abk_ftv.list_art_on_tv()
-        # abk_ftv.get_current_art_info()
+        abk_ftv.get_current_art_info()
     except Exception as exception:
         print(f"{Fore.RED}ERROR: executing abk ftv")
         print(f"EXCEPTION: {exception}{Style.RESET_ALL}")

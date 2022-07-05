@@ -62,10 +62,10 @@ class BingWallPaper(object):
             confFile = os.path.join(linkPath, confFile)
             self._logger.info(f"{confFile=}")
         with open(confFile) as jsonData:
-            config = json.load(jsonData)
+            config_dict = json.load(jsonData)
         jsonData.close()
-        self._logger.debug(f"<- (imagesDirrectory={config['imagesDirrectory']}, numOfImages2Keep={config['numOfImages2Keep']})")
-        return (config['imagesDirrectory'], config['numOfImages2Keep'])
+        self._logger.debug(f"<- ({config_dict})")
+        return config_dict
 
 
     def DefinePixDirs(self, imagesDir):
@@ -179,9 +179,9 @@ def main():
         command_line_options = abkCommon.CommandLineOptions()
         command_line_options.handle_options()
         bwp = BingWallPaper(logger=command_line_options.logger, options=command_line_options.options)
-        (imagesDir, numOfImages) = bwp.readLinkConfigFile(configFile)
-        pixDir = bwp.DefinePixDirs(imagesDir)
-        bwp.TrimNumberOfPix(pixDir, numOfImages)
+        config_dict = bwp.readLinkConfigFile(configFile)
+        pixDir = bwp.DefinePixDirs(config_dict.get('imagesDirrectory'))
+        bwp.TrimNumberOfPix(pixDir, config_dict.get('numOfImages2Keep'))
         fileName = bwp.DownloadBingImage(pixDir)
         bwp.setDesktopBackground(fileName)
     except Exception as exception:
