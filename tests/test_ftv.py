@@ -11,12 +11,18 @@ from ftv import FTV
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+TEST_FTV_CONFIG_DICT = {
+    "ipAddress": "0.0.0.0",
+    "port": 0,
+    "imageChangeFrequency": 0,
+    "setImage": False
+}
 
 class TestFTV(unittest.TestCase):
 
 
     def setUp(self):
-        self._ftv = FTV()
+        self._ftv = FTV(TEST_FTV_CONFIG_DICT)
 
     # -------------------------------------------------------------------------
     # Tests for get_environment_variable_value_

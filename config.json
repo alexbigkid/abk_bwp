@@ -6,9 +6,9 @@
     "numOfImages2Keep": 365,
     "setDesktopImage": true,
     "ftv": {
-        "ip_address": "192.168.0.119",
+        "ipAddress": "192.168.0.119",
         "port": 8002,
-        "image_change_frequency": 300,
-        "setFtvImage": true
+        "imageChangeFrequency": 300,
+        "setImage": true
     }
 }

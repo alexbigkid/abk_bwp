@@ -1,3 +1,4 @@
+from email.policy import default
 import os
 import sys
 import logging
@@ -18,17 +19,20 @@ class FTV(object):
     @property
     def ftv(self) -> SamsungTVWS:
         if self._ftv == None:
-            if not self._ftv_ip_address:
+            if not self._ip_address:
                 self.load_ftv_settings('ftv_settings.json')
             # self._ftv = SamsungTVWS(self._ftv_ip_address, port=self._port, token=self._api_token)
-            self._ftv = SamsungTVWS(self._ftv_ip_address, token=self._api_token)
+            self._ftv = SamsungTVWS(self._ip_address, token=self._api_token)
         return self._ftv
 
 
-    def __init__(self):
+    def __init__(self, config_dict:dict):
         # Increase debug level
         self._ftv = None
-        self._ftv_ip_address = None
+        self._ip_address = config_dict.get('ipAddress', None)
+        self._port = config_dict.get('port', None)
+        self._image_change_frequency = config_dict.get('imageChangeFrequency', 180)
+        self._set_image = config_dict.get('setImage', False)
         logging.basicConfig(level=logging.INFO)
 
 
@@ -42,9 +46,7 @@ class FTV(object):
         return os.environ[env_variable] if env_variable in os.environ else ''
 
     def load_ftv_settings(self, file_name:str) -> None:
-        self._ftv_ip_address = '192.168.0.119'
         self._api_token = self.get_environment_variable_value('ABK_SH_API_TOKEN')
-        self._port = 8002
         print(f'\n ---- ABK: ABK_SH_API_TOKEN: {self._api_token}')
         # self._api_token = f'{os.path.dirname(os.path.realpath(__file__))}{ABK_SH_API_TOKEN_FILE_NAME}'
 
@@ -141,8 +143,14 @@ class FTV(object):
 
 def main():
     exit_code = 0
+    dafault_config = {
+        "ipAddress": "192.168.0.119",
+        "port": 8002,
+        "imageChangeFrequency": 300,
+        "setImage": True
+    }
     try:
-        abk_ftv = FTV()
+        abk_ftv = FTV(dafault_config)
         abk_ftv.is_art_mode_supported()
         # abk_ftv.ftv.shortcuts().power()
         # abk_ftv.list_art_on_tv()
