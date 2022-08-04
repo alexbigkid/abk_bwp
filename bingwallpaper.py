@@ -25,6 +25,7 @@ from colorama import Fore, Style
 
 # Local application imports
 from abkPackage import abkCommon
+from ftv import FTV
 
 configFile = 'config.json'
 
@@ -47,7 +48,7 @@ class BingWallPaper(object):
         self._logger.debug('<-')
 
 
-    def readLinkConfigFile(self, confFile:str) -> Tuple[str, int]:
+    def read_link_config_file(self, confFile:str) -> Tuple[str, int]:
         """Reads config file
         Args:
             confFile (str): config file name
@@ -62,13 +63,13 @@ class BingWallPaper(object):
             confFile = os.path.join(linkPath, confFile)
             self._logger.info(f"{confFile=}")
         with open(confFile) as jsonData:
-            config = json.load(jsonData)
+            config_dict = json.load(jsonData)
         jsonData.close()
-        self._logger.debug(f"<- (imagesDirrectory={config['imagesDirrectory']}, numOfImages2Keep={config['numOfImages2Keep']})")
-        return (config['imagesDirrectory'], config['numOfImages2Keep'])
+        self._logger.debug(f"<- ({config_dict})")
+        return config_dict
 
 
-    def DefinePixDirs(self, imagesDir):
+    def define_pix_dirs(self, imagesDir):
         self._logger.debug(f"-> {function_name}({imagesDir=}")
         homeDir = abkCommon.GetHomeDir()
         self._logger.info(f"{homeDir=}")
@@ -77,7 +78,12 @@ class BingWallPaper(object):
         self._logger.debug(f"<- {function_name}({pixDir=}")
         return pixDir
 
-    def TrimNumberOfPix(self, pixDir, num):
+
+    def scale_images(self):
+        pass
+
+
+    def trim_number_of_pix(self, pixDir, num):
         self._logger.debug(f"-> {function_name}({pixDir=}, {num=})")
 
         listOfFiles = []
@@ -104,7 +110,8 @@ class BingWallPaper(object):
 
         self._logger.debug(f"<- {function_name}")
 
-    def DownloadBingImage(self, dstDir):
+
+    def download_bing_image(self, dstDir):
         self._logger.debug(f"-> {function_name}({dstDir=})")
         response = urlopen("http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en-US")
         obj = json.load(response)
@@ -121,7 +128,8 @@ class BingWallPaper(object):
         self._logger.debug(f"<- {function_name}({fullFileName=})")
         return fullFileName
 
-    def setDesktopBackground(self, fileName):
+
+    def set_desktop_background(self, fileName):
         self._logger.debug(f"-> {function_name}({fileName=})")
         # ----- Start platform dependency  -----
         if _platform == "darwin":
@@ -179,11 +187,18 @@ def main():
         command_line_options = abkCommon.CommandLineOptions()
         command_line_options.handle_options()
         bwp = BingWallPaper(logger=command_line_options.logger, options=command_line_options.options)
-        (imagesDir, numOfImages) = bwp.readLinkConfigFile(configFile)
-        pixDir = bwp.DefinePixDirs(imagesDir)
-        bwp.TrimNumberOfPix(pixDir, numOfImages)
-        fileName = bwp.DownloadBingImage(pixDir)
-        bwp.setDesktopBackground(fileName)
+        config_dict = bwp.read_link_config_file(configFile)
+        pixDir = bwp.define_pix_dirs(config_dict.get('imagesDirrectory'))
+        bwp.trim_number_of_pix(pixDir, config_dict.get('numOfImages2Keep'))
+        fileName = bwp.download_bing_image(pixDir)
+        bwp.scale_images()
+        if config_dict.get('setDesktopImage', False):
+            bwp.set_desktop_background(fileName)
+        if config_dict.get('ftv', {}).get('setImage', False):
+            ftv = FTV(config_dict.get('ftv'))
+            if ftv.is_art_mode_supported():
+                ftv.change_daily_images()
+
     except Exception as exception:
         print(f"{Fore.RED}ERROR: executing bingwallpaper")
         print(f"EXCEPTION: {exception}{Style.RESET_ALL}")
