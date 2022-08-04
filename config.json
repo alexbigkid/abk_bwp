@@ -4,6 +4,7 @@
     "pyScriptName": "bingwallpaper.py",
     "imagesDirrectory": "Pictures/BingWallpapers",
     "numOfImages2Keep": 365,
+    "region": "us",
     "ftv": {
         "ip_address": "192.168.0.119",
         "image_change_frequency": 300,

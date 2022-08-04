@@ -31,7 +31,7 @@ configFile = 'config.json'
 function_name = lambda: inspect.stack()[1][3]
 # function_name = sys._getframe().f_code.co_name
 
-
+BWP_API_REGION = ['au', 'ca', 'cn', 'de', 'fr', 'in', 'jp', 'es', 'gb', 'us']
 
 class BingWallPaper(object):
     """BingWallPaper downloads images from bing.com and sets it as a wallpaper"""

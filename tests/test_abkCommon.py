@@ -133,10 +133,10 @@ loggers:
 
 
     # def test_CommandLineOptions_handle_succeeds(self) -> None:
-    #     with mock.patch('abkCOmmon.OptionParser.parse_args') as mock_parse_args:
+    #     with mock.patch('abkPackage.abkCommon.OptionParser.parse_args') as mock_parse_args:
     #         mock_parse_args.return_value = ({'verbose': True, 'log_into_file': False, 'config_log_file': './valid.yaml'}, [])
     #         with mock.patch("builtins.open", mock.mock_open(read_data=self.yaml_file)) as mock_file:
-    #             self.clo.options.config_log_file = 'valid.yaml'
+    #             # self.clo.options.config_log_file = 'valid.yaml'
     #             with mock.patch('logging.config.dictConfig') as mock_dictConfig:
     #                 self.clo.handle_options()
     #         mock_file.assert_called_once()

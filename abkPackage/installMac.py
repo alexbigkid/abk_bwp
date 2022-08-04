@@ -21,8 +21,8 @@ def linkPythonScript (fileName):
 def CreatePlistFile(hour, minute, script_name):
     logger.debug("-> CreatePlistFile(%s, %s, %s)", hour, minute, script_name)
     user_name = abkCommon.GetUserName()
-    plist_label = "com."+user_name+"."+script_name
-    plist_name = plist_label+".plist"
+    plist_label = f"com.{user_name}.{script_name}"
+    plist_name = f"{plist_label}.plist"
     fh = open(plist_name, "w")
     lines2write = [
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n",
@@ -30,20 +30,20 @@ def CreatePlistFile(hour, minute, script_name):
         "<plist version=\"1.0\">\n",
         "<dict>\n",
         "    <key>Label</key>\n",
-        "    <string>"+plist_label+"</string>\n",
+        f"    <string>{plist_label}</string>\n",
         "    <key>ProgramArguments</key>\n",
         "    <array>\n",
         "        <string>python3</string>\n",
-        "        <string>/Users/"+user_name+"/abkBin/"+script_name+"</string>\n",
+        f"        <string>/Users/{user_name}/abkBin/{script_name}</string>\n",
         "    </array>\n",
         "    <key>RunAtLoad</key>\n",
         "    <true/>\n",
         "    <key>StartCalendarInterval</key>\n",
         "    <dict>\n",
         "        <key>Hour</key>\n",
-        "        <integer>"+hour+"</integer>\n",
+        f"        <integer>{hour}</integer>\n",
         "        <key>Minute</key>\n",
-        "        <integer>"+minute+"</integer>\n",
+        f"        <integer>{minute}</integer>\n",
         "    </dict>\n",
         "</dict>\n",
         "</plist>\n" ]
@@ -56,7 +56,7 @@ def CreatePlistLink(full_file_name):
     logger.debug("-> CreatePlistLink(%s)", full_file_name)
     file_name = os.path.basename(full_file_name)
     plist_install_dir = abkCommon.GetHomeDir()
-    plist_install_dir = plist_install_dir+"/Library/LaunchAgents"
+    plist_install_dir = f"{plist_install_dir}/Library/LaunchAgents"
     abkCommon.EnsureDir(plist_install_dir)
     dst_file_name = os.path.join(plist_install_dir, file_name)
     logger.info("src= %s, dst= %s", full_file_name, dst_file_name)
@@ -86,8 +86,8 @@ def LoadAndStartBingwallpaperJob(plistName, plistLable):
     logger.debug("-> LoadAndStartBingwallpaperJob(plistName=%s, plistLable=%s)", plistName, plistLable)
 
     cmdList = []
-    cmdList.append("launchctl load -w "+plistName)
-    cmdList.append("launchctl start "+plistLable)
+    cmdList.append(f"launchctl load -w {plistName}")
+    cmdList.append(f"launchctl start {plistLable}")
 
     try:
         for cmd in cmdList:
@@ -103,15 +103,27 @@ def LoadAndStartBingwallpaperJob(plistName, plistLable):
 
 def Setup(hour, minute, pyScriptName):
     logger.debug("-> Setup(%s, %s, %s)", hour, minute, pyScriptName)
+    print(f' --- ABK:1')
     pyFullName = linkPythonScript(pyScriptName)
+    print(f' --- ABK:2')
     scriptName = os.path.basename(pyFullName)
+    print(f' --- ABK:3')
     scriptPath = os.path.dirname(pyFullName)
+    print(f' --- ABK:4')
     logger.info("scriptName = %s", scriptName)
+    print(f' --- ABK:5')
     logger.info("scriptPath = %s", scriptPath)
+    print(f' --- ABK:6')
     (plistLable, plistName) =  CreatePlistFile(hour, minute, scriptName)
+    print(f' --- ABK:7')
     plistFullName = os.path.join(scriptPath, plistName)
+    print(f' --- ABK:8')
     logger.info("plist_full_name = %s", plistFullName)
+    print(f' --- ABK:9')
     dstPlistName = CreatePlistLink(plistFullName)
+    print(f' --- ABK:10')
     StopAndUnloadBingwallpaperJob(dstPlistName, plistLable)
+    print(f' --- ABK:11')
     LoadAndStartBingwallpaperJob(dstPlistName, plistLable)
+    print(f' --- ABK:12')
     logger.debug("<- Setup")
