@@ -25,7 +25,7 @@ from colorama import Fore, Style
 
 # Local application imports
 from abkPackage import abkCommon
-from ftv import FTV
+# from ftv import FTV
 
 configFile = 'config.json'
 
@@ -195,9 +195,10 @@ def main():
         if config_dict.get('setDesktopImage', False):
             bwp.set_desktop_background(fileName)
         if config_dict.get('ftv', {}).get('setImage', False):
-            ftv = FTV(config_dict.get('ftv'))
-            if ftv.is_art_mode_supported():
-                ftv.change_daily_images()
+            pass
+            # ftv = FTV(config_dict.get('ftv'))
+            # if ftv.is_art_mode_supported():
+            #     ftv.change_daily_images()
 
     except Exception as exception:
         print(f"{Fore.RED}ERROR: executing bingwallpaper")
