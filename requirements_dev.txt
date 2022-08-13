@@ -4,6 +4,9 @@
 # Install test dependencies
 parameterized
 coverage
+pip-check
+pip-date
+pip-chill
 #black               # code formatting
 #flake8              # linting, formatting, analysis
 #pytest              # pytest for unit testing
