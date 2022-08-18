@@ -38,3 +38,4 @@ target/
 .vscode/
 com.*.bingwallpaper.py.plist
 exif_rename.log
+samsung-tv-ws-api/
