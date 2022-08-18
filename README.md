@@ -48,7 +48,7 @@ The project contains com.abk.bingwallpaper_debug.py.plist file, which can be use
    rm com.abk.bingwallpaper_debug.py.plist in: ~/Labrary/LaunchAgents
 
 #### tested running on:
-- [x] MacOS Monterey (local machine) / Python 3.8.9
+- [x] MacOS Monterey (local machine) / Python 3.10.6
 - [ ] Linux Ubuntu 20.04  / Python 3.8.9
 - [ ] Windows 10 / Python 3.8.9
 
