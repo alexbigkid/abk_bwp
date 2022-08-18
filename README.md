@@ -1,4 +1,4 @@
-# :octocat: bingWallPaper4Mac - Bing images :octocat:
+# ![Tests](https://github.com/alexbigkid/bingWallPaper/actions/workflows/pipeline.yml/badge.svg) bingWallPaper4Mac - Bing images :octocat:
 Downloads daily images from bing.com and sets them as background
 
 ## Triggers
