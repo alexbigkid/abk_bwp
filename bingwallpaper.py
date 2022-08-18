@@ -29,25 +29,41 @@ from abkPackage import abkCommon
 
 configFile = 'config.json'
 
-function_name = lambda: inspect.stack()[1][3]
-# function_name = sys._getframe().f_code.co_name
+# function_name = lambda: inspect.stack()[1][3]
 
-BWP_API_REGION = ['au', 'ca', 'cn', 'de', 'fr', 'in', 'jp', 'es', 'gb', 'us']
+BWP_API_REGION = frozenset(['au', 'ca', 'cn', 'de', 'fr', 'in', 'jp', 'es', 'gb', 'us'])
+
+# def function_logging(logger_name:str):
+def function_trace(original_function):
+    """Decorator function to help to trace function call entry and exit
+    Args:
+        original_function (_type_): function above which the decorater is defined
+    """
+    def function_wrapper(*args, **kwargs):
+        _logger = logging.getLogger(original_function.__name__)
+        _logger.debug(f'{Fore.YELLOW}-> {original_function.__name__}{Style.RESET_ALL}')
+        result = original_function(*args, **kwargs)
+        _logger.debug(f'{Fore.YELLOW}<- {original_function.__name__}{Style.RESET_ALL}\n')
+        return result
+    return function_wrapper
+    # return function_trace
 
 class BingWallPaper(object):
     """BingWallPaper downloads images from bing.com and sets it as a wallpaper"""
 
 
+    @function_trace
     def __init__(self, logger:logging.Logger=None, options:Values=None):
         self._logger = logger or logging.getLogger(__name__)
         self._options = options
-        self._logger.debug('->')
 
 
+    @function_trace
     def __del__(self):
-        self._logger.debug('<-')
+        pass
 
 
+    @function_trace
     def read_link_config_file(self, confFile:str) -> Tuple[str, int]:
         """Reads config file
         Args:
@@ -55,7 +71,7 @@ class BingWallPaper(object):
         Returns:
             Tuple: tuple of image directory and number of images to keep
         """
-        self._logger.debug(f"-> {confFile=}")
+        self._logger.debug(f"{confFile=}")
         if os.path.islink(__file__):
             linkFile = os.readlink(__file__)
             linkPath = os.path.dirname(linkFile)
@@ -65,26 +81,29 @@ class BingWallPaper(object):
         with open(confFile) as jsonData:
             config_dict = json.load(jsonData)
         jsonData.close()
-        self._logger.debug(f"<- ({config_dict})")
+        self._logger.debug(f"{config_dict=}")
         return config_dict
 
 
+    @function_trace
     def define_pix_dirs(self, imagesDir):
-        self._logger.debug(f"-> {function_name}({imagesDir=}")
+        self._logger.debug(f"{imagesDir=}")
         homeDir = abkCommon.GetHomeDir()
         self._logger.info(f"{homeDir=}")
         pixDir = os.path.join(homeDir, imagesDir)
         abkCommon.EnsureDir(pixDir)
-        self._logger.debug(f"<- {function_name}({pixDir=}")
+        self._logger.debug(f"{pixDir=}")
         return pixDir
 
 
+    @function_trace
     def scale_images(self):
         pass
 
 
+    @function_trace
     def trim_number_of_pix(self, pixDir, num):
-        self._logger.debug(f"-> {function_name}({pixDir=}, {num=})")
+        self._logger.debug(f"{pixDir=}, {num=}")
 
         listOfFiles = []
         for f in os.listdir(pixDir):
@@ -108,11 +127,10 @@ class BingWallPaper(object):
         else:
             self._logger.info("no images to delete")
 
-        self._logger.debug(f"<- {function_name}")
 
-
+    @function_trace
     def download_bing_image(self, dstDir):
-        self._logger.debug(f"-> {function_name}({dstDir=})")
+        self._logger.debug(f"{dstDir=}")
         response = urlopen("http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en-US")
         obj = json.load(response)
         url = (obj['images'][0]['urlbase'])
@@ -125,12 +143,13 @@ class BingWallPaper(object):
         pic = urlopen(url)
         f.write(pic.read())
         f.close()
-        self._logger.debug(f"<- {function_name}({fullFileName=})")
+        self._logger.debug(f"{fullFileName=}")
         return fullFileName
 
 
+    @function_trace
     def set_desktop_background(self, fileName):
-        self._logger.debug(f"-> {function_name}({fileName=})")
+        self._logger.debug(f"{fileName=}")
         # ----- Start platform dependency  -----
         if _platform == "darwin":
             # MAC OS X ------------------------
@@ -170,7 +189,6 @@ END"""
             raise NameError("Not known OS environment")
 
         self._logger.info(f"Set background to {fileName}")
-        self._logger.debug(f"<- {function_name}()")
 
 
 def main():
