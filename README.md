@@ -52,4 +52,4 @@ The project contains com.abk.bingwallpaper_debug.py.plist file, which can be use
 - [ ] Linux Ubuntu 20.04  / Python 3.8.9
 - [ ] Windows 10 / Python 3.8.9
 
-[Tests](https://github.com/alexbigkid/bingWallPaper/actions/workflows/pipeline.yml/badge.svg)
+![Tests](https://github.com/alexbigkid/bingWallPaper/actions/workflows/pipeline.yml/badge.svg)
