@@ -21,7 +21,7 @@ class TestAbkCommon(unittest.TestCase):
 
 
     def test_bingwallpaper_001(self) -> None:
-        self.assertTrue(True)
+        self.assertTrue(False)
 
 
 
