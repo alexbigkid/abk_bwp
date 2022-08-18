@@ -37,3 +37,4 @@ target/
 #abk ignores
 .vscode/
 com.*.bingwallpaper.py.plist
+exif_rename.log
