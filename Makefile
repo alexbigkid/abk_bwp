@@ -15,6 +15,9 @@ install: upgrade_setuptools
 install_dev: upgrade_setuptools
 	pip install --requirement requirements_dev.txt
 
+install_nth: upgrade_setuptools
+	pip install --requirement requirements_nth.txt
+
 test:
 	python -m unittest discover --start-directory tests
 
@@ -53,6 +56,7 @@ help:
 	@echo "  bwp                - executes the main program"
 	@echo "  install            - installs required packages"
 	@echo "  install_dev        - installs required development packages"
+	@echo "  install_nth        - installs nice-to-have packages"
 	@echo "  test               - runs test"
 	@echo "  test_v             - runs test with verbose messaging"
 	@echo "  test_ff            - runs test fast fail"
