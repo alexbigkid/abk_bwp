@@ -1,4 +1,4 @@
-# Bing Wallpaper images (currently MacOS only) ![Tests](https://github.com/alexbigkid/bingWallPaper/actions/workflows/pipeline.yml/badge.svg)
+# Bing Wallpaper (currently MacOS only) ![Tests](https://github.com/alexbigkid/bingWallPaper/actions/workflows/pipeline.yml/badge.svg)
 Downloads daily images from bing.com and sets them as background
 
 ## Triggers
@@ -56,4 +56,3 @@ The project contains com.abk.bingwallpaper_debug.py.plist file, which can be use
 - [x] Linux latest / Python 3.8.x
 - [x] MacOS latest / Python 3.8.x
 - [x] Windows latest / Python 3.8.x
-
