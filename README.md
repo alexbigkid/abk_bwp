@@ -51,3 +51,5 @@ The project contains com.abk.bingwallpaper_debug.py.plist file, which can be use
 - [x] MacOS Big Sur (local machine) / Python 3.8.9
 - [ ] Linux Ubuntu 20.04  / Python 3.8.9
 - [ ] Windows 10 / Python 3.8.9
+
+[Tests](https://github.com/alexbigkid/bingWallPaper/actions/workflows/tests.yaml/badge.svg)
