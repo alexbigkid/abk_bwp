@@ -48,8 +48,14 @@ The project contains com.abk.bingwallpaper_debug.py.plist file, which can be use
    rm com.abk.bingwallpaper_debug.py.plist in: ~/Labrary/LaunchAgents
 
 #### tested running on:
-- [x] MacOS Big Sur (local machine) / Python 3.8.9
+- [x] MacOS Monterey (local machine) / Python 3.8.9
 - [ ] Linux Ubuntu 20.04  / Python 3.8.9
 - [ ] Windows 10 / Python 3.8.9
+
+#### Pipeline Unit Tests ran on:
+- [x] Linux latest / Python 3.8.x
+- [x] MacOS latest / Python 3.8.x
+- [x] Windows latest / Python 3.8.x
+
 
 ![Tests](https://github.com/alexbigkid/bingWallPaper/actions/workflows/pipeline.yml/badge.svg)
