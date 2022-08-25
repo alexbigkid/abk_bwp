@@ -16,7 +16,6 @@ import json
 import subprocess
 import logging
 import logging.config
-import inspect
 from sys import platform as _platform
 
 # Third party imports
@@ -28,8 +27,6 @@ from abkPackage import abkCommon
 # from ftv import FTV
 
 configFile = 'config.json'
-
-# function_name = lambda: inspect.stack()[1][3]
 
 BWP_API_REGION = frozenset(['au', 'ca', 'cn', 'de', 'fr', 'in', 'jp', 'es', 'gb', 'us'])
 
