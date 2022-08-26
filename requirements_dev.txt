@@ -4,9 +4,6 @@
 # Install test dependencies
 coverage
 parameterized
-pip-check
-pip-date
-pip-chill
 tomli_w
 #black               # code formatting
 #flake8              # linting, formatting, analysis
