@@ -110,7 +110,7 @@ loggers:
                 self.clo._setup_logging()
             self.assertEqual('valid.yaml is not a valid yaml format', str(mock_ve.exception))
             mock_file.assert_called_with('valid.yaml', 'r')
-            self.assertEqual(self.clo.logger, None)
+            self.assertEqual(self.clo._logger, None)
 
 
     def test_CommandLineOptions__succeeds(self) -> None:
@@ -121,7 +121,7 @@ loggers:
         mock_file.assert_called_once()
         mock_file.assert_called_with('valid.yaml', 'r')
         mock_dictConfig.assert_called_once()
-        self.assertTrue(isinstance(self.clo.logger, logging.Logger))
+        self.assertTrue(isinstance(self.clo._logger, logging.Logger))
 
 
     def test_CommandLineOptions_handle_options_throws_when_incorrect_number_of_args(self) -> None:

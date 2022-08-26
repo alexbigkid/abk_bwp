@@ -1,25 +1,71 @@
 # Standard library imports
-import os
 import errno
 import getpass
+import json
 import logging
 import logging.config
+import os
 import timeit
+from enum import Enum
+from optparse import OptionParser, Values
 
+import tomli
 # Third party imports
 import yaml
-from optparse import OptionParser, Values
-from colorama import Fore, Style
-
 # Local application imports
 from _version import __version__
-
+from colorama import Fore, Style
 
 logger = logging.getLogger(__name__)
 
 
-CONSOLE_LOGGER = 'consoleLogger'
-FILE_LOGGER = 'fileLogger'
+class LoggerType(Enum):
+    CONSOLE_LOGGER = 'consoleLogger'
+    FILE_LOGGER = 'fileLogger'
+
+
+class ConfigFileType(Enum):
+    JSON = "json"
+    TOML = "toml"
+
+
+def function_trace(original_function):
+    """Decorator function to help to trace function call entry and exit
+    Args:
+        original_function (_type_): function above which the decorater is defined
+    """
+    def function_wrapper(*args, **kwargs):
+        _logger = logging.getLogger(original_function.__name__)
+        _logger.debug(f'{Fore.YELLOW}-> {original_function.__name__}{Style.RESET_ALL}')
+        result = original_function(*args, **kwargs)
+        _logger.debug(f'{Fore.YELLOW}<- {original_function.__name__}{Style.RESET_ALL}\n')
+        return result
+    return function_wrapper
+
+
+@function_trace
+def readConfigFile(config_file:str) -> dict:
+    """Reads configuration file in toml or json format
+    Args:
+        config_file (str): file name
+    Raises:
+        ValueError: throws error if the config file format is not supported
+        FileNotFoundError: throw an error when file does not exist
+    Returns:
+        dict: with configuration data
+    """
+    logger.debug(f'{config_file=}')
+    _, file_ext = os.path.splitext(config_file)
+    if (file_extention := file_ext[1:]) == ConfigFileType.TOML:
+        with open(config_file, mode="rb") as file_handle:
+            config = tomli.load(file_handle)
+    elif file_extention == ConfigFileType.JSON:
+        with open(config_file) as file_handle:
+            config = json.load(file_handle)
+    else:
+        raise ValueError(f'Unsupported Config File Format: {file_extention}. Supported are: {ConfigFileType.__members__.values()}')
+    logger.debug(f'{config=}')
+    return config
 
 
 def GetUserName():
@@ -102,7 +148,7 @@ def DeleteDir(dir2delete):
 
 
 class PerformanceTimer(object):
-    def __init__(self, timer_name, logger=None):
+    def __init__(self, timer_name:str, logger:logging.Logger):
         self._timer_name = timer_name
         self._logger = logger
     def __enter__(self):
@@ -115,14 +161,13 @@ class PerformanceTimer(object):
 
 class CommandLineOptions(object):
     """CommandLineOptions module handles all parameters passed in to the python script"""
-    _args = None
-    options = None
-    logger = None
+    _args:list[str] = None
+    options:Values = None
+    _logger:logging.Logger = None
 
-    def __init__(self, args:list=None, options:Values=None):
+    def __init__(self, args:list[str]=None, options:Values=None):
         self._args = args
         self.options = options
-        self.logger = None
 
     def handle_options(self) -> None:
         """Handles user specified options and arguments"""
@@ -158,11 +203,11 @@ class CommandLineOptions(object):
         if len(self._args) != 0:
             raise ValueError(f'{len(self._args)} is wrong number of args, should be 0')
         self._setup_logging()
-        self.logger.info(f'{self.options=}')
-        self.logger.info(f'{self._args=}')
-        self.logger.info(f'{self.options.verbose=}')
-        self.logger.info(f'{self.options.log_into_file=}')
-        self.logger.info(f'{__version__=}')
+        self._logger.info(f'{self.options=}')
+        self._logger.info(f'{self._args=}')
+        self._logger.info(f'{self.options.verbose=}')
+        self._logger.info(f'{self.options.log_into_file=}')
+        self._logger.info(f'{__version__=}')
 
 
     def _setup_logging(self) -> None:
@@ -170,11 +215,11 @@ class CommandLineOptions(object):
             with open(self.options.config_log_file, 'r') as stream:
                 config_yaml = yaml.load(stream, Loader=yaml.FullLoader)
                 logging.config.dictConfig(config_yaml)
-                logger_type = (CONSOLE_LOGGER, FILE_LOGGER)[self.options.log_into_file]
-                self.logger = logging.getLogger(logger_type)
-                self.logger.disabled = self.options.verbose == False
+                logger_type = (LoggerType.CONSOLE_LOGGER.value, LoggerType.FILE_LOGGER.value)[self.options.log_into_file]
+                self._logger = logging.getLogger(logger_type)
+                self._logger.disabled = self.options.verbose == False
         except ValueError as ve:
             raise ValueError(f'{self.options.config_log_file} is not a valid yaml format')
         except IOError:
             raise IOError(f'{self.options.config_log_file} does not exist.')
-        self.logger.debug(f"logger_type: {logger_type}")
+        self._logger.debug(f"logger_type: {logger_type}")

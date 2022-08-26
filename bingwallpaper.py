@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 
 # Standard library imports
+from enum import Enum
 import os
 import sys
 import argparse
@@ -21,6 +22,7 @@ from sys import platform as _platform
 # Third party imports
 from optparse import OptionParser, Values
 from colorama import Fore, Style
+import tomli
 
 # Local application imports
 from abkPackage import abkCommon
@@ -28,39 +30,23 @@ from abkPackage import abkCommon
 
 configFile = 'config.json'
 
-BWP_API_REGION = frozenset(['au', 'ca', 'cn', 'de', 'fr', 'in', 'jp', 'es', 'gb', 'us'])
-
-# def function_logging(logger_name:str):
-def function_trace(original_function):
-    """Decorator function to help to trace function call entry and exit
-    Args:
-        original_function (_type_): function above which the decorater is defined
-    """
-    def function_wrapper(*args, **kwargs):
-        _logger = logging.getLogger(original_function.__name__)
-        _logger.debug(f'{Fore.YELLOW}-> {original_function.__name__}{Style.RESET_ALL}')
-        result = original_function(*args, **kwargs)
-        _logger.debug(f'{Fore.YELLOW}<- {original_function.__name__}{Style.RESET_ALL}\n')
-        return result
-    return function_wrapper
-    # return function_trace
 
 class BingWallPaper(object):
     """BingWallPaper downloads images from bing.com and sets it as a wallpaper"""
 
 
-    @function_trace
+    @abkCommon.function_trace
     def __init__(self, logger:logging.Logger=None, options:Values=None):
         self._logger = logger or logging.getLogger(__name__)
         self._options = options
 
 
-    @function_trace
+    @abkCommon.function_trace
     def __del__(self):
         pass
 
 
-    @function_trace
+    @abkCommon.function_trace
     def read_link_config_file(self, confFile:str) -> Tuple[str, int]:
         """Reads config file
         Args:
@@ -82,7 +68,7 @@ class BingWallPaper(object):
         return config_dict
 
 
-    @function_trace
+    @abkCommon.function_trace
     def define_pix_dirs(self, imagesDir):
         self._logger.debug(f"{imagesDir=}")
         homeDir = abkCommon.GetHomeDir()
@@ -93,12 +79,12 @@ class BingWallPaper(object):
         return pixDir
 
 
-    @function_trace
+    @abkCommon.function_trace
     def scale_images(self):
         pass
 
 
-    @function_trace
+    @abkCommon.function_trace
     def trim_number_of_pix(self, pixDir, num):
         self._logger.debug(f"{pixDir=}, {num=}")
 
@@ -125,7 +111,7 @@ class BingWallPaper(object):
             self._logger.info("no images to delete")
 
 
-    @function_trace
+    @abkCommon.function_trace
     def download_bing_image(self, dstDir):
         self._logger.debug(f"{dstDir=}")
         response = urlopen("http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en-US")
@@ -144,7 +130,7 @@ class BingWallPaper(object):
         return fullFileName
 
 
-    @function_trace
+    @abkCommon.function_trace
     def set_desktop_background(self, fileName):
         self._logger.debug(f"{fileName=}")
         # ----- Start platform dependency  -----
@@ -201,7 +187,7 @@ def main():
     try:
         command_line_options = abkCommon.CommandLineOptions()
         command_line_options.handle_options()
-        bwp = BingWallPaper(logger=command_line_options.logger, options=command_line_options.options)
+        bwp = BingWallPaper(logger=command_line_options._logger, options=command_line_options.options)
         config_dict = bwp.read_link_config_file(configFile)
         pixDir = bwp.define_pix_dirs(config_dict.get('imagesDirrectory'))
         bwp.trim_number_of_pix(pixDir, config_dict.get('numOfImages2Keep'))

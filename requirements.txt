@@ -1,5 +1,6 @@
+colorama
 optparse-pretty
 PyYAML
-colorama
 samsungtvws[async,encrypted]
+tomli
 urllib3[secure]
