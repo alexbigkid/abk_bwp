@@ -57,10 +57,10 @@ def ReadConfigFile(config_file:str) -> dict:
     logger.debug(f'{config_file=}')
     _, file_ext = os.path.splitext(config_file)
     if (file_extention := file_ext[1:]) == ConfigFileType.TOML.value:
-        with open(config_file, mode="rb") as file_handle:
+        with open(config_file, mode='rb') as file_handle:
             config = tomli.load(file_handle)
     elif file_extention == ConfigFileType.JSON.value:
-        with open(config_file) as file_handle:
+        with open(config_file, mode="r") as file_handle:
             config = json.load(file_handle)
     else:
         raise ValueError(f'Unsupported Config File Format: {file_extention}. Supported are: {[file_type.value for file_type in ConfigFileType]}')

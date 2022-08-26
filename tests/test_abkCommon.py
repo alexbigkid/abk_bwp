@@ -6,6 +6,7 @@ from io import StringIO
 import logging
 import os
 import sys
+import json
 import unittest
 from unittest import mock
 
@@ -16,6 +17,7 @@ from optparse import Values
 from abkPackage import abkCommon
 from abkPackage.abkCommon import CommandLineOptions
 from parameterized import parameterized
+import tomli_w
 
 
 GENERAL_EXCEPTION_MSG = 'General Exception Raised'
@@ -52,8 +54,25 @@ class TestGetpassGetuser(unittest.TestCase):
             getpw.assert_called_once_with(42)
 
 
+
 class TestReadConfigFile(unittest.TestCase):
     """Tests for ReadConfigFile function"""
+    exp_dict:dict = {
+            "time_to_fetch": "08:00:00",
+            "app_name": "app_name.py",
+            "image_dir": "test_Pictures/test_app_name_dir",
+            "number_images_to_keep": 10,
+            "set_desktop_image": True,
+            "region": "us",
+            "constant": {"alternative_regions": ["au", "ca", "cn", "de", "fr", "in", "jp", "es", "gb", "us"]},
+            "ftv": {
+                "ip_address": "192.168.0.255",
+                "port": 8002,
+                "image_change_frequency": 300,
+                "set_image": True
+            }
+        }
+
 
     @parameterized.expand([
         ['test_config0',     "invalid"],
@@ -63,8 +82,42 @@ class TestReadConfigFile(unittest.TestCase):
     def test_ReadConfigFile_throws_given_invalid_file_format(self, file_name:str, file_ext:str) -> None:
         with self.assertRaises(ValueError) as ex:
             act_config = abkCommon.ReadConfigFile(f'{file_name}.{file_ext}')
-        self.assertEqual(f'Unsupported Config File Format: {file_ext}. Supported are: {[file_type.value for file_type in abkCommon.ConfigFileType]}',
-                         str(ex.exception))
+        self.assertEqual(str(ex.exception),
+                         f'Unsupported Config File Format: {file_ext}. Supported are: {[file_type.value for file_type in abkCommon.ConfigFileType]}')
+
+
+    @parameterized.expand([
+        ['test_config',     "toml"],
+        ['test_config',     "json"],
+    ])
+    def test_ReadConfigFile_throws_given_file_does_not_exist(self, file_name:str, file_ext:str) -> None:
+        with self.assertRaises(FileNotFoundError) as ex:
+            act_config = abkCommon.ReadConfigFile(f'{file_name}.{file_ext}')
+        self.assertTrue(f"No such file or directory: '{file_name}.{file_ext}'" in str(ex.exception))
+
+
+    def test_ReadConfigFile_reads_json_file(self) -> None:
+        json_file_name:str = 'test_config.json'
+
+        with mock.patch("builtins.open", mock.mock_open(read_data=json.dumps(self.exp_dict))) as mock_file:
+            act_dict = abkCommon.ReadConfigFile(f'{json_file_name}')
+
+        mock_file.assert_called_once()
+        mock_file.assert_called_with(f'{json_file_name}', mode='r')
+        self.assertDictEqual(act_dict, self.exp_dict)
+
+
+    def test_ReadConfigFile_reads_toml_file(self) -> None:
+        toml_file_name:str = 'test_config.toml'
+        toml_str = tomli_w.dumps(self.exp_dict)
+
+        with mock.patch("builtins.open", mock.mock_open(read_data=str.encode(toml_str))) as mock_file:
+            act_dict = abkCommon.ReadConfigFile(f'{toml_file_name}')
+
+        mock_file.assert_called_once()
+        mock_file.assert_called_with(f'{toml_file_name}', mode='rb')
+        self.assertDictEqual(act_dict, self.exp_dict)
+
 
 
 class TestGetHomeDir(unittest.TestCase):
@@ -75,6 +128,7 @@ class TestGetHomeDir(unittest.TestCase):
         exp_home_dir = 'users_home_dir_001'
         act_home_dir = abkCommon.GetHomeDir()
         self.assertEqual(exp_home_dir, act_home_dir, 'ERROR: unexpected home dir returned')
+
 
 
 class TestCommandLineOptions(unittest.TestCase):

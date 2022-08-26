@@ -2,11 +2,12 @@
 -r requirements.txt
 
 # Install test dependencies
-parameterized
 coverage
+parameterized
 pip-check
 pip-date
 pip-chill
+tomli_w
 #black               # code formatting
 #flake8              # linting, formatting, analysis
 #pytest              # pytest for unit testing
