@@ -30,6 +30,12 @@ test_ff:
 test_vff:
 	python -m unittest discover --start-directory tests --verbose --failfast
 
+%:
+	@:
+
+test_1:
+	python -m unittest "tests.$(filter-out $@,$(MAKECMDGOALS))"
+
 clean:
 	@echo "deleting log files:"
 	@echo "___________________"
@@ -61,7 +67,8 @@ help:
 	@echo "  test_v             - runs test with verbose messaging"
 	@echo "  test_ff            - runs test fast fail"
 	@echo "  test_vff           - runs test fast fail with verbose messaging"
-	@echo "--------------------------------------------------------------------------------"
+	@echo "  test_1 <file.class.test> - runs a single test"
 	@echo "  coverage           - runs test, produces coverage and displays it"
+	@echo "--------------------------------------------------------------------------------"
 	@echo "  settings           - outputs current settings"
 	@echo "  help               - outputs this info"
