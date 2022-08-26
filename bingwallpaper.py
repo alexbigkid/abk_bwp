@@ -36,7 +36,7 @@ class BingWallPaper(object):
 
 
     @abkCommon.function_trace
-    def __init__(self, logger:logging.Logger=None, options:Values=None):
+    def __init__(self, logger:logging.Logger=None, options:Values=None):  # type: ignore
         self._logger = logger or logging.getLogger(__name__)
         self._options = options
 
@@ -47,7 +47,7 @@ class BingWallPaper(object):
 
 
     @abkCommon.function_trace
-    def define_pix_dirs(self, imagesDir) -> str:
+    def define_pix_dirs(self, imagesDir:str) -> str:
         self._logger.debug(f"{imagesDir=}")
         homeDir = abkCommon.GetHomeDir()
         self._logger.info(f"{homeDir=}")
@@ -63,7 +63,7 @@ class BingWallPaper(object):
 
 
     @abkCommon.function_trace
-    def trim_number_of_pix(self, pixDir, num) -> None:
+    def trim_number_of_pix(self, pixDir:str, num:int) -> None:
         self._logger.debug(f"{pixDir=}, {num=}")
 
         listOfFiles = []
@@ -90,7 +90,7 @@ class BingWallPaper(object):
 
 
     @abkCommon.function_trace
-    def download_bing_image(self, dstDir) -> str:
+    def download_bing_image(self, dstDir:str) -> str:
         self._logger.debug(f"{dstDir=}")
         response = urlopen("http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en-US")
         obj = json.load(response)
@@ -109,7 +109,7 @@ class BingWallPaper(object):
 
 
     @abkCommon.function_trace
-    def set_desktop_background(self, fileName) -> None:
+    def set_desktop_background(self, fileName:str) -> None:
         self._logger.debug(f"{fileName=}")
         # ----- Start platform dependency  -----
         if _platform == "darwin":
@@ -137,7 +137,7 @@ END"""
             self._logger.info(f"win#: {winNum}")
             if(int(winNum) >= 10):
                 try:
-                    ctypes.windll.user32.SystemParametersInfoW(
+                    ctypes.windll.user32.SystemParametersInfoW(  # type: ignore
                         20, 0, fileName, 3)
                     self._logger.info(f"Background image set to: {fileName}")
                 except:
@@ -166,8 +166,8 @@ def main():
         command_line_options = abkCommon.CommandLineOptions()
         command_line_options.handle_options()
         bwp = BingWallPaper(logger=command_line_options._logger, options=command_line_options.options)
-        pix_dir = bwp.define_pix_dirs(bwp_config.get('image_dir'))
-        bwp.trim_number_of_pix(pix_dir, bwp_config.get('number_images_to_keep'))
+        pix_dir = bwp.define_pix_dirs(bwp_config['image_dir'])
+        bwp.trim_number_of_pix(pix_dir, bwp_config['number_images_to_keep'])
         file_name = bwp.download_bing_image(pix_dir)
         bwp.scale_images()
         if bwp_config.get('set_desktop_image', False):
