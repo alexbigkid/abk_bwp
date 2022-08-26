@@ -28,14 +28,14 @@ GENERAL_EXCEPTION_MSG = 'General Exception Raised'
 class TestGetpassGetuser(unittest.TestCase):
     """Tests for GetUserName function"""
 
-    def test_Getuser__username_takes_username_from_env(self, environ):
+    def test_Getuser__username_takes_username_from_env(self, environ) -> None:
         expected_user_name = 'user_name_001'
         environ.get.return_value = expected_user_name
         actual_user_name = abkCommon.GetUserName()
         self.assertEqual(actual_user_name, expected_user_name, 'ERROR: unexpected user name')
 
 
-    def test_Getuser__username_priorities_of_env_values(self, environ):
+    def test_Getuser__username_priorities_of_env_values(self, environ) -> None:
         environ.get.return_value = None
         abkCommon.GetUserName()
         self.assertEqual(
@@ -44,7 +44,7 @@ class TestGetpassGetuser(unittest.TestCase):
         )
 
 
-    def test_Getuser__username_falls_back_to_pwd(self, environ):
+    def test_Getuser__username_falls_back_to_pwd(self, environ) -> None:
         expected_user_name = 'user_name_003'
         environ.get.return_value = None
         with mock.patch('os.getuid') as uid, mock.patch('pwd.getpwuid') as getpw:
@@ -59,7 +59,7 @@ class TestGetHomeDir(unittest.TestCase):
     """Tests for GetHomeDir function"""
 
     @mock.patch.dict(os.environ, {'HOME': 'users_home_dir_001'})
-    def test_GetHomeDir__returns_users_homedir_from_env(self):
+    def test_GetHomeDir__returns_users_homedir_from_env(self) -> None:
         exp_home_dir = 'users_home_dir_001'
         act_home_dir = abkCommon.GetHomeDir()
         self.assertEqual(exp_home_dir, act_home_dir, 'ERROR: unexpected home dir returned')
