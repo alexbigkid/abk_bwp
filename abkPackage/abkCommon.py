@@ -44,7 +44,7 @@ def function_trace(original_function):
 
 
 @function_trace
-def readConfigFile(config_file:str) -> dict:
+def ReadConfigFile(config_file:str) -> dict:
     """Reads configuration file in toml or json format
     Args:
         config_file (str): file name
@@ -56,10 +56,10 @@ def readConfigFile(config_file:str) -> dict:
     """
     logger.debug(f'{config_file=}')
     _, file_ext = os.path.splitext(config_file)
-    if (file_extention := file_ext[1:]) == ConfigFileType.TOML:
+    if (file_extention := file_ext[1:]) == ConfigFileType.TOML.value:
         with open(config_file, mode="rb") as file_handle:
             config = tomli.load(file_handle)
-    elif file_extention == ConfigFileType.JSON:
+    elif file_extention == ConfigFileType.JSON.value:
         with open(config_file) as file_handle:
             config = json.load(file_handle)
     else:

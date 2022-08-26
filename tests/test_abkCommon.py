@@ -51,6 +51,16 @@ class TestGetpassGetuser(unittest.TestCase):
             getpw.assert_called_once_with(42)
 
 
+class TestReadConfigFile(unittest.TestCase):
+    """Tests for ReadConfigFile function"""
+
+    def test_ReadConfigFile_throws_given_invalid_file_format(self) -> None:
+        file_name = 'test_config'
+        file_extension = 'invalid'
+        with self.assertRaises(ValueError) as ex:
+            act_config = abkCommon.ReadConfigFile(f'{file_name}.{file_extension}')
+        self.assertEqual(f'Unsupported Config File Format: {file_extension}. Supported are: {abkCommon.ConfigFileType.__members__.values()}',
+                         str(ex.exception))
 
 
 class TestGetHomeDir(unittest.TestCase):
