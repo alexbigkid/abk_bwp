@@ -9,12 +9,19 @@ import timeit
 from enum import Enum
 from optparse import OptionParser, Values
 
-import tomli
 # Third party imports
 import yaml
 # Local application imports
 from _version import __version__
 from colorama import Fore, Style
+
+# this ensures it will work with python 3.7 and up
+try:
+    import tomllib              # for python 3.11 and up
+except ModuleNotFoundError:
+    import tomli as tomllib     # for 3.7 <= python < 3.11
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +65,7 @@ def ReadConfigFile(config_file:str) -> dict:
     _, file_ext = os.path.splitext(config_file)
     if (file_extention := file_ext[1:]) == ConfigFileType.TOML.value:
         with open(config_file, mode='rb') as file_handle:
-            config = tomli.load(file_handle)
+            config = tomllib.load(file_handle)
     elif file_extention == ConfigFileType.JSON.value:
         with open(config_file, mode="r") as file_handle:
             config = json.load(file_handle)
