@@ -72,11 +72,10 @@ def GetUserName():
     return getpass.getuser()
 
 
+@function_trace
 def GetHomeDir():
-    logger.debug("-> GetHomeDir")
     homeDir = os.environ['HOME']
-    logger.info("homeDir = %s", homeDir)
-    logger.debug("<- GetHomeDir")
+    logger.info(f'{homeDir=}')
     return homeDir
 
 
@@ -87,63 +86,62 @@ def GetCurrentDir(fileName):
 def GetParentDir(fileName):
     return os.path.dirname(os.path.dirname(fileName))
 
-
+@function_trace
 def EnsureDir(dirName):
-    logger.debug("-> EnsureDir(%s)", dirName)
+    logger.debug(f'{dirName=}')
     if not os.path.exists(dirName):
         try:
             os.makedirs(dirName)
         except OSError as error:
             if error.errno != errno.EEXIST:
                 raise
-    logger.debug("<- EnsureDir")
 
 
+@function_trace
 def EnsureLinkExists(src, dst):
-    logger.debug("-> EnsureLinkExists(%s, %s)", src, dst)
+    logger.debug(f'{src=}, {dst=}')
     if not os.path.islink(dst):
-        logger.info("creating link %s to %s" % (dst, src))
+        logger.info(f'creating link {dst=} to {src=}')
         try:
             os.symlink(src, dst)
-            logger.info("created link %s to %s" % (dst, src))
+            logger.info(f'created link {dst=} to {src=}')
         except OSError as error:
             if error.errno != errno.EEXIST:
-                logger.error("create link failed with error =%d", error.errno)
+                logger.error(f'create link failed with error = {error.errno}')
                 raise
     else:
-        logger.info("link %s exists, do nothing" % (dst) )
-    logger.debug("<- EnsureLinkExists")
+        logger.info(f'link {dst=} exists, do nothing')
 
 
+@function_trace
 def RemoveLink(fileName):
-    logger.debug("-> RemoveLink(fileName=%s)", fileName)
+    logger.debug(f'{fileName=}')
     if os.path.islink(fileName):
         try:
             os.unlink(fileName)
-            logger.info("deleted link %s", fileName )
+            logger.info(f'deleted link {fileName}')
         except OSError as error:
-            logger.error("failed to delete link %s, with error=%d", fileName, error.errno)
+            logger.error(f'failed to delete link {fileName}, with error={error.errno}')
             pass
     else:
-        logger.info("link %s does not exist, do nothing", fileName )
-    logger.debug("<- RemoveLink")
+        logger.info(f'link {fileName} does not exist, do nothing')
 
 
+@function_trace
 def DeleteDir(dir2delete):
-    logger.debug("-> DeleteDir(dir2delete=%s)", dir2delete)
+    logger.debug(f'{dir2delete=}')
     if os.path.isdir(dir2delete):
         if len(os.listdir(dir2delete)) == 0:
             try:
                 os.rmdir(dir2delete)
-                logger.info("deleted dir %s", dir2delete)
+                logger.info(f'deleted dir {dir2delete}')
             except OSError as ex:
                 if ex.errno == errno.ENOTEMPTY:
-                    logger.error("directory %s is not empty", dir2delete)
+                    logger.error(f'directory {dir2delete} is not empty')
         else:
-            logger.debug("dir %s is not empty", dir2delete)
+            logger.debug(f'dir {dir2delete} is not empty')
             for fileName in os.listdir(dir2delete):
-                logger.debug("file=%s", fileName)
-    logger.debug("<- DeleteDir")
+                logger.debug(f'{fileName=}')
 
 
 
@@ -155,7 +153,7 @@ class PerformanceTimer(object):
         self.start = timeit.default_timer()
     def __exit__(self, exc_type, exc_value, traceback):
         time_took = (timeit.default_timer() - self.start) * 1000.0
-        self._logger.info('Executing {} took {} ms'.format(self._timer_name, str(time_took)))
+        self._logger.info(f'Executing {self._timer_name} took {str(time_took)} ms')
 
 
 
@@ -222,4 +220,4 @@ class CommandLineOptions(object):
             raise ValueError(f'{self.options.config_log_file} is not a valid yaml format')
         except IOError:
             raise IOError(f'{self.options.config_log_file} does not exist.')
-        self._logger.debug(f"logger_type: {logger_type}")
+        self._logger.debug(f'{logger_type=}')
