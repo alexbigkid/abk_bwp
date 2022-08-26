@@ -15,6 +15,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from optparse import Values
 from abkPackage import abkCommon
 from abkPackage.abkCommon import CommandLineOptions
+from parameterized import parameterized
 
 
 GENERAL_EXCEPTION_MSG = 'General Exception Raised'
@@ -54,12 +55,15 @@ class TestGetpassGetuser(unittest.TestCase):
 class TestReadConfigFile(unittest.TestCase):
     """Tests for ReadConfigFile function"""
 
-    def test_ReadConfigFile_throws_given_invalid_file_format(self) -> None:
-        file_name = 'test_config'
-        file_extension = 'invalid'
+    @parameterized.expand([
+        ['test_config0',     "invalid"],
+        ['test_config1',     "jsn"],
+        ['test_config2',     "tml"],
+    ])
+    def test_ReadConfigFile_throws_given_invalid_file_format(self, file_name:str, file_ext:str) -> None:
         with self.assertRaises(ValueError) as ex:
-            act_config = abkCommon.ReadConfigFile(f'{file_name}.{file_extension}')
-        self.assertEqual(f'Unsupported Config File Format: {file_extension}. Supported are: {abkCommon.ConfigFileType.__members__.values()}',
+            act_config = abkCommon.ReadConfigFile(f'{file_name}.{file_ext}')
+        self.assertEqual(f'Unsupported Config File Format: {file_ext}. Supported are: {[file_type.value for file_type in abkCommon.ConfigFileType]}',
                          str(ex.exception))
 
 

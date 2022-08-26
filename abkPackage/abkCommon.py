@@ -63,7 +63,7 @@ def ReadConfigFile(config_file:str) -> dict:
         with open(config_file) as file_handle:
             config = json.load(file_handle)
     else:
-        raise ValueError(f'Unsupported Config File Format: {file_extention}. Supported are: {ConfigFileType.__members__.values()}')
+        raise ValueError(f'Unsupported Config File Format: {file_extention}. Supported are: {[file_type.value for file_type in ConfigFileType]}')
     logger.debug(f'{config=}')
     return config
 
