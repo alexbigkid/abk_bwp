@@ -1,129 +1,131 @@
 import os
-import sys
 import subprocess
-import abkPackage
-from abkPackage import abkCommon
 import logging
 import logging.config
+from datetime import time
+
+from abkPackage import abkCommon
+from abkPackage.abkCommon import function_trace
+
 logger = logging.getLogger(__name__)
 
-def linkPythonScript (fileName):
-    logger.debug("-> linkPythonScript(%s)", fileName)
+
+@function_trace
+def linkPythonScript(fileName):
+    logger.debug(f'{fileName=}')
     binDir = os.path.join(abkCommon.GetHomeDir(), "bin")
     abkCommon.EnsureDir(binDir)
     currDir = abkCommon.GetParentDir(__file__)
     src = os.path.join(currDir, fileName)
     dst = os.path.join(binDir, fileName)
     abkCommon.EnsureLinkExists(src, dst)
-    logger.debug("<- linkPythonScript(src=%s)", src)
+    logger.debug(f'{src=}')
     return src
 
-def CreatePlistFile(hour, minute, script_name):
-    logger.debug("-> CreatePlistFile(%s, %s, %s)", hour, minute, script_name)
+
+@function_trace
+def CreatePlistFile_new(time_to_exe: time, script_name: str):
+    logger.debug(f'{time_to_exe.hour=}, {time_to_exe.minute=}, {script_name=}')
     user_name = abkCommon.GetUserName()
-    plist_label = f"com.{user_name}.{script_name}"
-    plist_name = f"{plist_label}.plist"
+    plist_label = f'com.{user_name}.{script_name}'
+    plist_name = f'{plist_label}.plist'
     fh = open(plist_name, "w")
     lines2write = [
-        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n",
-        "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n",
-        "<plist version=\"1.0\">\n",
-        "<dict>\n",
-        "    <key>Label</key>\n",
-        f"    <string>{plist_label}</string>\n",
-        "    <key>ProgramArguments</key>\n",
-        "    <array>\n",
-        "        <string>python3</string>\n",
-        f"        <string>/Users/{user_name}/abkBin/{script_name}</string>\n",
-        "    </array>\n",
-        "    <key>RunAtLoad</key>\n",
-        "    <true/>\n",
-        "    <key>StartCalendarInterval</key>\n",
-        "    <dict>\n",
-        "        <key>Hour</key>\n",
-        f"        <integer>{hour}</integer>\n",
-        "        <key>Minute</key>\n",
-        f"        <integer>{minute}</integer>\n",
-        "    </dict>\n",
-        "</dict>\n",
-        "</plist>\n" ]
+        '<?xml version="1.0" encoding="UTF-8"?>\n',
+        '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n',
+        '<plist version="1.0">\n',
+        '<dict>\n',
+        '    <key>Label</key>\n',
+        f'    <string>{plist_label}</string>\n',
+        '    <key>ProgramArguments</key>\n',
+        '    <array>\n',
+        '        <string>python3</string>\n',
+        f'        <string>/Users/{user_name}/abkBin/{script_name}</string>\n',
+        '    </array>\n',
+        '    <key>RunAtLoad</key>\n',
+        '    <true/>\n',
+        '    <key>StartCalendarInterval</key>\n',
+        '    <dict>\n',
+        '        <key>Hour</key>\n',
+        f'        <integer>{time_to_exe.hour}</integer>\n',
+        '        <key>Minute</key>\n',
+        f'        <integer>{time_to_exe.minute}</integer>\n',
+        '    </dict>\n',
+        '</dict>\n',
+        '</plist>\n',
+    ]
     fh.writelines(lines2write)
     fh.close()
-    logger.debug("<- CreatePlistFile(%s, %s)", plist_label, plist_name)
+    logger.debug(f'{plist_label=}, {plist_name=}')
     return (plist_label, plist_name)
 
+
+@function_trace
 def CreatePlistLink(full_file_name):
-    logger.debug("-> CreatePlistLink(%s)", full_file_name)
+    logger.debug(f'{full_file_name=}')
     file_name = os.path.basename(full_file_name)
     plist_install_dir = abkCommon.GetHomeDir()
-    plist_install_dir = f"{plist_install_dir}/Library/LaunchAgents"
+    plist_install_dir = f'{plist_install_dir}/Library/LaunchAgents'
     abkCommon.EnsureDir(plist_install_dir)
     dst_file_name = os.path.join(plist_install_dir, file_name)
-    logger.info("src= %s, dst= %s", full_file_name, dst_file_name)
+    logger.info(f'src= {full_file_name}, dst= {dst_file_name}')
     abkCommon.EnsureLinkExists(full_file_name, dst_file_name)
-    logger.debug("<- CreatePlistLink(%s)", dst_file_name)
+    logger.debug(f'{dst_file_name=}')
     return dst_file_name
 
-def StopAndUnloadBingwallpaperJob(plistName, plistLable):
-    logger.debug("-> StopAndUnloadBingwallpaperJob(plistName=%s, plistLable=%s)", plistName, plistLable)
 
-    cmdList = []
-    cmdList.append("launchctl list | grep "+plistLable)
-    cmdList.append("launchctl stop "+plistLable)
-    cmdList.append("launchctl unload -w "+plistName)
+@function_trace
+def StopAndUnloadBingwallpaperJob(plistName, plistLable):
+    logger.debug(f'{plistName=}, {plistLable=}')
+
+    cmd_list = []
+    cmd_list.append(f'launchctl list | grep {plistLable}')
+    cmd_list.append(f'launchctl stop {plistLable}')
+    cmd_list.append(f'launchctl unload -w {plistName}')
 
     try:
-        for cmd in cmdList:
+        for cmd in cmd_list:
+            logger.info(f"about to execute command '{cmd}'")
             retCode = subprocess.check_call(cmd, shell=True)
-            logger.info("command '%s' succeeded, returned: %d", cmd, retCode)
+            logger.info(f"command '{cmd}' succeeded, returned: {retCode}")
     except subprocess.CalledProcessError as e:
-        logger.error("command '%s' failed, returned: %d", cmd, e.returncode)
+        logger.error(f'ERROR: returned: {e.returncode}')
         pass
 
-    logger.debug("<- StopAndUnloadBingwallpaperJob")
 
+@function_trace
 def LoadAndStartBingwallpaperJob(plistName, plistLable):
-    logger.debug("-> LoadAndStartBingwallpaperJob(plistName=%s, plistLable=%s)", plistName, plistLable)
+    logger.debug(f'{plistName=}, {plistLable=}')
 
-    cmdList = []
-    cmdList.append(f"launchctl load -w {plistName}")
-    cmdList.append(f"launchctl start {plistLable}")
+    cmd_list = []
+    cmd_list.append(f'launchctl load -w {plistName}')
+    cmd_list.append(f'launchctl start {plistLable}')
 
     try:
-        for cmd in cmdList:
+        for cmd in cmd_list:
+            logger.info(f"about to execute command '{cmd}'")
             retCode = subprocess.check_call(cmd, shell=True)
-            logger.info("command '%s' succeeded, returned: %s", cmd, str(retCode))
+            logger.info(f"command '{cmd}' succeeded, returned: {retCode}")
     except subprocess.CalledProcessError as e:
-        logger.critical("command '%s' failed, returned: %d", cmd, e.returncode)
+        logger.critical(f'ERROR: returned: {e.returncode}')
     except:
-        logger.critical("command '%s' failed", cmd)
-
-    logger.debug("<- LoadAndStartBingwallpaperJob")
+        logger.critical(f'ERROR: unknow')
 
 
-def Setup(hour, minute, pyScriptName):
-    logger.debug("-> Setup(%s, %s, %s)", hour, minute, pyScriptName)
-    print(f' --- ABK:1')
+@function_trace
+def Setup(time_to_exe: time, pyScriptName):
+    logger.debug(f'{time_to_exe.hour=}, {time_to_exe.minute=}, {pyScriptName}')
     pyFullName = linkPythonScript(pyScriptName)
-    print(f' --- ABK:2')
     scriptName = os.path.basename(pyFullName)
-    print(f' --- ABK:3')
     scriptPath = os.path.dirname(pyFullName)
-    print(f' --- ABK:4')
-    logger.info("scriptName = %s", scriptName)
-    print(f' --- ABK:5')
-    logger.info("scriptPath = %s", scriptPath)
-    print(f' --- ABK:6')
-    (plistLable, plistName) =  CreatePlistFile(hour, minute, scriptName)
-    print(f' --- ABK:7')
+    logger.info(f'{scriptPath=}, {scriptName=}')
+    (plistLable, plistName) = CreatePlistFile_new(time_to_exe, scriptName)
     plistFullName = os.path.join(scriptPath, plistName)
-    print(f' --- ABK:8')
-    logger.info("plist_full_name = %s", plistFullName)
-    print(f' --- ABK:9')
+    logger.info(f'{plistFullName=}')
     dstPlistName = CreatePlistLink(plistFullName)
-    print(f' --- ABK:10')
     StopAndUnloadBingwallpaperJob(dstPlistName, plistLable)
-    print(f' --- ABK:11')
     LoadAndStartBingwallpaperJob(dstPlistName, plistLable)
-    print(f' --- ABK:12')
-    logger.debug("<- Setup")
+
+
+if __name__ == '__main__':
+    raise Exception('This module should not be executed directly. Only for imports')

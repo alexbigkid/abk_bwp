@@ -26,9 +26,9 @@ import tomli
 
 # Local application imports
 from abkPackage import abkCommon
+from config import bwp_config
 # from ftv import FTV
 
-configFile = 'config.json'
 
 
 class BingWallPaper(object):
@@ -44,28 +44,6 @@ class BingWallPaper(object):
     @abkCommon.function_trace
     def __del__(self):
         pass
-
-
-    @abkCommon.function_trace
-    def read_link_config_file(self, confFile:str) -> Tuple[str, int]:
-        """Reads config file
-        Args:
-            confFile (str): config file name
-        Returns:
-            Tuple: tuple of image directory and number of images to keep
-        """
-        self._logger.debug(f"{confFile=}")
-        if os.path.islink(__file__):
-            linkFile = os.readlink(__file__)
-            linkPath = os.path.dirname(linkFile)
-            self._logger.info(f"{linkPath=}")
-            confFile = os.path.join(linkPath, confFile)
-            self._logger.info(f"{confFile=}")
-        with open(confFile) as jsonData:
-            config_dict = json.load(jsonData)
-        jsonData.close()
-        self._logger.debug(f"{config_dict=}")
-        return config_dict
 
 
     @abkCommon.function_trace
@@ -188,14 +166,13 @@ def main():
         command_line_options = abkCommon.CommandLineOptions()
         command_line_options.handle_options()
         bwp = BingWallPaper(logger=command_line_options._logger, options=command_line_options.options)
-        config_dict = bwp.read_link_config_file(configFile)
-        pixDir = bwp.define_pix_dirs(config_dict.get('imagesDirrectory'))
-        bwp.trim_number_of_pix(pixDir, config_dict.get('numOfImages2Keep'))
-        fileName = bwp.download_bing_image(pixDir)
+        pix_dir = bwp.define_pix_dirs(bwp_config.get('image_dir'))
+        bwp.trim_number_of_pix(pix_dir, bwp_config.get('number_images_to_keep'))
+        file_name = bwp.download_bing_image(pix_dir)
         bwp.scale_images()
-        if config_dict.get('setDesktopImage', False):
-            bwp.set_desktop_background(fileName)
-        if config_dict.get('ftv', {}).get('setImage', False):
+        if bwp_config.get('set_desktop_image', False):
+            bwp.set_desktop_background(file_name)
+        if bwp_config.get('ftv', {}).get('set_image', False):
             pass
             # ftv = FTV(config_dict.get('ftv'))
             # if ftv.is_art_mode_supported():

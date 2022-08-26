@@ -50,31 +50,6 @@ def function_trace(original_function):
     return function_wrapper
 
 
-@function_trace
-def ReadConfigFile(config_file:str) -> dict:
-    """Reads configuration file in toml or json format
-    Args:
-        config_file (str): file name
-    Raises:
-        ValueError: throws error if the config file format is not supported
-        FileNotFoundError: throw an error when file does not exist
-    Returns:
-        dict: with configuration data
-    """
-    logger.debug(f'{config_file=}')
-    _, file_ext = os.path.splitext(config_file)
-    if (file_extention := file_ext[1:]) == ConfigFileType.TOML.value:
-        with open(config_file, mode='rb') as file_handle:
-            config = tomllib.load(file_handle)
-    elif file_extention == ConfigFileType.JSON.value:
-        with open(config_file, mode="r") as file_handle:
-            config = json.load(file_handle)
-    else:
-        raise ValueError(f'Unsupported Config File Format: {file_extention}. Supported are: {[file_type.value for file_type in ConfigFileType]}')
-    logger.debug(f'{config=}')
-    return config
-
-
 def GetUserName():
     return getpass.getuser()
 
@@ -228,3 +203,7 @@ class CommandLineOptions(object):
         except IOError:
             raise IOError(f'{self.options.config_log_file} does not exist.')
         self._logger.debug(f'{logger_type=}')
+
+
+if __name__ == '__main__':
+    raise Exception('This module should not be executed directly. Only for imports')

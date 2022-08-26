@@ -1,19 +1,18 @@
+from datetime import time
 import logging
 import logging.config
+
+from abkCommon import function_trace
+
+
 logger = logging.getLogger(__name__)
 
-def Setup(hour, minute, pyScriptName):
-    logger.debug("-> Setup(%s, %s, %s)", hour, minute, pyScriptName)
+
+@function_trace
+def Setup(time_to_exe:time, pyScriptName:str) -> None:
+    logger.debug(f'{time_to_exe.hour=}, {time_to_exe.minute=}, {pyScriptName}')
     logger.info("Windows installation is not supported yet")
-    # pyFullName = linkPythonScript(pyScriptName)
-    # scriptName = os.path.basename(pyFullName)
-    # scriptPath = os.path.dirname(pyFullName)
-    # logger.info("scriptName = %s", scriptName)
-    # logger.info("scriptPath = %s", scriptPath)
-    # (plistLable, plistName) =  CreatePlistFile(hour, minute, scriptName)
-    # plistFullName = os.path.join(scriptPath, plistName)
-    # logger.info("plist_full_name = %s", plistFullName)
-    # dstPlistName = CreatePlistLink(plistFullName)
-    # StopAndUnloadBingwallpaperJob(dstPlistName, plistLable)
-    # LoadAndStartBingwallpaperJob(dstPlistName, plistLable)
-    logger.debug("<- Setup")
+
+
+if __name__ == '__main__':
+    raise Exception('This module should not be executed directly. Only for imports')

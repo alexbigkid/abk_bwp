@@ -18,47 +18,41 @@ import logging
 import logging.config
 import json
 from sys import platform as _platform
-import abkPackage
 from abkPackage import abkCommon
+from abkPackage.abkCommon import function_trace
+from config import bwp_config
 
-configFile = 'config.json'
+
 loggingConf = 'logging.conf'
 
-def readConfigFile(confFile):
-    logger.debug("-> readConfigFile(confFile=%s)", confFile)
-    with open(confFile) as json_data:
-        config = json.load(json_data)
-    json_data.close()
-    logger.debug("<- readConfigFile(pyScriptName=%s, imagesDirrectory=%s)", config['pyScriptName'], config['imagesDirrectory'])
-    return (config['pyScriptName'], config['imagesDirrectory'])
 
+@function_trace
 def deleteImageDir(imagesDir):
-    logger.debug("-> deleteImageDir(imagesDir=%s)", imagesDir)
+    logger.debug(f'{imagesDir=}')
     if(os.path.isdir(imagesDir)):
         try:
             shutil.rmtree(imagesDir)
         except:
-            logger.error("deleting image directory %s failed", imagesDir)
+            logger.error(f'deleting image directory {imagesDir} failed')
 
-    logger.debug("<- deleteImageDir")
 
+@function_trace
 def unlinkPythonScript (fileName):
-    logger.debug("-> unlinkPythonScript(fileName=%s)", fileName)
+    logger.debug(f'{fileName=}')
     binDir = os.path.join(abkCommon.GetHomeDir(), "bin")
     currDir = abkCommon.GetCurrentDir(__file__)
     src = os.path.join(currDir, fileName)
     pyBinLink = os.path.join(binDir, fileName)
     abkCommon.RemoveLink(pyBinLink)
     abkCommon.DeleteDir(binDir)
-    logger.debug("<- unlinkPythonScript")
     return src
 
+
+@function_trace
 def main():
-    logger.debug("-> main()")
-    (pyScriptName, imagesDir) = readConfigFile(configFile)
-    imageFullPath = os.path.join(abkCommon.GetHomeDir(), imagesDir)
+    imageFullPath = os.path.join(abkCommon.GetHomeDir(), bwp_config["image_dir"])
     deleteImageDir(imageFullPath)
-    unlinkPythonScript(pyScriptName)
+    unlinkPythonScript(bwp_config["app_name"])
 
     #>>>>>>>>>> platform dependency
     if _platform == "darwin":
@@ -79,10 +73,10 @@ def main():
 
     currDir = abkCommon.GetCurrentDir(__file__)
     logger.info("currDir=%s", currDir)
-    pyScriptFullName = os.path.join(currDir, pyScriptName)
+    pyScriptFullName = os.path.join(currDir, bwp_config["app_name"])
     logger.info("pyScriptFullName=%s", pyScriptFullName)
     uninstallXxx.Cleanup(pyScriptFullName)
-    logger.debug("<- main()")
+
 
 if __name__ == '__main__':
     logging.config.fileConfig(loggingConf)

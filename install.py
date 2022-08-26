@@ -13,31 +13,19 @@
 #
 # Created by Alex Berger @ http://www.ABKphoto.com
 
-import os
 import logging
 import logging.config
-import json
 from sys import platform as _platform
-import abkPackage
-from abkPackage import abkCommon
+from abkPackage.abkCommon import function_trace
+from config import bwp_config
 
 
-configFile = 'config.json'
-loggingConf = 'logging.conf'
-
-def readConfigFile(confFile):
-    logger.debug("-> readConfigFile(%s)", confFile)
-    with open(confFile) as json_data:
-        config = json.load(json_data)
-    json_data.close()
-    logger.debug("<- readConfigFile(hour=%s, minute=%s, pyScriptName=%s)", config['hour'], config['minute'], config['pyScriptName'])
-    return (config['hour'], config['minute'], config['pyScriptName'])
+loggingConf = "logging.conf"
 
 
+@function_trace
 def main():
-    logger.debug("-> main()")
-    (hour2run, minute2run, pyScriptName) = readConfigFile(configFile)
-    #>>>>>>>>>> platform dependency
+    # >>>>>>>>>> platform dependency
     if _platform == "darwin":
         # Mac OS X ------------------------
         logger.info("Mac OS X environment")
@@ -52,10 +40,9 @@ def main():
         # Windows or Windows 64-bit -----
         logger.info("Windows environment")
         from abkPackage import installWin as installXxx
-    #<<<<<<<<<< platform dependency
+    # <<<<<<<<<< platform dependency
 
-    installXxx.Setup(hour2run, minute2run, pyScriptName)
-    logger.debug("<- main()")
+    installXxx.Setup(bwp_config["time_to_fetch"], bwp_config["app_name"])
 
 
 if __name__ == '__main__':

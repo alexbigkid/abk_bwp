@@ -1,7 +1,7 @@
-time_to_fetch = 08:00:00
+time_to_fetch = 08:30:00
 app_name = "bingwallpaper.py"
 image_dir = "Pictures/BingWallpapers"
-number_images_to_keep = 10
+number_images_to_keep = 365
 set_desktop_image = true
 region = "us"
 

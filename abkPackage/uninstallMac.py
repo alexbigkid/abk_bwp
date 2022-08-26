@@ -7,13 +7,15 @@ import logging
 import logging.config
 logger = logging.getLogger(__name__)
 
+
 def GetPlistNames(scriptName):
     logger.debug("-> GetPlistNames(scriptName=%s)", scriptName)
     userName = abkCommon.GetUserName()
     plistLable = "com."+userName+"."+scriptName
     plistName = plistLable+".plist"
-    logger.debug("<- GetPlistNames(plistLable=%s, plistName=%s)", plistLable, plistName)    
+    logger.debug("<- GetPlistNames(plistLable=%s, plistName=%s)", plistLable, plistName)
     return (plistLable, plistName)
+
 
 def StopAndUnloadBingwallpaperJob(plistName, plistLable):
     logger.debug("-> StopAndUnloadBingwallpaperJob(plistName=%s, plistLable=%s)", plistName, plistLable)
@@ -32,6 +34,7 @@ def StopAndUnloadBingwallpaperJob(plistName, plistLable):
         pass
     logger.debug("<- StopAndUnloadBingwallpaperJob")
 
+
 def DeletePlistFile(scriptName):
     logger.debug("-> DeletePlistFile(%s)", scriptName)
     if os.path.isfile(scriptName):
@@ -42,7 +45,7 @@ def DeletePlistFile(scriptName):
             logger.error("failed to delete file %s, with error=%d", scriptName, error.errno)
             pass
     else:
-        logger.info("file %s does not exist", scriptName)    
+        logger.info("file %s does not exist", scriptName)
     logger.debug("<- DeletePlistFile")
 
 
@@ -64,3 +67,7 @@ def Cleanup(pyFullName):
     abkCommon.RemoveLink(plistLinkName)
     DeletePlistFile(plistFullName)
     logger.debug("<- Cleanup")
+
+
+if __name__ == '__main__':
+    raise Exception('This module should not be executed directly. Only for imports')
