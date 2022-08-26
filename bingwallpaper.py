@@ -47,7 +47,7 @@ class BingWallPaper(object):
 
 
     @abkCommon.function_trace
-    def define_pix_dirs(self, imagesDir):
+    def define_pix_dirs(self, imagesDir) -> str:
         self._logger.debug(f"{imagesDir=}")
         homeDir = abkCommon.GetHomeDir()
         self._logger.info(f"{homeDir=}")
@@ -63,7 +63,7 @@ class BingWallPaper(object):
 
 
     @abkCommon.function_trace
-    def trim_number_of_pix(self, pixDir, num):
+    def trim_number_of_pix(self, pixDir, num) -> None:
         self._logger.debug(f"{pixDir=}, {num=}")
 
         listOfFiles = []
@@ -90,7 +90,7 @@ class BingWallPaper(object):
 
 
     @abkCommon.function_trace
-    def download_bing_image(self, dstDir):
+    def download_bing_image(self, dstDir) -> str:
         self._logger.debug(f"{dstDir=}")
         response = urlopen("http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en-US")
         obj = json.load(response)
@@ -109,7 +109,7 @@ class BingWallPaper(object):
 
 
     @abkCommon.function_trace
-    def set_desktop_background(self, fileName):
+    def set_desktop_background(self, fileName) -> None:
         self._logger.debug(f"{fileName=}")
         # ----- Start platform dependency  -----
         if _platform == "darwin":
