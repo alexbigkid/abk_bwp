@@ -161,11 +161,11 @@ class PerformanceTimer(object):
 
 class CommandLineOptions(object):
     """CommandLineOptions module handles all parameters passed in to the python script"""
-    _args:list[str] = None
+    _args:list = None
     options:Values = None
     _logger:logging.Logger = None
 
-    def __init__(self, args:list[str]=None, options:Values=None):
+    def __init__(self, args:list=None, options:Values=None):
         self._args = args
         self.options = options
 
