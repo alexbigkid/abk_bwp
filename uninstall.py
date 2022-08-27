@@ -79,7 +79,7 @@ class UninstallOnMacOS(IUninstallBase):
         self._logger.info(f"{plist_link_name=}")
         self._logger.info(f"{plist_full_name=}")
         self._stop_and_unload_bingwallpaper_job(plist_link_name, plist_lable)
-        abkCommon.RemoveLink(plist_link_name)
+        abkCommon.remove_link(plist_link_name)
         self._delete_plist_file(plist_full_name)
 
     @abkCommon.function_trace
@@ -104,8 +104,8 @@ class UninstallOnMacOS(IUninstallBase):
         curr_dir = abkCommon.get_current_dir(__file__)
         src = os.path.join(curr_dir, file_name)
         py_bin_link = os.path.join(bin_dir, file_name)
-        abkCommon.RemoveLink(py_bin_link)
-        abkCommon.DeleteDir(bin_dir)
+        abkCommon.remove_link(py_bin_link)
+        abkCommon.delete_dir(bin_dir)
         return src
 
     @abkCommon.function_trace

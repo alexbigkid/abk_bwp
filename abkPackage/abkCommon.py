@@ -74,7 +74,7 @@ def get_parent_dir(fileName):
 
 
 @function_trace
-def EnsureDir(dirName):
+def ensure_dir(dirName):
     logger.debug(f"{dirName=}")
     if not os.path.exists(dirName):
         try:
@@ -85,7 +85,7 @@ def EnsureDir(dirName):
 
 
 @function_trace
-def EnsureLinkExists(src, dst):
+def ensure_link_exists(src, dst):
     logger.debug(f"{src=}, {dst=}")
     if not os.path.islink(dst):
         logger.info(f"creating link {dst=} to {src=}")
@@ -101,7 +101,7 @@ def EnsureLinkExists(src, dst):
 
 
 @function_trace
-def RemoveLink(fileName):
+def remove_link(fileName):
     logger.debug(f"{fileName=}")
     if os.path.islink(fileName):
         try:
@@ -115,7 +115,7 @@ def RemoveLink(fileName):
 
 
 @function_trace
-def DeleteDir(dir2delete):
+def delete_dir(dir2delete):
     logger.debug(f"{dir2delete=}")
     if os.path.isdir(dir2delete):
         if len(os.listdir(dir2delete)) == 0:

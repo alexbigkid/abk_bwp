@@ -82,7 +82,7 @@ class InstallOnMacOS(IInstallBase):
         curr_dir = abkCommon.get_parent_dir(__file__)
         src = os.path.join(curr_dir, file_name)
         dst = os.path.join(bin_dir, file_name)
-        abkCommon.EnsureLinkExists(src, dst)
+        abkCommon.ensure_link_exists(src, dst)
         self._logger.debug(f"{src=}")
         return src
 
@@ -143,7 +143,7 @@ class InstallOnMacOS(IInstallBase):
         abkCommon.ensure_dir(plist_install_dir)
         dst_file_name = os.path.join(plist_install_dir, file_name)
         self._logger.info(f"src= {full_file_name}, dst= {dst_file_name}")
-        abkCommon.EnsureLinkExists(full_file_name, dst_file_name)
+        abkCommon.ensure_link_exists(full_file_name, dst_file_name)
         self._logger.debug(f"{dst_file_name=}")
         return dst_file_name
 
