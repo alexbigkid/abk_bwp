@@ -68,7 +68,7 @@ class UninstallOnMacOS(IUninstallBase):
         self._unlink_python_script(app_name)
         # get app_name full name with path
         curr_dir = abkCommon.GetCurrentDir(__file__)
-        self._logger.info("currDir=%s", curr_dir)
+        self._logger.info(f'{curr_dir=}')
         app_file_full_name = os.path.join(curr_dir, app_name)
         self._logger.info(f'{app_file_full_name=}')
         # get plist data
@@ -139,8 +139,8 @@ class UninstallOnMacOS(IUninstallBase):
         """
         self._logger.debug(f'{script_name=}')
         user_name = abkCommon.GetUserName()
-        plist_lable = "com."+user_name+"."+script_name
-        plist_file_name = plist_lable+".plist"
+        plist_lable = f'com.{user_name}.{script_name}'
+        plist_file_name = f'{plist_lable}.plist'
         self._logger.debug(f'{plist_lable=}, {plist_file_name=}')
         return (plist_lable, plist_file_name)
 
@@ -155,9 +155,9 @@ class UninstallOnMacOS(IUninstallBase):
         self._logger.debug(f'{plist_name=}, {plist_lable=}')
 
         cmdList = []
-        cmdList.append("launchctl list | grep "+plist_lable)
-        cmdList.append("launchctl stop "+plist_lable)
-        cmdList.append("launchctl unload -w "+plist_name)
+        cmdList.append(f'launchctl list | grep {plist_lable}')
+        cmdList.append(f'launchctl stop {plist_lable}')
+        cmdList.append(f'launchctl unload -w {plist_name}')
 
         try:
             for cmd in cmdList:
