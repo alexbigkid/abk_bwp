@@ -69,20 +69,20 @@ class InstallOnMacOS(IInstallBase):
             app_name (str): application name
         """
         self._logger.debug(f'{time_to_exe.hour=}, {time_to_exe.minute=}, {app_name=}')
-        full_name = self.link_python_script(app_name)
+        full_name = self._link_python_script(app_name)
         script_name = os.path.basename(full_name)
         script_path = os.path.dirname(full_name)
         self._logger.info(f'{script_path=}, {script_name=}')
-        (plist_lable, plist_name) = self.create_plist_file(time_to_exe, script_name)
+        (plist_lable, plist_name) = self._create_plist_file(time_to_exe, script_name)
         plist_full_name = os.path.join(script_path, plist_name)
         self._logger.info(f'{plist_full_name=}')
-        dst_plist_name = self.create_plist_link(plist_full_name)
-        self.stop_and_unload_bingwallpaper_job(dst_plist_name, plist_lable)
-        self.load_and_start_bingwallpaper_job(dst_plist_name, plist_lable)
+        dst_plist_name = self._create_plist_link(plist_full_name)
+        self._stop_and_unload_bingwallpaper_job(dst_plist_name, plist_lable)
+        self._load_and_start_bingwallpaper_job(dst_plist_name, plist_lable)
 
 
     @abkCommon.function_trace
-    def link_python_script(self, file_name: str) -> str:
+    def _link_python_script(self, file_name: str) -> str:
         """Creates a link of the python app script in the $HOME/bin directory
         Args:
             file_name (str): file name to create link to
@@ -101,7 +101,7 @@ class InstallOnMacOS(IInstallBase):
 
 
     @abkCommon.function_trace
-    def create_plist_file(self, time_to_exe: time, script_name: str) -> Tuple[str, str]:
+    def _create_plist_file(self, time_to_exe: time, script_name: str) -> Tuple[str, str]:
         """Creates plist file with info for MacOS to trigger scheduled job.
         Args:
             time_to_exe (time): time to execute the download of the bing image
@@ -144,7 +144,7 @@ class InstallOnMacOS(IInstallBase):
 
 
     @abkCommon.function_trace
-    def create_plist_link(self, full_file_name: str) -> str:
+    def _create_plist_link(self, full_file_name: str) -> str:
         """Creates link in the $HOME/Library/LaunchAgent to the real locacion of the app script
         Args:
             full_file_name (str): full name + path of the app script
@@ -164,7 +164,7 @@ class InstallOnMacOS(IInstallBase):
 
 
     @abkCommon.function_trace
-    def stop_and_unload_bingwallpaper_job(self, plist_name: str, plist_lable: str) -> None:
+    def _stop_and_unload_bingwallpaper_job(self, plist_name: str, plist_lable: str) -> None:
         """Stops and unloads bing wall paper job.
            Executes until the end. Can also exit with first error occuring.
            This is an expected behaviour though.
@@ -189,7 +189,7 @@ class InstallOnMacOS(IInstallBase):
 
 
     @abkCommon.function_trace
-    def load_and_start_bingwallpaper_job(self, plist_name: str, plist_lable: str) -> None:
+    def _load_and_start_bingwallpaper_job(self, plist_name: str, plist_lable: str) -> None:
         """Loads and starts the scheduled job
         Args:
             plist_name (str): full name (path + file name) of the link of the plist file
