@@ -22,28 +22,6 @@ from config import bwp_config
 from abkPackage import abkCommon
 
 
-@abkCommon.function_trace
-def deleteImageDir(imagesDir):
-    logger.debug(f'{imagesDir=}')
-    if(os.path.isdir(imagesDir)):
-        try:
-            shutil.rmtree(imagesDir)
-        except:
-            logger.error(f'deleting image directory {imagesDir} failed')
-
-
-@abkCommon.function_trace
-def unlinkPythonScript (fileName):
-    logger.debug(f'{fileName=}')
-    binDir = os.path.join(abkCommon.GetHomeDir(), "bin")
-    currDir = abkCommon.GetCurrentDir(__file__)
-    src = os.path.join(currDir, fileName)
-    pyBinLink = os.path.join(binDir, fileName)
-    abkCommon.RemoveLink(pyBinLink)
-    abkCommon.DeleteDir(binDir)
-    return src
-
-
 
 class IUninstallBase(metaclass=ABCMeta):
     """Abstract class (mostly)"""
@@ -58,6 +36,12 @@ class IUninstallBase(metaclass=ABCMeta):
 
     @abstractmethod
     def cleanup_installation(self, app_name: str) -> None:
+        """Abstract method - should not be implemented. Interface purpose."""
+        raise NotImplemented
+
+
+    @abstractmethod
+    def cleanup_image_dir(self, image_dir: str) -> None:
         """Abstract method - should not be implemented. Interface purpose."""
         raise NotImplemented
 
@@ -79,6 +63,8 @@ class UninstallOnMacOS(IUninstallBase):
             app_name (str): application name
         """
         logger.debug(f'{app_name=}')
+        # remove the link from $HOME/bin directory
+        self.unlinkPythonScript(app_name)
         # get app_name full name with path
         currDir = abkCommon.GetCurrentDir(__file__)
         logger.info("currDir=%s", currDir)
@@ -98,6 +84,34 @@ class UninstallOnMacOS(IUninstallBase):
         self.StopAndUnloadBingwallpaperJob(plistLinkName, plistLable)
         abkCommon.RemoveLink(plistLinkName)
         self.DeletePlistFile(plistFullName)
+
+
+    @abkCommon.function_trace
+    def cleanup_image_dir(self, image_dir: str) -> None:
+        imageFullPath = os.path.join(abkCommon.GetHomeDir(), image_dir)
+        self.deleteImageDir(imageFullPath)
+
+
+    @abkCommon.function_trace
+    def unlinkPythonScript(self, fileName):
+        logger.debug(f'{fileName=}')
+        binDir = os.path.join(abkCommon.GetHomeDir(), "bin")
+        currDir = abkCommon.GetCurrentDir(__file__)
+        src = os.path.join(currDir, fileName)
+        pyBinLink = os.path.join(binDir, fileName)
+        abkCommon.RemoveLink(pyBinLink)
+        abkCommon.DeleteDir(binDir)
+        return src
+
+
+    @abkCommon.function_trace
+    def deleteImageDir(self, imagesDir):
+        logger.debug(f'{imagesDir=}')
+        if(os.path.isdir(imagesDir)):
+            try:
+                shutil.rmtree(imagesDir)
+            except:
+                logger.error(f'deleting image directory {imagesDir} failed')
 
 
     @abkCommon.function_trace
@@ -161,6 +175,12 @@ class UninstallOnLinux(IUninstallBase):
         self._logger.info(f'{self.os_type.value} uninstallation is not supported yet')
 
 
+    @abkCommon.function_trace
+    def cleanup_image_dir(self, image_dir: str) -> None:
+        logger.debug(f'{image_dir=}')
+        self._logger.info(f'{self.os_type.value} cleanup_image_dir is not supported yet')
+
+
 
 class UninstallOnWindows(IUninstallBase):
     """Concrete Uninstallation on Windows"""
@@ -181,6 +201,11 @@ class UninstallOnWindows(IUninstallBase):
         self._logger.info(f'{self.os_type.value} uninstallation is not supported yet')
 
 
+    @abkCommon.function_trace
+    def cleanup_image_dir(self, image_dir: str) -> None:
+        logger.debug(f'{image_dir=}')
+        self._logger.info(f'{self.os_type.value} cleanup_image_dir is not supported yet')
+
 
 
 
@@ -196,10 +221,7 @@ def main():
         raise ValueError(f'ERROR: "{_platform}" is not supported')
 
     if bwp_config.get('retain_images', False) == False:
-        imageFullPath = os.path.join(abkCommon.GetHomeDir(), bwp_config["image_dir"])
-        deleteImageDir(imageFullPath)
-    unlinkPythonScript(bwp_config["app_name"])
-
+        uninstallation.cleanup_image_dir(bwp_config['image_dir'])
     uninstallation.cleanup_installation(bwp_config['app_name'])
 
 
