@@ -21,6 +21,7 @@ from abc import ABCMeta, abstractmethod
 from enum import Enum
 from datetime import time
 from sys import platform as _platform
+from typing import Tuple
 
 from config import bwp_config
 from abkPackage import abkCommon
@@ -38,7 +39,7 @@ class IInstallOnOS(metaclass=ABCMeta):
     os_type: OsType = None  # type: ignore
 
     @abkCommon.function_trace
-    def __init__(self, logger:logging.Logger=None):  # type: ignore
+    def __init__(self, logger:logging.Logger=None) -> None:  # type: ignore
         self._logger = logger or logging.getLogger(__name__)
         self._logger.info(f'({__class__.__name__}) Initializing {self.os_type} installation environment ...')
 
@@ -52,13 +53,13 @@ class IInstallOnOS(metaclass=ABCMeta):
 class InstallOnMacOS(IInstallOnOS):
 
     @abkCommon.function_trace
-    def __init__(self, logger: logging.Logger):
+    def __init__(self, logger: logging.Logger) -> None:
         self.os_type = OsType.MAC_OS
         super().__init__(logger)
 
 
     @abkCommon.function_trace
-    def setup_installation(self, time_to_exe: time, app_name):
+    def setup_installation(self, time_to_exe: time, app_name: str) -> None:
         self._logger.debug(f'{time_to_exe.hour=}, {time_to_exe.minute=}, {app_name=}')
         full_name = self.link_python_script(app_name)
         script_name = os.path.basename(full_name)
@@ -73,7 +74,7 @@ class InstallOnMacOS(IInstallOnOS):
 
 
     @abkCommon.function_trace
-    def link_python_script(self, file_name):
+    def link_python_script(self, file_name: str) -> str:
         self._logger.debug(f'{file_name=}')
         bin_dir = os.path.join(abkCommon.GetHomeDir(), "bin")
         abkCommon.EnsureDir(bin_dir)
@@ -86,7 +87,7 @@ class InstallOnMacOS(IInstallOnOS):
 
 
     @abkCommon.function_trace
-    def create_plist_file(self, time_to_exe: time, script_name: str):
+    def create_plist_file(self, time_to_exe: time, script_name: str) -> Tuple[str, str]:
         self._logger.debug(f'{time_to_exe.hour=}, {time_to_exe.minute=}, {script_name=}')
         user_name = abkCommon.GetUserName()
         plist_label = f'com.{user_name}.{script_name}'
@@ -123,7 +124,7 @@ class InstallOnMacOS(IInstallOnOS):
 
 
     @abkCommon.function_trace
-    def create_plist_link(self, full_file_name):
+    def create_plist_link(self, full_file_name: str) -> str:
         self._logger.debug(f'{full_file_name=}')
         file_name = os.path.basename(full_file_name)
         plist_install_dir = abkCommon.GetHomeDir()
@@ -137,7 +138,7 @@ class InstallOnMacOS(IInstallOnOS):
 
 
     @abkCommon.function_trace
-    def stop_and_unload_bingwallpaper_job(self, plist_name, plist_lable):
+    def stop_and_unload_bingwallpaper_job(self, plist_name: str, plist_lable: str) -> None:
         self._logger.debug(f'{plist_name=}, {plist_lable=}')
 
         cmd_list = []
@@ -155,7 +156,7 @@ class InstallOnMacOS(IInstallOnOS):
 
 
     @abkCommon.function_trace
-    def load_and_start_bingwallpaper_job(self, plist_name, plist_lable):
+    def load_and_start_bingwallpaper_job(self, plist_name: str, plist_lable: str) -> None:
         self._logger.debug(f'{plist_name=}, {plist_lable=}')
 
         cmd_list = []
@@ -176,7 +177,7 @@ class InstallOnMacOS(IInstallOnOS):
 
 class InstallOnLinux(IInstallOnOS):
 
-    def __init__(self, logger: logging.Logger):
+    def __init__(self, logger: logging.Logger) -> None:
         self.os_type = OsType.LINUX_OS
         super().__init__(logger)
 
@@ -190,7 +191,7 @@ class InstallOnLinux(IInstallOnOS):
 
 class InstallOnWindows(IInstallOnOS):
 
-    def __init__(self, logger: logging.Logger):
+    def __init__(self, logger: logging.Logger) -> None:
         self.os_type = OsType.WINDOWS_OS
         super().__init__(logger)
 
