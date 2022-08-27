@@ -27,6 +27,56 @@ from config import bwp_config
 # from ftv import FTV
 
 
+class IDownLoadServiceBase(metaclass=ABCMeta):
+
+    def __init__(self, logger: logging.Logger) -> None:
+        """Super class init"""
+        self._logger = logger or logging.getLogger(__name__)
+
+    @abstractmethod
+    def download_daily_image(self, dst_dir: str) -> str:
+        """Abstract method - should not be implemented. Interface purpose."""
+        raise NotImplemented
+
+
+
+class BingDownloadService(IDownLoadServiceBase):
+    def __init__(self, logger: logging.Logger) -> None:
+        super().__init__(logger)
+
+    def download_daily_image(self, dst_dir: str) -> str:
+        """Downloads bing image and stores it in the defined directory
+        Args:
+            dst_dir (str): directory to store the image
+        Returns:
+            str: full file name downloaded
+        """
+        self._logger.debug(f"{dst_dir=}")
+        response = urlopen("http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en-US")
+        obj = json.load(response)
+        url = obj["images"][0]["urlbase"]
+        name = obj["images"][0]["fullstartdate"]
+        url = f"http://www.bing.com{url}_1920x1080.jpg"
+        full_file_name = os.path.join(dst_dir, f"{name}.jpg")
+
+        self._logger.info(f"Downloading {url} to {full_file_name}")
+        f = open(full_file_name, "wb")
+        pic = urlopen(url)
+        f.write(pic.read())
+        f.close()
+        self._logger.debug(f"{full_file_name=}")
+        return full_file_name
+
+
+class PeapixDownloadService(IDownLoadServiceBase):
+    def __init__(self, logger: logging.Logger) -> None:
+        super().__init__(logger)
+
+    def download_daily_image(self, dst_dir: str) -> str:
+        return ""
+
+
+
 class IOsDependentBase(metaclass=ABCMeta):
     """OS dependency base class"""
     os_type: abkCommon.OsType = None  # type: ignore
@@ -128,10 +178,16 @@ class BingWallPaper(object):
     """BingWallPaper downloads images from bing.com and sets it as a wallpaper"""
 
     @abkCommon.function_trace
-    def __init__(self, logger: logging.Logger, options: Values, os_dependant : IOsDependentBase):
+    def __init__(self,
+                 logger: logging.Logger,
+                 options: Values,
+                 os_dependant : IOsDependentBase,
+                 dl_service : IDownLoadServiceBase
+    ):
         self._logger = logger or logging.getLogger(__name__)
         self._options = options
         self._os_dependent = os_dependant
+        self._dl_service = dl_service
 
 
     def set_desktop_background(self, file_name: str) -> None:
@@ -199,31 +255,14 @@ class BingWallPaper(object):
 
 
     @abkCommon.function_trace
-    def download_bing_image(self, dst_dir: str) -> str:
+    def download_daily_image(self, dst_dir: str) -> str:
         """Downloads bing image and stores it in the defined directory
-
         Args:
             dst_dir (str): directory to store the image
-
         Returns:
             str: full file name downloaded
         """
-        self._logger.debug(f"{dst_dir=}")
-        response = urlopen("http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en-US")
-        obj = json.load(response)
-        url = obj["images"][0]["urlbase"]
-        name = obj["images"][0]["fullstartdate"]
-        url = f"http://www.bing.com{url}_1920x1080.jpg"
-        full_file_name = os.path.join(dst_dir, f"{name}.jpg")
-
-        self._logger.info(f"Downloading {url} to {full_file_name}")
-        f = open(full_file_name, "wb")
-        pic = urlopen(url)
-        f.write(pic.read())
-        f.close()
-        self._logger.debug(f"{full_file_name=}")
-        return full_file_name
-
+        return self._dl_service.download_daily_image(dst_dir)
 
 
 def main():
@@ -233,6 +272,7 @@ def main():
         command_line_options.handle_options()
         main_logger = command_line_options._logger
 
+        # get the correct OS and instantiate OS dependent code
         if _platform in abkCommon.OsPlatformType.PLATFORM_MAC.value:
             bwp_os_dependent = MacOSDependent(logger=main_logger)
         elif _platform in abkCommon.OsPlatformType.PLATFORM_LINUX.value:
@@ -242,10 +282,22 @@ def main():
         else:
             raise ValueError(f'ERROR: "{_platform}" is not supported')
 
-        bwp = BingWallPaper(logger=main_logger, options=command_line_options.options, os_dependant=bwp_os_dependent)
+        # use bing service as defualt, peapix is for a back up solution
+        if bwp_config.get("dl_service", "bing") == "bing":
+            dl_service = BingDownloadService(logger=main_logger)
+        else:
+            dl_service = PeapixDownloadService(logger=main_logger)
+
+
+        bwp = BingWallPaper(
+            logger=main_logger,
+            options=command_line_options.options,
+            os_dependant=bwp_os_dependent,
+            dl_service=dl_service
+        )
         pix_dir = bwp.define_pix_dirs(bwp_config["image_dir"])
         bwp.trim_number_of_pix(pix_dir, bwp_config["number_images_to_keep"])
-        file_name = bwp.download_bing_image(pix_dir)
+        file_name = bwp.download_daily_image(pix_dir)
         bwp.scale_images()
         if bwp_config.get("set_desktop_image", False):
             bwp.set_desktop_background(file_name)

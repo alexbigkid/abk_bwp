@@ -4,10 +4,14 @@ image_dir = "Pictures/BingWallpapers"
 number_images_to_keep = 365
 set_desktop_image = true
 retain_images = true
+dl_service = "bing"
 region = "us"
 
 [constant]
-alternative_regions = ["au", "ca", "cn", "de", "fr", "in", "jp", "es", "gb", "us"]
+bing_dl_service = "http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en-US"
+peapix_dl_service = "https://peapix.com/bing/feed"
+dl_service_alternatives = ["bing", "peapix"]
+region_alternatives = ["au", "ca", "cn", "de", "fr", "in", "jp", "es", "gb", "us"]
 
 [ftv]
 set_image = true
