@@ -62,97 +62,97 @@ class UninstallOnMacOS(IUninstallBase):
         Args:
             app_name (str): application name
         """
-        logger.debug(f'{app_name=}')
+        self._logger.debug(f'{app_name=}')
         # remove the link from $HOME/bin directory
-        self.unlinkPythonScript(app_name)
+        self._unlink_python_script(app_name)
         # get app_name full name with path
-        currDir = abkCommon.GetCurrentDir(__file__)
-        logger.info("currDir=%s", currDir)
-        app_file_full_name = os.path.join(currDir, app_name)
-        logger.info("pyScriptFullName=%s", app_file_full_name)
+        curr_dir = abkCommon.GetCurrentDir(__file__)
+        self._logger.info("currDir=%s", curr_dir)
+        app_file_full_name = os.path.join(curr_dir, app_name)
+        self._logger.info(f'{app_file_full_name=}')
         # get plist data
-        scriptName = os.path.basename(app_file_full_name)
-        scriptPath = os.path.dirname(app_file_full_name)
-        logger.info(f'{scriptPath=}, {scriptName=}, ')
-        (plistLable, plistName) = self.GetPlistNames(scriptName)
+        script_name = os.path.basename(app_file_full_name)
+        script_path = os.path.dirname(app_file_full_name)
+        self._logger.info(f'{script_path=}, {script_name=}, ')
+        (plist_lable, plist_name) = self._get_plist_names(script_name)
         # stop jobs and unload plist file
-        homeDir = abkCommon.GetHomeDir()
-        plistLinkName = os.path.join(f'{homeDir}/Library/LaunchAgents', plistName)
-        plistFullName = os.path.join(scriptPath, plistName)
-        logger.info(f'{plistLinkName=}')
-        logger.info(f'{plistFullName=}')
-        self.StopAndUnloadBingwallpaperJob(plistLinkName, plistLable)
-        abkCommon.RemoveLink(plistLinkName)
-        self.DeletePlistFile(plistFullName)
+        home_dir = abkCommon.GetHomeDir()
+        plist_link_name = os.path.join(f'{home_dir}/Library/LaunchAgents', plist_name)
+        plist_full_name = os.path.join(script_path, plist_name)
+        self._logger.info(f'{plist_link_name=}')
+        self._logger.info(f'{plist_full_name=}')
+        self._stop_and_unload_bingwallpaper_job(plist_link_name, plist_lable)
+        abkCommon.RemoveLink(plist_link_name)
+        self._delete_plist_file(plist_full_name)
 
 
     @abkCommon.function_trace
     def cleanup_image_dir(self, image_dir: str) -> None:
-        imageFullPath = os.path.join(abkCommon.GetHomeDir(), image_dir)
-        self.deleteImageDir(imageFullPath)
+        image_full_path = os.path.join(abkCommon.GetHomeDir(), image_dir)
+        self._delete_image_dir(image_full_path)
 
 
     @abkCommon.function_trace
-    def unlinkPythonScript(self, fileName):
-        logger.debug(f'{fileName=}')
-        binDir = os.path.join(abkCommon.GetHomeDir(), "bin")
-        currDir = abkCommon.GetCurrentDir(__file__)
-        src = os.path.join(currDir, fileName)
-        pyBinLink = os.path.join(binDir, fileName)
-        abkCommon.RemoveLink(pyBinLink)
-        abkCommon.DeleteDir(binDir)
+    def _unlink_python_script(self, file_name):
+        self._logger.debug(f'{file_name=}')
+        bin_dir = os.path.join(abkCommon.GetHomeDir(), "bin")
+        curr_dir = abkCommon.GetCurrentDir(__file__)
+        src = os.path.join(curr_dir, file_name)
+        py_bin_link = os.path.join(bin_dir, file_name)
+        abkCommon.RemoveLink(py_bin_link)
+        abkCommon.DeleteDir(bin_dir)
         return src
 
 
     @abkCommon.function_trace
-    def deleteImageDir(self, imagesDir):
-        logger.debug(f'{imagesDir=}')
-        if(os.path.isdir(imagesDir)):
+    def _delete_image_dir(self, images_dir):
+        self._logger.debug(f'{images_dir=}')
+        if(os.path.isdir(images_dir)):
             try:
-                shutil.rmtree(imagesDir)
+                shutil.rmtree(images_dir)
             except:
-                logger.error(f'deleting image directory {imagesDir} failed')
+                self._logger.error(f'deleting image directory {images_dir} failed')
 
 
     @abkCommon.function_trace
-    def GetPlistNames(self, scriptName):
-        logger.debug(f'{scriptName=}')
-        userName = abkCommon.GetUserName()
-        plistLable = "com."+userName+"."+scriptName
-        plistName = plistLable+".plist"
-        logger.debug(f'{plistLable=}, {plistName=}')
-        return (plistLable, plistName)
+    def _get_plist_names(self, script_name):
+        self._logger.debug(f'{script_name=}')
+        user_name = abkCommon.GetUserName()
+        plist_lable = "com."+user_name+"."+script_name
+        plist_name = plist_lable+".plist"
+        self._logger.debug(f'{plist_lable=}, {plist_name=}')
+        return (plist_lable, plist_name)
 
 
     @abkCommon.function_trace
-    def StopAndUnloadBingwallpaperJob(self, plistName, plistLable):
-        logger.debug(f'{plistName=}, {plistLable=}')
+    def _stop_and_unload_bingwallpaper_job(self, plist_name, plist_lable):
+        self._logger.debug(f'{plist_name=}, {plist_lable=}')
 
         cmdList = []
-        cmdList.append("launchctl list | grep "+plistLable)
-        cmdList.append("launchctl stop "+plistLable)
-        cmdList.append("launchctl unload -w "+plistName)
+        cmdList.append("launchctl list | grep "+plist_lable)
+        cmdList.append("launchctl stop "+plist_lable)
+        cmdList.append("launchctl unload -w "+plist_name)
 
         try:
             for cmd in cmdList:
-                logger.info(f"about to execute command '{cmd}'")
-                retCode = subprocess.check_call(cmd, shell=True)
-                logger.info(f"command '{cmd}' succeeded, returned: {retCode}")
+                self._logger.info(f"about to execute command '{cmd}'")
+                return_code = subprocess.check_call(cmd, shell=True)
+                self._logger.info(f"command '{cmd}' succeeded, returned: {return_code}")
         except subprocess.CalledProcessError as e:
-            logger.error(f'ERROR: returned: {e.returncode}')
+            self._logger.error(f'ERROR: returned: {e.returncode}')
 
 
     @abkCommon.function_trace
-    def DeletePlistFile(self, scriptName):
-        logger.debug(f'{scriptName=}')
-        if os.path.isfile(scriptName):
+    def _delete_plist_file(self, script_name):
+        self._logger.debug(f'{script_name=}')
+        if os.path.isfile(script_name):
             try:
-                os.unlink(scriptName)
-                logger.info(f'deleted file {scriptName}')
+                os.unlink(script_name)
+                self._logger.info(f'deleted file {script_name}')
             except OSError as error:
-                logger.error(f'failed to delete file {scriptName}, with error = {error.errno}')
+                self._logger.error(f'failed to delete file {script_name}, with error = {error.errno}')
         else:
-            logger.info(f'file {scriptName} does not exist')
+            self._logger.info(f'file {script_name} does not exist')
 
 
 
@@ -171,13 +171,13 @@ class UninstallOnLinux(IUninstallBase):
         Args:
             app_name (str): application name
         """
-        logger.debug(f'{app_name=}')
+        self._logger.debug(f'{app_name=}')
         self._logger.info(f'{self.os_type.value} uninstallation is not supported yet')
 
 
     @abkCommon.function_trace
     def cleanup_image_dir(self, image_dir: str) -> None:
-        logger.debug(f'{image_dir=}')
+        self._logger.debug(f'{image_dir=}')
         self._logger.info(f'{self.os_type.value} cleanup_image_dir is not supported yet')
 
 
@@ -197,26 +197,29 @@ class UninstallOnWindows(IUninstallBase):
         Args:
             app_name (str): application name
         """
-        logger.debug(f'{app_name=}')
+        self._logger.debug(f'{app_name=}')
         self._logger.info(f'{self.os_type.value} uninstallation is not supported yet')
 
 
     @abkCommon.function_trace
     def cleanup_image_dir(self, image_dir: str) -> None:
-        logger.debug(f'{image_dir=}')
+        self._logger.debug(f'{image_dir=}')
         self._logger.info(f'{self.os_type.value} cleanup_image_dir is not supported yet')
-
 
 
 
 @abkCommon.function_trace
 def main():
+    command_line_options = abkCommon.CommandLineOptions()
+    command_line_options.handle_options()
+    main_logger = command_line_options._logger
+
     if _platform in abkCommon.OsPlatformType.PLATFORM_MAC.value:
-        uninstallation = UninstallOnMacOS(logger=logger)
+        uninstallation = UninstallOnMacOS(logger=main_logger)
     elif _platform in abkCommon.OsPlatformType.PLATFORM_LINUX.value:
-        uninstallation = UninstallOnLinux(logger=logger)
+        uninstallation = UninstallOnLinux(logger=main_logger)
     elif _platform in abkCommon.OsPlatformType.PLATFORM_WINDOWS.value:
-        uninstallation = UninstallOnWindows(logger=logger)
+        uninstallation = UninstallOnWindows(logger=main_logger)
     else:
         raise ValueError(f'ERROR: "{_platform}" is not supported')
 
@@ -226,7 +229,4 @@ def main():
 
 
 if __name__ == '__main__':
-    command_line_options = abkCommon.CommandLineOptions()
-    command_line_options.handle_options()
-    logger = command_line_options._logger
     main()
