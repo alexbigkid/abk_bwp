@@ -49,7 +49,7 @@ class BingWallPaper(object):
         homeDir = abkCommon.get_home_dir()
         self._logger.info(f"{homeDir=}")
         pixDir = os.path.join(homeDir, imagesDir)
-        abkCommon.EnsureDir(pixDir)
+        abkCommon.ensure_dir(pixDir)
         self._logger.debug(f"{pixDir=}")
         return pixDir
 

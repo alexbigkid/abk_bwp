@@ -78,7 +78,7 @@ class InstallOnMacOS(IInstallBase):
         """
         self._logger.debug(f"{file_name=}")
         bin_dir = os.path.join(abkCommon.get_home_dir(), "bin")
-        abkCommon.EnsureDir(bin_dir)
+        abkCommon.ensure_dir(bin_dir)
         curr_dir = abkCommon.get_parent_dir(__file__)
         src = os.path.join(curr_dir, file_name)
         dst = os.path.join(bin_dir, file_name)
@@ -140,7 +140,7 @@ class InstallOnMacOS(IInstallBase):
         file_name = os.path.basename(full_file_name)
         plist_install_dir = abkCommon.get_home_dir()
         plist_install_dir = f"{plist_install_dir}/Library/LaunchAgents"
-        abkCommon.EnsureDir(plist_install_dir)
+        abkCommon.ensure_dir(plist_install_dir)
         dst_file_name = os.path.join(plist_install_dir, file_name)
         self._logger.info(f"src= {full_file_name}, dst= {dst_file_name}")
         abkCommon.EnsureLinkExists(full_file_name, dst_file_name)
