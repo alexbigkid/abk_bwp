@@ -27,48 +27,43 @@ import tomli
 # Local application imports
 from abkPackage import abkCommon
 from config import bwp_config
-# from ftv import FTV
 
+# from ftv import FTV
 
 
 class BingWallPaper(object):
     """BingWallPaper downloads images from bing.com and sets it as a wallpaper"""
 
-
     @abkCommon.function_trace
-    def __init__(self, logger:logging.Logger=None, options:Values=None):  # type: ignore
+    def __init__(self, logger: logging.Logger = None, options: Values = None):  # type: ignore
         self._logger = logger or logging.getLogger(__name__)
         self._options = options
-
 
     @abkCommon.function_trace
     def __del__(self):
         pass
 
-
     @abkCommon.function_trace
-    def define_pix_dirs(self, imagesDir:str) -> str:
+    def define_pix_dirs(self, imagesDir: str) -> str:
         self._logger.debug(f"{imagesDir=}")
-        homeDir = abkCommon.GetHomeDir()
+        homeDir = abkCommon.get_home_dir()
         self._logger.info(f"{homeDir=}")
         pixDir = os.path.join(homeDir, imagesDir)
         abkCommon.EnsureDir(pixDir)
         self._logger.debug(f"{pixDir=}")
         return pixDir
 
-
     @abkCommon.function_trace
     def scale_images(self):
         pass
 
-
     @abkCommon.function_trace
-    def trim_number_of_pix(self, pixDir:str, num:int) -> None:
+    def trim_number_of_pix(self, pixDir: str, num: int) -> None:
         self._logger.debug(f"{pixDir=}, {num=}")
 
         listOfFiles = []
         for f in os.listdir(pixDir):
-            if f.endswith('.jpg'):
+            if f.endswith(".jpg"):
                 listOfFiles.append(f)
         listOfFiles.sort()
         self._logger.debug(f"listOfFile = [{', '.join(map(str, listOfFiles))}]")
@@ -88,28 +83,26 @@ class BingWallPaper(object):
         else:
             self._logger.info("no images to delete")
 
-
     @abkCommon.function_trace
-    def download_bing_image(self, dstDir:str) -> str:
+    def download_bing_image(self, dstDir: str) -> str:
         self._logger.debug(f"{dstDir=}")
         response = urlopen("http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en-US")
         obj = json.load(response)
-        url = (obj['images'][0]['urlbase'])
-        name = (obj['images'][0]['fullstartdate'])
-        url = 'http://www.bing.com' + url + '_1920x1080.jpg'
-        fullFileName = os.path.join(dstDir, name+'.jpg')
+        url = obj["images"][0]["urlbase"]
+        name = obj["images"][0]["fullstartdate"]
+        url = f"http://www.bing.com{url}_1920x1080.jpg"
+        fullFileName = os.path.join(dstDir, f"{name}.jpg")
 
         self._logger.info(f"Downloading {url} to {fullFileName}")
-        f = open(fullFileName, 'wb')
+        f = open(fullFileName, "wb")
         pic = urlopen(url)
         f.write(pic.read())
         f.close()
         self._logger.debug(f"{fullFileName=}")
         return fullFileName
 
-
     @abkCommon.function_trace
-    def set_desktop_background(self, fileName:str) -> None:
+    def set_desktop_background(self, fileName: str) -> None:
         self._logger.debug(f"{fileName=}")
         # ----- Start platform dependency  -----
         if _platform == "darwin":
@@ -135,10 +128,9 @@ END"""
             winNum = platform.uname()[2]
             self._logger.info(f"os info: {platform.uname()}")
             self._logger.info(f"win#: {winNum}")
-            if(int(winNum) >= 10):
+            if int(winNum) >= 10:
                 try:
-                    ctypes.windll.user32.SystemParametersInfoW(  # type: ignore
-                        20, 0, fileName, 3)
+                    ctypes.windll.user32.SystemParametersInfoW(20, 0, fileName, 3)
                     self._logger.info(f"Background image set to: {fileName}")
                 except:
                     self._logger.error(f"Was not able to set background image to: {fileName}")
@@ -166,13 +158,13 @@ def main():
         command_line_options = abkCommon.CommandLineOptions()
         command_line_options.handle_options()
         bwp = BingWallPaper(logger=command_line_options._logger, options=command_line_options.options)
-        pix_dir = bwp.define_pix_dirs(bwp_config['image_dir'])
-        bwp.trim_number_of_pix(pix_dir, bwp_config['number_images_to_keep'])
+        pix_dir = bwp.define_pix_dirs(bwp_config["image_dir"])
+        bwp.trim_number_of_pix(pix_dir, bwp_config["number_images_to_keep"])
         file_name = bwp.download_bing_image(pix_dir)
         bwp.scale_images()
-        if bwp_config.get('set_desktop_image', False):
+        if bwp_config.get("set_desktop_image", False):
             bwp.set_desktop_background(file_name)
-        if bwp_config.get('ftv', {}).get('set_image', False):
+        if bwp_config.get("ftv", {}).get("set_image", False):
             pass
             # ftv = FTV(config_dict.get('ftv'))
             # if ftv.is_art_mode_supported():
@@ -186,5 +178,5 @@ def main():
         sys.exit(exit_code)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

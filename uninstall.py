@@ -73,7 +73,7 @@ class UninstallOnMacOS(IUninstallBase):
         self._logger.info(f"{script_path=}, {script_name=}")
         (plist_lable, plist_name) = self._get_plist_names(script_name)
         # stop jobs and unload plist file
-        home_dir = abkCommon.GetHomeDir()
+        home_dir = abkCommon.get_home_dir()
         plist_link_name = os.path.join(f"{home_dir}/Library/LaunchAgents", plist_name)
         plist_full_name = os.path.join(script_path, plist_name)
         self._logger.info(f"{plist_link_name=}")
@@ -88,7 +88,7 @@ class UninstallOnMacOS(IUninstallBase):
         Args:
             image_dir (str): image directory name
         """
-        image_full_path = os.path.join(abkCommon.GetHomeDir(), image_dir)
+        image_full_path = os.path.join(abkCommon.get_home_dir(), image_dir)
         self._delete_image_dir(image_full_path)
 
     @abkCommon.function_trace
@@ -100,7 +100,7 @@ class UninstallOnMacOS(IUninstallBase):
             str: full name of the source of the link
         """
         self._logger.debug(f"{file_name=}")
-        bin_dir = os.path.join(abkCommon.GetHomeDir(), "bin")
+        bin_dir = os.path.join(abkCommon.get_home_dir(), "bin")
         curr_dir = abkCommon.GetCurrentDir(__file__)
         src = os.path.join(curr_dir, file_name)
         py_bin_link = os.path.join(bin_dir, file_name)

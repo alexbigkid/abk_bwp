@@ -77,7 +77,7 @@ class InstallOnMacOS(IInstallBase):
             str: name of the full path + name of the app python script
         """
         self._logger.debug(f"{file_name=}")
-        bin_dir = os.path.join(abkCommon.GetHomeDir(), "bin")
+        bin_dir = os.path.join(abkCommon.get_home_dir(), "bin")
         abkCommon.EnsureDir(bin_dir)
         curr_dir = abkCommon.GetParentDir(__file__)
         src = os.path.join(curr_dir, file_name)
@@ -138,7 +138,7 @@ class InstallOnMacOS(IInstallBase):
         """
         self._logger.debug(f"{full_file_name=}")
         file_name = os.path.basename(full_file_name)
-        plist_install_dir = abkCommon.GetHomeDir()
+        plist_install_dir = abkCommon.get_home_dir()
         plist_install_dir = f"{plist_install_dir}/Library/LaunchAgents"
         abkCommon.EnsureDir(plist_install_dir)
         dst_file_name = os.path.join(plist_install_dir, file_name)

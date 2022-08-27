@@ -57,7 +57,7 @@ class TestGetHomeDir(unittest.TestCase):
     @mock.patch.dict(os.environ, {"HOME": "users_home_dir_001"})
     def test_GetHomeDir__returns_users_homedir_from_env(self) -> None:
         exp_home_dir = "users_home_dir_001"
-        act_home_dir = abkCommon.GetHomeDir()
+        act_home_dir = abkCommon.get_home_dir()
         self.assertEqual(exp_home_dir, act_home_dir, "ERROR: unexpected home dir returned")
 
 
