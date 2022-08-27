@@ -65,8 +65,8 @@ class InstallOnMacOS(IInstallOnOS):
         script_name = os.path.basename(full_name)
         script_path = os.path.dirname(full_name)
         self._logger.info(f'{script_path=}, {script_name=}')
-        (plist_lable, plistName) = self.create_plist_file(time_to_exe, script_name)
-        plist_full_name = os.path.join(script_path, plistName)
+        (plist_lable, plist_name) = self.create_plist_file(time_to_exe, script_name)
+        plist_full_name = os.path.join(script_path, plist_name)
         self._logger.info(f'{plist_full_name=}')
         dst_plist_name = self.create_plist_link(plist_full_name)
         self.stop_and_unload_bingwallpaper_job(dst_plist_name, plist_lable)
@@ -92,33 +92,32 @@ class InstallOnMacOS(IInstallOnOS):
         user_name = abkCommon.GetUserName()
         plist_label = f'com.{user_name}.{script_name}'
         plist_name = f'{plist_label}.plist'
-        fh = open(plist_name, "w")
-        lines_to_write = [
-            '<?xml version="1.0" encoding="UTF-8"?>\n',
-            '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n',
-            '<plist version="1.0">\n',
-            '<dict>\n',
-            '    <key>Label</key>\n',
-            f'    <string>{plist_label}</string>\n',
-            '    <key>ProgramArguments</key>\n',
-            '    <array>\n',
-            '        <string>python3</string>\n',
-            f'        <string>/Users/{user_name}/abkBin/{script_name}</string>\n',
-            '    </array>\n',
-            '    <key>RunAtLoad</key>\n',
-            '    <true/>\n',
-            '    <key>StartCalendarInterval</key>\n',
-            '    <dict>\n',
-            '        <key>Hour</key>\n',
-            f'        <integer>{time_to_exe.hour}</integer>\n',
-            '        <key>Minute</key>\n',
-            f'        <integer>{time_to_exe.minute}</integer>\n',
-            '    </dict>\n',
-            '</dict>\n',
-            '</plist>\n',
-        ]
-        fh.writelines(lines_to_write)
-        fh.close()
+        with open(plist_name, "w") as fh:
+            lines_to_write = [
+                '<?xml version="1.0" encoding="UTF-8"?>\n',
+                '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n',
+                '<plist version="1.0">\n',
+                '<dict>\n',
+                '    <key>Label</key>\n',
+               f'    <string>{plist_label}</string>\n',
+                '    <key>ProgramArguments</key>\n',
+                '    <array>\n',
+                '        <string>python3</string>\n',
+               f'        <string>/Users/{user_name}/abkBin/{script_name}</string>\n',
+                '    </array>\n',
+                '    <key>RunAtLoad</key>\n',
+                '    <true/>\n',
+                '    <key>StartCalendarInterval</key>\n',
+                '    <dict>\n',
+                '        <key>Hour</key>\n',
+               f'        <integer>{time_to_exe.hour}</integer>\n',
+                '        <key>Minute</key>\n',
+               f'        <integer>{time_to_exe.minute}</integer>\n',
+                '    </dict>\n',
+                '</dict>\n',
+                '</plist>\n',
+            ]
+            fh.writelines(lines_to_write)
         self._logger.debug(f'{plist_label=}, {plist_name=}')
         return (plist_label, plist_name)
 
