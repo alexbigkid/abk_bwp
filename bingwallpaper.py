@@ -28,6 +28,7 @@ from config import bwp_config
 
 
 class IOsDependentBase(metaclass=ABCMeta):
+    """OS dependency base class"""
     os_type: abkCommon.OsType = None  # type: ignore
 
     @abkCommon.function_trace
@@ -44,6 +45,7 @@ class IOsDependentBase(metaclass=ABCMeta):
 
 
 class MacOSDependent(IOsDependentBase):
+    """MacOS dependent code"""
 
     @abkCommon.function_trace
     def __init__(self, logger: logging.Logger) -> None:
@@ -53,6 +55,10 @@ class MacOSDependent(IOsDependentBase):
 
     @abkCommon.function_trace
     def set_desktop_background(self, file_name: str) -> None:
+        """Sets desktop image on Mac OS
+        Args:
+            file_name (str): file name which should be used to set the background
+        """
         self._logger.debug(f"{file_name=}")
         SCRIPT_MAC = """/usr/bin/osascript<<END
 tell application "Finder"
@@ -65,6 +71,8 @@ END"""
 
 
 class LinuxDependent(IOsDependentBase):
+    """Linux dependent code"""
+
     @abkCommon.function_trace
     def __init__(self, logger: logging.Logger) -> None:
         self.os_type = abkCommon.OsType.LINUX_OS
@@ -72,6 +80,10 @@ class LinuxDependent(IOsDependentBase):
 
     @abkCommon.function_trace
     def set_desktop_background(self, file_name: str) -> None:
+        """Sets desktop image on Linux
+        Args:
+            file_name (str): file name which should be used to set the background
+        """
         self._logger.debug(f"{file_name=}")
         self._logger.info(f"({self.os_type.MAC_OS.value}) Set background to {file_name}")
         self._logger.info(f"({self.os_type.MAC_OS.value}) Not implemented yet")
@@ -79,6 +91,8 @@ class LinuxDependent(IOsDependentBase):
 
 
 class WindowsDependent(IOsDependentBase):
+    """Windows dependent code"""
+
     @abkCommon.function_trace
     def __init__(self, logger: logging.Logger) -> None:
         self.os_type = abkCommon.OsType.WINDOWS_OS
@@ -86,6 +100,10 @@ class WindowsDependent(IOsDependentBase):
 
     @abkCommon.function_trace
     def set_desktop_background(self, file_name: str) -> None:
+        """Sets desktop image on Windows
+        Args:
+            file_name (str): file name which should be used to set the background
+        """
         self._logger.debug(f"{file_name=}")
         import ctypes
         import platform
@@ -117,18 +135,28 @@ class BingWallPaper(object):
 
 
     def set_desktop_background(self, file_name: str) -> None:
+        """Sets background image on different OS
+        Args:
+            file_name (str): file name which should be used to set the background
+        """
         self._os_dependent.set_desktop_background(file_name)
 
 
     @abkCommon.function_trace
-    def define_pix_dirs(self, imagesDir: str) -> str:
-        self._logger.debug(f"{imagesDir=}")
-        homeDir = abkCommon.get_home_dir()
-        self._logger.info(f"{homeDir=}")
-        pixDir = os.path.join(homeDir, imagesDir)
-        abkCommon.ensure_dir(pixDir)
-        self._logger.debug(f"{pixDir=}")
-        return pixDir
+    def define_pix_dirs(self, images_dir: str) -> str:
+        """Defines the image directory
+        Args:
+            images_dir (str): image directory
+        Returns:
+            str: full directory name where imaghes will be saved
+        """
+        self._logger.debug(f"{images_dir=}")
+        home_dir = abkCommon.get_home_dir()
+        self._logger.info(f"{home_dir=}")
+        pix_dir = os.path.join(home_dir, images_dir)
+        abkCommon.ensure_dir(pix_dir)
+        self._logger.debug(f"{pix_dir=}")
+        return pix_dir
 
 
     @abkCommon.function_trace
@@ -137,26 +165,33 @@ class BingWallPaper(object):
 
 
     @abkCommon.function_trace
-    def trim_number_of_pix(self, pixDir: str, num: int) -> None:
-        self._logger.debug(f"{pixDir=}, {num=}")
+    def trim_number_of_pix(self, pix_dir: str, max_number: int) -> None:
+        """Deletes some images if it reaches max number desirable
+           The max number can be defined in the config/bwp_config.toml file
+
+        Args:
+            pix_dir (str): image directory
+            max_number (int): max number of images to keep
+        """
+        self._logger.debug(f"{pix_dir=}, {max_number=}")
 
         listOfFiles = []
-        for f in os.listdir(pixDir):
+        for f in os.listdir(pix_dir):
             if f.endswith(".jpg"):
                 listOfFiles.append(f)
         listOfFiles.sort()
         self._logger.debug(f"listOfFile = [{', '.join(map(str, listOfFiles))}]")
         numberOfJpgs = len(listOfFiles)
         self._logger.info(f"{numberOfJpgs=}")
-        if numberOfJpgs > num:
-            jpgs2delete = listOfFiles[0:numberOfJpgs-num]
+        if numberOfJpgs > max_number:
+            jpgs2delete = listOfFiles[0:numberOfJpgs-max_number]
             self._logger.info(f"jpgs2delete = [{', '.join(map(str, jpgs2delete))}]")
             num2delete = len(jpgs2delete)
             self._logger.info(f"{num2delete=}")
             for delFile in jpgs2delete:
                 self._logger.info(f"deleting file: {delFile}")
                 try:
-                    os.unlink(os.path.join(pixDir, delFile))
+                    os.unlink(os.path.join(pix_dir, delFile))
                 except:
                     self._logger.error(f"deleting {delFile} failed")
         else:
@@ -164,22 +199,30 @@ class BingWallPaper(object):
 
 
     @abkCommon.function_trace
-    def download_bing_image(self, dstDir: str) -> str:
-        self._logger.debug(f"{dstDir=}")
+    def download_bing_image(self, dst_dir: str) -> str:
+        """Downloads bing image and stores it in the defined directory
+
+        Args:
+            dst_dir (str): directory to store the image
+
+        Returns:
+            str: full file name downloaded
+        """
+        self._logger.debug(f"{dst_dir=}")
         response = urlopen("http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en-US")
         obj = json.load(response)
         url = obj["images"][0]["urlbase"]
         name = obj["images"][0]["fullstartdate"]
         url = f"http://www.bing.com{url}_1920x1080.jpg"
-        fullFileName = os.path.join(dstDir, f"{name}.jpg")
+        full_file_name = os.path.join(dst_dir, f"{name}.jpg")
 
-        self._logger.info(f"Downloading {url} to {fullFileName}")
-        f = open(fullFileName, "wb")
+        self._logger.info(f"Downloading {url} to {full_file_name}")
+        f = open(full_file_name, "wb")
         pic = urlopen(url)
         f.write(pic.read())
         f.close()
-        self._logger.debug(f"{fullFileName=}")
-        return fullFileName
+        self._logger.debug(f"{full_file_name=}")
+        return full_file_name
 
 
 
