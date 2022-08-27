@@ -60,10 +60,9 @@ class BingDownloadService(IDownLoadServiceBase):
         full_file_name = os.path.join(dst_dir, f"{name}.jpg")
 
         self._logger.info(f"Downloading {url} to {full_file_name}")
-        f = open(full_file_name, "wb")
-        pic = urlopen(url)
-        f.write(pic.read())
-        f.close()
+        with open(full_file_name, "wb") as fh:
+            pic = urlopen(url)
+            fh.write(pic.read())
         self._logger.debug(f"{full_file_name=}")
         return full_file_name
 
