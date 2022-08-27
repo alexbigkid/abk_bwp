@@ -79,7 +79,7 @@ class InstallOnMacOS(IInstallBase):
         self._logger.debug(f"{file_name=}")
         bin_dir = os.path.join(abkCommon.get_home_dir(), "bin")
         abkCommon.EnsureDir(bin_dir)
-        curr_dir = abkCommon.GetParentDir(__file__)
+        curr_dir = abkCommon.get_parent_dir(__file__)
         src = os.path.join(curr_dir, file_name)
         dst = os.path.join(bin_dir, file_name)
         abkCommon.EnsureLinkExists(src, dst)

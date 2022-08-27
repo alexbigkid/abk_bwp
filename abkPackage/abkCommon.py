@@ -69,7 +69,7 @@ def get_current_dir(fileName):
     return os.path.dirname(os.path.realpath(fileName))
 
 
-def GetParentDir(fileName):
+def get_parent_dir(fileName):
     return os.path.dirname(os.path.dirname(fileName))
 
 
