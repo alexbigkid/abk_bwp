@@ -3,14 +3,15 @@ app_name = "bingwallpaper.py"
 image_dir = "Pictures/BingWallpapers"
 number_images_to_keep = 365
 set_desktop_image = true
+retain_images = true
 region = "us"
 
 [constant]
 alternative_regions = ["au", "ca", "cn", "de", "fr", "in", "jp", "es", "gb", "us"]
 
 [ftv]
+set_image = true
 ip_address = "192.168.0.119"
 port = 8002
 # image change frequency in sec
 image_change_frequency = 300
-set_image = true

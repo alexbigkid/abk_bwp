@@ -57,7 +57,7 @@ class IUninstallBase(metaclass=ABCMeta):
 
 
     @abstractmethod
-    def cleanup(self, app_name: str) -> None:
+    def cleanup_installation(self, app_name: str) -> None:
         """Abstract method - should not be implemented. Interface purpose."""
         raise NotImplemented
 
@@ -73,23 +73,28 @@ class UninstallOnMacOS(IUninstallBase):
 
 
     @abkCommon.function_trace
-    def cleanup(self, app_name: str) -> None:
+    def cleanup_installation(self, app_name: str) -> None:
         """Cleans up installation of the bing wall paper downloader on MacOS
         Args:
             app_name (str): application name
         """
         logger.debug(f'{app_name=}')
-        scriptName = os.path.basename(app_name)
-        scriptPath = os.path.dirname(app_name)
+        # get app_name full name with path
+        currDir = abkCommon.GetCurrentDir(__file__)
+        logger.info("currDir=%s", currDir)
+        app_file_full_name = os.path.join(currDir, app_name)
+        logger.info("pyScriptFullName=%s", app_file_full_name)
+        # get plist data
+        scriptName = os.path.basename(app_file_full_name)
+        scriptPath = os.path.dirname(app_file_full_name)
         logger.info(f'{scriptPath=}, {scriptName=}, ')
         (plistLable, plistName) = self.GetPlistNames(scriptName)
-
+        # stop jobs and unload plist file
         homeDir = abkCommon.GetHomeDir()
         plistLinkName = os.path.join(f'{homeDir}/Library/LaunchAgents', plistName)
         plistFullName = os.path.join(scriptPath, plistName)
         logger.info(f'{plistLinkName=}')
         logger.info(f'{plistFullName=}')
-
         self.StopAndUnloadBingwallpaperJob(plistLinkName, plistLable)
         abkCommon.RemoveLink(plistLinkName)
         self.DeletePlistFile(plistFullName)
@@ -147,7 +152,7 @@ class UninstallOnLinux(IUninstallBase):
 
 
     @abkCommon.function_trace
-    def cleanup(self, app_name: str) -> None:
+    def cleanup_installation(self, app_name: str) -> None:
         """Cleans up installation of the bing wall paper downloader on Linux
         Args:
             app_name (str): application name
@@ -167,7 +172,7 @@ class UninstallOnWindows(IUninstallBase):
 
 
     @abkCommon.function_trace
-    def cleanup(self, app_name: str) -> None:
+    def cleanup_installation(self, app_name: str) -> None:
         """Cleans up installation of the bing wall paper downloader on Windows
         Args:
             app_name (str): application name
@@ -181,10 +186,6 @@ class UninstallOnWindows(IUninstallBase):
 
 @abkCommon.function_trace
 def main():
-    imageFullPath = os.path.join(abkCommon.GetHomeDir(), bwp_config["image_dir"])
-    deleteImageDir(imageFullPath)
-    unlinkPythonScript(bwp_config["app_name"])
-
     if _platform in abkCommon.OsPlatformType.PLATFORM_MAC.value:
         uninstallation = UninstallOnMacOS(logger=logger)
     elif _platform in abkCommon.OsPlatformType.PLATFORM_LINUX.value:
@@ -194,11 +195,12 @@ def main():
     else:
         raise ValueError(f'ERROR: "{_platform}" is not supported')
 
-    currDir = abkCommon.GetCurrentDir(__file__)
-    logger.info("currDir=%s", currDir)
-    pyScriptFullName = os.path.join(currDir, bwp_config["app_name"])
-    logger.info("pyScriptFullName=%s", pyScriptFullName)
-    uninstallation.cleanup(pyScriptFullName)
+    if bwp_config.get('retain_images', False) == False:
+        imageFullPath = os.path.join(abkCommon.GetHomeDir(), bwp_config["image_dir"])
+        deleteImageDir(imageFullPath)
+    unlinkPythonScript(bwp_config["app_name"])
+
+    uninstallation.cleanup_installation(bwp_config['app_name'])
 
 
 if __name__ == '__main__':
