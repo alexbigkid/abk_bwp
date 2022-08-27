@@ -17,6 +17,7 @@ import logging.config
 import subprocess
 from abc import ABCMeta, abstractmethod
 from sys import platform as _platform
+from typing import Tuple
 
 from config import bwp_config
 from abkPackage import abkCommon
@@ -88,12 +89,22 @@ class UninstallOnMacOS(IUninstallBase):
 
     @abkCommon.function_trace
     def cleanup_image_dir(self, image_dir: str) -> None:
+        """Cleans up image directory, deletes all downloaded images
+        Args:
+            image_dir (str): image directory name
+        """
         image_full_path = os.path.join(abkCommon.GetHomeDir(), image_dir)
         self._delete_image_dir(image_full_path)
 
 
     @abkCommon.function_trace
-    def _unlink_python_script(self, file_name):
+    def _unlink_python_script(self, file_name: str) -> str:
+        """Deletes link in the $HOME/bin directory
+        Args:
+            file_name (str): file name of the link
+        Returns:
+            str: full name of the source of the link
+        """
         self._logger.debug(f'{file_name=}')
         bin_dir = os.path.join(abkCommon.GetHomeDir(), "bin")
         curr_dir = abkCommon.GetCurrentDir(__file__)
@@ -105,7 +116,11 @@ class UninstallOnMacOS(IUninstallBase):
 
 
     @abkCommon.function_trace
-    def _delete_image_dir(self, images_dir):
+    def _delete_image_dir(self, images_dir: str) -> None:
+        """deletes image directory and all downloaded images
+        Args:
+            images_dir (str): image directory name
+        """
         self._logger.debug(f'{images_dir=}')
         if(os.path.isdir(images_dir)):
             try:
@@ -115,17 +130,28 @@ class UninstallOnMacOS(IUninstallBase):
 
 
     @abkCommon.function_trace
-    def _get_plist_names(self, script_name):
+    def _get_plist_names(self, script_name: str) -> Tuple[str, str]:
+        """Gets plist names. Plist lable and plist file name
+        Args:
+            script_name (str): full script name
+        Returns:
+            Tuple[str, str]: plist lable and plist file name
+        """
         self._logger.debug(f'{script_name=}')
         user_name = abkCommon.GetUserName()
         plist_lable = "com."+user_name+"."+script_name
-        plist_name = plist_lable+".plist"
-        self._logger.debug(f'{plist_lable=}, {plist_name=}')
-        return (plist_lable, plist_name)
+        plist_file_name = plist_lable+".plist"
+        self._logger.debug(f'{plist_lable=}, {plist_file_name=}')
+        return (plist_lable, plist_file_name)
 
 
     @abkCommon.function_trace
-    def _stop_and_unload_bingwallpaper_job(self, plist_name, plist_lable):
+    def _stop_and_unload_bingwallpaper_job(self, plist_name: str, plist_lable: str) -> None:
+        """Stops and unloads bing wallpaper jobs
+        Args:
+            plist_name (str): plist file name
+            plist_lable (str): plist lable
+        """
         self._logger.debug(f'{plist_name=}, {plist_lable=}')
 
         cmdList = []
@@ -143,7 +169,11 @@ class UninstallOnMacOS(IUninstallBase):
 
 
     @abkCommon.function_trace
-    def _delete_plist_file(self, script_name):
+    def _delete_plist_file(self, script_name: str) -> None:
+        """Deletes plist file
+        Args:
+            script_name (str): plist file name
+        """
         self._logger.debug(f'{script_name=}')
         if os.path.isfile(script_name):
             try:
