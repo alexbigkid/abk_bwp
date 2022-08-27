@@ -7,11 +7,8 @@
 # -----------------------------------------------------------------------------
 
 # Standard library imports
-from enum import Enum
 import os
 import sys
-import argparse
-from typing import Tuple
 from urllib.request import urlopen
 import json
 import subprocess
@@ -20,9 +17,8 @@ import logging.config
 from sys import platform as _platform
 
 # Third party imports
-from optparse import OptionParser, Values
+from optparse import Values
 from colorama import Fore, Style
-import tomli
 
 # Local application imports
 from abkPackage import abkCommon
