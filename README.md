@@ -26,7 +26,7 @@ Default is 365 days - 1 year of images
 
 ### Python tracing:
 In order to debug python scripts, you could enable the traces in the
-logging.conf file by changing levels from CRITICAL to DEBUG
+logging.yaml file by changing levels from CRITICAL to DEBUG
 
 #### Scheduler / plist tracing / Troubleshooting
 The project contains com.abk.bingwallpaper_debug.py.plist file, which can be used to debug scheduler problems.

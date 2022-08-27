@@ -13,17 +13,13 @@
 #
 # Created by Alex Berger @ http://www.ABKphoto.com
 
-import logging
 import logging.config
 from sys import platform as _platform
-from abkPackage.abkCommon import function_trace
+from abkPackage import abkCommon
 from config import bwp_config
 
 
-loggingConf = "logging.conf"
-
-
-@function_trace
+@abkCommon.function_trace
 def main():
     # >>>>>>>>>> platform dependency
     if _platform == "darwin":
@@ -46,6 +42,7 @@ def main():
 
 
 if __name__ == '__main__':
-    logging.config.fileConfig(loggingConf)
-    logger = logging.getLogger(__name__)
+    command_line_options = abkCommon.CommandLineOptions()
+    command_line_options.handle_options()
+    logger = logger=command_line_options._logger
     main()

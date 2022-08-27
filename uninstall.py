@@ -23,9 +23,6 @@ from abkPackage.abkCommon import function_trace
 from config import bwp_config
 
 
-loggingConf = 'logging.conf'
-
-
 @function_trace
 def deleteImageDir(imagesDir):
     logger.debug(f'{imagesDir=}')
@@ -79,6 +76,7 @@ def main():
 
 
 if __name__ == '__main__':
-    logging.config.fileConfig(loggingConf)
-    logger = logging.getLogger(__name__)
+    command_line_options = abkCommon.CommandLineOptions()
+    command_line_options.handle_options()
+    logger = logger=command_line_options._logger
     main()
