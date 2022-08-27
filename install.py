@@ -58,41 +58,41 @@ class InstallOnMacOS(IInstallOnOS):
 
 
     @abkCommon.function_trace
-    def setup_installation(self,time_to_exe: time, pyScriptName):
-        self._logger.debug(f'{time_to_exe.hour=}, {time_to_exe.minute=}, {pyScriptName}')
-        pyFullName = self.linkPythonScript(pyScriptName)
-        scriptName = os.path.basename(pyFullName)
-        scriptPath = os.path.dirname(pyFullName)
-        self._logger.info(f'{scriptPath=}, {scriptName=}')
-        (plistLable, plistName) = self.CreatePlistFile_new(time_to_exe, scriptName)
-        plistFullName = os.path.join(scriptPath, plistName)
-        self._logger.info(f'{plistFullName=}')
-        dstPlistName = self.CreatePlistLink(plistFullName)
-        self.StopAndUnloadBingwallpaperJob(dstPlistName, plistLable)
-        self.LoadAndStartBingwallpaperJob(dstPlistName, plistLable)
+    def setup_installation(self, time_to_exe: time, app_name):
+        self._logger.debug(f'{time_to_exe.hour=}, {time_to_exe.minute=}, {app_name=}')
+        full_name = self.link_python_script(app_name)
+        script_name = os.path.basename(full_name)
+        script_path = os.path.dirname(full_name)
+        self._logger.info(f'{script_path=}, {script_name=}')
+        (plist_lable, plistName) = self.create_plist_file(time_to_exe, script_name)
+        plist_full_name = os.path.join(script_path, plistName)
+        self._logger.info(f'{plist_full_name=}')
+        dst_plist_name = self.create_plist_link(plist_full_name)
+        self.stop_and_unload_bingwallpaper_job(dst_plist_name, plist_lable)
+        self.load_and_start_bingwallpaper_job(dst_plist_name, plist_lable)
 
 
     @abkCommon.function_trace
-    def linkPythonScript(self, fileName):
-        self._logger.debug(f'{fileName=}')
-        binDir = os.path.join(abkCommon.GetHomeDir(), "bin")
-        abkCommon.EnsureDir(binDir)
-        currDir = abkCommon.GetParentDir(__file__)
-        src = os.path.join(currDir, fileName)
-        dst = os.path.join(binDir, fileName)
+    def link_python_script(self, file_name):
+        self._logger.debug(f'{file_name=}')
+        bin_dir = os.path.join(abkCommon.GetHomeDir(), "bin")
+        abkCommon.EnsureDir(bin_dir)
+        curr_dir = abkCommon.GetParentDir(__file__)
+        src = os.path.join(curr_dir, file_name)
+        dst = os.path.join(bin_dir, file_name)
         abkCommon.EnsureLinkExists(src, dst)
         self._logger.debug(f'{src=}')
         return src
 
 
     @abkCommon.function_trace
-    def CreatePlistFile_new(self, time_to_exe: time, script_name: str):
+    def create_plist_file(self, time_to_exe: time, script_name: str):
         self._logger.debug(f'{time_to_exe.hour=}, {time_to_exe.minute=}, {script_name=}')
         user_name = abkCommon.GetUserName()
         plist_label = f'com.{user_name}.{script_name}'
         plist_name = f'{plist_label}.plist'
         fh = open(plist_name, "w")
-        lines2write = [
+        lines_to_write = [
             '<?xml version="1.0" encoding="UTF-8"?>\n',
             '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n',
             '<plist version="1.0">\n',
@@ -116,14 +116,14 @@ class InstallOnMacOS(IInstallOnOS):
             '</dict>\n',
             '</plist>\n',
         ]
-        fh.writelines(lines2write)
+        fh.writelines(lines_to_write)
         fh.close()
         self._logger.debug(f'{plist_label=}, {plist_name=}')
         return (plist_label, plist_name)
 
 
     @abkCommon.function_trace
-    def CreatePlistLink(self, full_file_name):
+    def create_plist_link(self, full_file_name):
         self._logger.debug(f'{full_file_name=}')
         file_name = os.path.basename(full_file_name)
         plist_install_dir = abkCommon.GetHomeDir()
@@ -137,13 +137,13 @@ class InstallOnMacOS(IInstallOnOS):
 
 
     @abkCommon.function_trace
-    def StopAndUnloadBingwallpaperJob(self, plistName, plistLable):
-        self._logger.debug(f'{plistName=}, {plistLable=}')
+    def stop_and_unload_bingwallpaper_job(self, plist_name, plist_lable):
+        self._logger.debug(f'{plist_name=}, {plist_lable=}')
 
         cmd_list = []
-        cmd_list.append(f'launchctl list | grep {plistLable}')
-        cmd_list.append(f'launchctl stop {plistLable}')
-        cmd_list.append(f'launchctl unload -w {plistName}')
+        cmd_list.append(f'launchctl list | grep {plist_lable}')
+        cmd_list.append(f'launchctl stop {plist_lable}')
+        cmd_list.append(f'launchctl unload -w {plist_name}')
 
         try:
             for cmd in cmd_list:
@@ -155,12 +155,12 @@ class InstallOnMacOS(IInstallOnOS):
 
 
     @abkCommon.function_trace
-    def LoadAndStartBingwallpaperJob(self, plistName, plistLable):
-        self._logger.debug(f'{plistName=}, {plistLable=}')
+    def load_and_start_bingwallpaper_job(self, plist_name, plist_lable):
+        self._logger.debug(f'{plist_name=}, {plist_lable=}')
 
         cmd_list = []
-        cmd_list.append(f'launchctl load -w {plistName}')
-        cmd_list.append(f'launchctl start {plistLable}')
+        cmd_list.append(f'launchctl load -w {plist_name}')
+        cmd_list.append(f'launchctl start {plist_lable}')
 
         try:
             for cmd in cmd_list:
