@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 
 class OsType(Enum):
     """OsType string representation"""
+
     MAC_OS = "MacOS"
     LINUX_OS = "Linux"
     WINDOWS_OS = "Windows"
@@ -64,7 +65,7 @@ def get_home_dir():
     return homeDir
 
 
-def GetCurrentDir(fileName):
+def get_current_dir(fileName):
     return os.path.dirname(os.path.realpath(fileName))
 
 

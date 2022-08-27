@@ -63,7 +63,7 @@ class UninstallOnMacOS(IUninstallBase):
         # remove the link from $HOME/bin directory
         self._unlink_python_script(app_name)
         # get app_name full name with path
-        curr_dir = abkCommon.GetCurrentDir(__file__)
+        curr_dir = abkCommon.get_current_dir(__file__)
         self._logger.info(f"{curr_dir=}")
         app_file_full_name = os.path.join(curr_dir, app_name)
         self._logger.info(f"{app_file_full_name=}")
@@ -101,7 +101,7 @@ class UninstallOnMacOS(IUninstallBase):
         """
         self._logger.debug(f"{file_name=}")
         bin_dir = os.path.join(abkCommon.get_home_dir(), "bin")
-        curr_dir = abkCommon.GetCurrentDir(__file__)
+        curr_dir = abkCommon.get_current_dir(__file__)
         src = os.path.join(curr_dir, file_name)
         py_bin_link = os.path.join(bin_dir, file_name)
         abkCommon.RemoveLink(py_bin_link)
