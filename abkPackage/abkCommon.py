@@ -24,11 +24,6 @@ class LoggerType(Enum):
     FILE_LOGGER = 'fileLogger'
 
 
-class ConfigFileType(Enum):
-    JSON = "json"
-    TOML = "toml"
-
-
 def function_trace(original_function):
     """Decorator function to help to trace function call entry and exit
     Args:
@@ -60,6 +55,7 @@ def GetCurrentDir(fileName):
 
 def GetParentDir(fileName):
     return os.path.dirname(os.path.dirname(fileName))
+
 
 @function_trace
 def EnsureDir(dirName):
