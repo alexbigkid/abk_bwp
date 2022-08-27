@@ -17,7 +17,6 @@ from optparse import Values
 from abkPackage import abkCommon
 from abkPackage.abkCommon import CommandLineOptions
 from parameterized import parameterized
-import tomli_w
 
 
 GENERAL_EXCEPTION_MSG = 'General Exception Raised'
