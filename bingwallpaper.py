@@ -9,12 +9,13 @@
 # Standard library imports
 import os
 import sys
-from urllib.request import urlopen
 import json
 import subprocess
 import logging
 import logging.config
+from abc import ABCMeta, abstractmethod
 from sys import platform as _platform
+from urllib.request import urlopen
 
 # Third party imports
 from optparse import Values
@@ -23,21 +24,101 @@ from colorama import Fore, Style
 # Local application imports
 from abkPackage import abkCommon
 from config import bwp_config
-
 # from ftv import FTV
+
+
+class IOsDependentBase(metaclass=ABCMeta):
+    os_type: abkCommon.OsType = None  # type: ignore
+
+    @abkCommon.function_trace
+    def __init__(self, logger: logging.Logger = None) -> None:  # type: ignore
+        """Super class init"""
+        self._logger = logger or logging.getLogger(__name__)
+        self._logger.info(f"({__class__.__name__}) {self.os_type} OS dependent environment ...")
+
+    @abstractmethod
+    def set_desktop_background(self, file_name: str) -> None:
+        """Abstract method - should not be implemented. Interface purpose."""
+        raise NotImplemented
+
+
+
+class MacOSDependent(IOsDependentBase):
+
+    @abkCommon.function_trace
+    def __init__(self, logger: logging.Logger) -> None:
+        self.os_type = abkCommon.OsType.MAC_OS
+        super().__init__(logger)
+
+
+    @abkCommon.function_trace
+    def set_desktop_background(self, file_name: str) -> None:
+        self._logger.debug(f"{file_name=}")
+        SCRIPT_MAC = """/usr/bin/osascript<<END
+tell application "Finder"
+set desktop picture to POSIX file "%s"
+end tell
+END"""
+        subprocess.call(SCRIPT_MAC % file_name, shell=True)
+        self._logger.info(f"({self.os_type.MAC_OS.value}) Set background to {file_name}")
+
+
+
+class LinuxDependent(IOsDependentBase):
+    @abkCommon.function_trace
+    def __init__(self, logger: logging.Logger) -> None:
+        self.os_type = abkCommon.OsType.LINUX_OS
+        super().__init__(logger)
+
+    @abkCommon.function_trace
+    def set_desktop_background(self, file_name: str) -> None:
+        self._logger.debug(f"{file_name=}")
+        self._logger.info(f"({self.os_type.MAC_OS.value}) Set background to {file_name}")
+        self._logger.info(f"({self.os_type.MAC_OS.value}) Not implemented yet")
+
+
+
+class WindowsDependent(IOsDependentBase):
+    @abkCommon.function_trace
+    def __init__(self, logger: logging.Logger) -> None:
+        self.os_type = abkCommon.OsType.WINDOWS_OS
+        super().__init__(logger)
+
+    @abkCommon.function_trace
+    def set_desktop_background(self, file_name: str) -> None:
+        self._logger.debug(f"{file_name=}")
+        import ctypes
+        import platform
+
+        winNum = platform.uname()[2]
+        self._logger.info(f"os info: {platform.uname()}")
+        self._logger.info(f"win#: {winNum}")
+        if int(winNum) >= 10:
+            try:
+                ctypes.windll.user32.SystemParametersInfoW(20, 0, file_name, 3)  # type: ignore
+                self._logger.info(f"Background image set to: {file_name}")
+            except:
+                self._logger.error(f"Was not able to set background image to: {file_name}")
+        else:
+            self._logger.error(f"Windows 10 and above is supported, you are using Windows {winNum}")
+        self._logger.info(f"({self.os_type.MAC_OS.value}) Not tested yet")
+        self._logger.info(f"({self.os_type.MAC_OS.value}) Set background to {file_name}")
+
 
 
 class BingWallPaper(object):
     """BingWallPaper downloads images from bing.com and sets it as a wallpaper"""
 
     @abkCommon.function_trace
-    def __init__(self, logger: logging.Logger = None, options: Values = None):  # type: ignore
+    def __init__(self, logger: logging.Logger, options: Values, os_dependant : IOsDependentBase):
         self._logger = logger or logging.getLogger(__name__)
         self._options = options
+        self._os_dependent = os_dependant
 
-    @abkCommon.function_trace
-    def __del__(self):
-        pass
+
+    def set_desktop_background(self, file_name: str) -> None:
+        self._os_dependent.set_desktop_background(file_name)
+
 
     @abkCommon.function_trace
     def define_pix_dirs(self, imagesDir: str) -> str:
@@ -49,9 +130,11 @@ class BingWallPaper(object):
         self._logger.debug(f"{pixDir=}")
         return pixDir
 
+
     @abkCommon.function_trace
     def scale_images(self):
         pass
+
 
     @abkCommon.function_trace
     def trim_number_of_pix(self, pixDir: str, num: int) -> None:
@@ -79,6 +162,7 @@ class BingWallPaper(object):
         else:
             self._logger.info("no images to delete")
 
+
     @abkCommon.function_trace
     def download_bing_image(self, dstDir: str) -> str:
         self._logger.debug(f"{dstDir=}")
@@ -97,47 +181,6 @@ class BingWallPaper(object):
         self._logger.debug(f"{fullFileName=}")
         return fullFileName
 
-    @abkCommon.function_trace
-    def set_desktop_background(self, fileName: str) -> None:
-        self._logger.debug(f"{fileName=}")
-        # ----- Start platform dependency  -----
-        if _platform == "darwin":
-            # MAC OS X ------------------------
-            self._logger.info("Mac OS X environment")
-            SCRIPT_MAC = """/usr/bin/osascript<<END
-tell application "Finder"
-set desktop picture to POSIX file "%s"
-end tell
-END"""
-            subprocess.call(SCRIPT_MAC % fileName, shell=True)
-
-        elif _platform == "linux" or _platform == "linux2":
-            # linux ---------------------------
-            self._logger.info("Linux environment")
-
-        elif _platform == "win32" or _platform == "win64":
-            # Windows or Windows 64-bit -----
-            self._logger.info("Windows environment")
-            import ctypes
-            import platform
-
-            winNum = platform.uname()[2]
-            self._logger.info(f"os info: {platform.uname()}")
-            self._logger.info(f"win#: {winNum}")
-            if int(winNum) >= 10:
-                try:
-                    ctypes.windll.user32.SystemParametersInfoW(20, 0, fileName, 3)
-                    self._logger.info(f"Background image set to: {fileName}")
-                except:
-                    self._logger.error(f"Was not able to set background image to: {fileName}")
-            else:
-                self._logger.error(f"Windows 10 and above is supported, you are using Windows {winNum}")
-        # ----- End platform dependency  -----
-        else:
-            self._logger.error("Not known OS environment")
-            raise NameError("Not known OS environment")
-
-        self._logger.info(f"Set background to {fileName}")
 
 
 def main():
@@ -153,7 +196,18 @@ def main():
     try:
         command_line_options = abkCommon.CommandLineOptions()
         command_line_options.handle_options()
-        bwp = BingWallPaper(logger=command_line_options._logger, options=command_line_options.options)
+        main_logger = command_line_options._logger
+
+        if _platform in abkCommon.OsPlatformType.PLATFORM_MAC.value:
+            bwp_os_dependent = MacOSDependent(logger=main_logger)
+        elif _platform in abkCommon.OsPlatformType.PLATFORM_LINUX.value:
+            bwp_os_dependent = LinuxDependent(logger=main_logger)
+        elif _platform in abkCommon.OsPlatformType.PLATFORM_WINDOWS.value:
+            bwp_os_dependent = WindowsDependent(logger=main_logger)
+        else:
+            raise ValueError(f'ERROR: "{_platform}" is not supported')
+
+        bwp = BingWallPaper(logger=main_logger, options=command_line_options.options, os_dependant=bwp_os_dependent)
         pix_dir = bwp.define_pix_dirs(bwp_config["image_dir"])
         bwp.trim_number_of_pix(pix_dir, bwp_config["number_images_to_keep"])
         file_name = bwp.download_bing_image(pix_dir)
