@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Main program for downloading and upscaling/downscaling bing images to use as wallpapaer sized """
+"""Main program for downloading and upscaling/downscaling bing images to use as wallpaper sized """
 
 # -----------------------------------------------------------------------------
 # http://www.owenrumney.co.uk/2014/09/13/Update_Bing_Desktop_For_Mac.html
@@ -185,14 +185,6 @@ class BingWallPaper(object):
 
 def main():
     exit_code = 0
-    # parser = argparse.ArgumentParser(description='Sets picture from Bing as background')
-    # parser.add_argument(
-    #     "-l", "--log",
-    #     dest="logLevel", choices=[AbkLogLevel.DEBUG, AbkLogLevel.INFO, AbkLogLevel.WARNING, AbkLogLevel.ERROR, AbkLogLevel.CRITICAL],
-    #     # dest="logLevel", choices=['DEBUG'],
-    #     help="Set the logging level"
-    # )
-    # args = parser.parse_args()
     try:
         command_line_options = abkCommon.CommandLineOptions()
         command_line_options.handle_options()
