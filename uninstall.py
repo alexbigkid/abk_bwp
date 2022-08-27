@@ -78,5 +78,5 @@ def main():
 if __name__ == '__main__':
     command_line_options = abkCommon.CommandLineOptions()
     command_line_options.handle_options()
-    logger = logger=command_line_options._logger
+    logger = command_line_options._logger
     main()

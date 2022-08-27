@@ -1,10 +1,20 @@
 .PHONY:	upgrade_setuptools install install_dev test test_verbose exif_rename exif_rename3 settings help
-.SILENT: bwp coverage clean
+.SILENT: bwp coverage clean bwp_install bwp_uninstall
 
 bwp:
 	echo "[ python ./bingwallpaper.py -c ./logging.yaml -v ]"
 	echo "------------------------------------------------------------------------------------"
 	python ./bingwallpaper.py -c ./logging.yaml -v
+
+bwp_install:
+	echo "[ python ./install.py -v ]"
+	echo "------------------------------------------------------------------------------------"
+	python ./install.py -v
+
+bwp_uninstall:
+	echo "[ python ./uninstall.py -v ]"
+	echo "------------------------------------------------------------------------------------"
+	python ./uninstall.py -v
 
 upgrade_setuptools:
 	pip install --upgrade setuptools
@@ -60,6 +70,8 @@ help:
 	@echo "Targets:"
 	@echo "--------------------------------------------------------------------------------"
 	@echo "  bwp                - executes the main program"
+	@echo "  bwp_install        - executes the main install.py"
+	@echo "  bwp_uninstall      - executes the main uninstall.py"
 	@echo "  install            - installs required packages"
 	@echo "  install_dev        - installs required development packages"
 	@echo "  install_nth        - installs nice-to-have packages"
