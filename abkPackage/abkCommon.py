@@ -19,6 +19,22 @@ from colorama import Fore, Style
 logger = logging.getLogger(__name__)
 
 
+
+class OsType(Enum):
+    """OsType string representation"""
+    MAC_OS = 'MacOS'
+    LINUX_OS = 'Linux'
+    WINDOWS_OS = 'Windows'
+
+
+
+class OsPlatformType(Enum):
+    PLATFORM_MAC = frozenset({'darwin'})
+    PLATFORM_LINUX = frozenset({'linux', 'linux2'})
+    PLATFORM_WINDOWS = frozenset({'win32', 'win64'})
+
+
+
 class LoggerType(Enum):
     CONSOLE_LOGGER = 'consoleLogger'
     FILE_LOGGER = 'fileLogger'

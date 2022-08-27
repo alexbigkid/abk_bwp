@@ -8,7 +8,7 @@
             2.2.1. NOT READY YET
         2.3 Windows
             2.3.1. NOT READY YET
-    3. schedule the job permanent job running at 8am or when logged in    Raises:
+    3. schedule the job permanent job running at 8am or when logged in
 """
 
 import os
@@ -16,7 +16,6 @@ import logging
 import logging.config
 import subprocess
 from abc import ABCMeta, abstractmethod
-from enum import Enum
 from datetime import time
 from sys import platform as _platform
 from typing import Tuple
@@ -26,17 +25,9 @@ from abkPackage import abkCommon
 
 
 
-class OsType(Enum):
-    """OsType string representation"""
-    MAC_OS = 'MacOS'
-    LINUX_OS = 'Linux'
-    WINDOWS_OS = 'Windows'
-
-
-
 class IInstallBase(metaclass=ABCMeta):
     """Abstract class (mostly)"""
-    os_type: OsType = None  # type: ignore
+    os_type: abkCommon.OsType = None  # type: ignore
 
     @abkCommon.function_trace
     def __init__(self, logger:logging.Logger=None) -> None:  # type: ignore
@@ -57,7 +48,7 @@ class InstallOnMacOS(IInstallBase):
 
     @abkCommon.function_trace
     def __init__(self, logger: logging.Logger) -> None:
-        self.os_type = OsType.MAC_OS
+        self.os_type = abkCommon.OsType.MAC_OS
         super().__init__(logger)
 
 
@@ -217,7 +208,7 @@ class InstallOnLinux(IInstallBase):
     """Concrete class for installation on Linux"""
 
     def __init__(self, logger: logging.Logger) -> None:
-        self.os_type = OsType.LINUX_OS
+        self.os_type = abkCommon.OsType.LINUX_OS
         super().__init__(logger)
 
 
@@ -229,7 +220,7 @@ class InstallOnLinux(IInstallBase):
             app_name (str): application name
         """
         self._logger.debug(f'{time_to_exe.hour=}, {time_to_exe.minute=}, {app_name=}')
-        self._logger.info("Linux installation is not supported yet")
+        self._logger.info(f'{self.os_type.value} installation is not supported yet')
 
 
 
@@ -237,7 +228,7 @@ class InstallOnWindows(IInstallBase):
     """Concrete class for installation on Windows"""
 
     def __init__(self, logger: logging.Logger) -> None:
-        self.os_type = OsType.WINDOWS_OS
+        self.os_type = abkCommon.OsType.WINDOWS_OS
         super().__init__(logger)
 
 
@@ -249,25 +240,21 @@ class InstallOnWindows(IInstallBase):
             app_name (str): application name
         """
         self._logger.debug(f'{time_to_exe.hour=}, {time_to_exe.minute=}, {app_name=}')
-        self._logger.info("Windows installation is not supported yet")
+        self._logger.info(f'{self.os_type.value} installation is not supported yet')
 
 
 
 @abkCommon.function_trace
 def main():
-    platform_mac = frozenset({'darwin'})
-    platform_linux = frozenset({'linux', 'linux2'})
-    platform_windows = frozenset({'win32', 'win64'})
-
     command_line_options = abkCommon.CommandLineOptions()
     command_line_options.handle_options()
     main_logger = command_line_options._logger
 
-    if _platform in platform_mac:
+    if _platform in abkCommon.OsPlatformType.PLATFORM_MAC.value:
         installation = InstallOnMacOS(logger=main_logger)
-    elif _platform in platform_linux:
+    elif _platform in abkCommon.OsPlatformType.PLATFORM_LINUX.value:
         installation = InstallOnLinux(logger=main_logger)
-    elif _platform in platform_windows:
+    elif _platform in abkCommon.OsPlatformType.PLATFORM_WINDOWS.value:
         installation = InstallOnWindows(logger=main_logger)
     else:
         raise ValueError(f'ERROR: "{_platform}" is not supported')
