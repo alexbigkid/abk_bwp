@@ -15,7 +15,6 @@ import yaml
 from _version import __version__
 from colorama import Fore, Style
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -54,7 +53,7 @@ def function_trace(original_function):
     return function_wrapper
 
 
-def GetUserName():
+def get_user_name():
     return getpass.getuser()
 
 
