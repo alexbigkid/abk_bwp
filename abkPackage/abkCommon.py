@@ -15,13 +15,6 @@ import yaml
 from _version import __version__
 from colorama import Fore, Style
 
-# this ensures it will work with python 3.7 and up
-try:
-    import tomllib              # for python 3.11 and up
-except ModuleNotFoundError:
-    import tomli as tomllib     # for 3.7 <= python < 3.11
-
-
 
 logger = logging.getLogger(__name__)
 
