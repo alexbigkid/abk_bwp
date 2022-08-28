@@ -56,6 +56,18 @@ class InstallOnMacOS(IInstallBase):
             time_to_exe (time): time to execute the bing wall paper download
             app_name (str): application name
         """
+        # TODO: 1. check whether pyenv is installed
+        #   TODO: 1.1. if pyenv is installed, check what versions of python are installed
+        #   TODO: 1.2. select the latest python 3 version
+        #   TODO: 1.3. check pyenv-virtualenv is installed
+        #       TODO: 1.3.1. if pyenv-virtualenv is installed create a new bingwallpaper ve if not available yet
+        #       TODO: 1.3.2. set the local virtual env to be bingwallpaper
+        #       TODO: 1.3.3. install all needed python packages into ve
+        #   TODO: 1.4. if ve is not installed, install packages into the latest installed python version
+        # TODO: 2. if pyenv is not installed, install packages into the whatever version is active (worst case)
+        # TODO: 3. create shell script to change to abk bingwall paper project and execute the download within the directory
+        # TODO: 4. use that script to create plist
+        # TODO: 5. don't forget to unwind the shole logic in the uninstall script!
         self._logger.debug(f"{time_to_exe.hour=}, {time_to_exe.minute=}, {app_name=}")
         full_name = self._link_python_script(app_name)
         script_name = os.path.basename(full_name)
