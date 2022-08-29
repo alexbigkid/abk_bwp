@@ -7,7 +7,6 @@
 # -----------------------------------------------------------------------------
 
 # Standard library imports
-from functools import lru_cache
 import os
 import sys
 import json
@@ -17,6 +16,8 @@ import logging.config
 import datetime
 import shutil
 from abc import ABCMeta, abstractmethod
+from dataclasses import dataclass
+from functools import lru_cache
 from sys import platform as _platform
 from typing import Dict, List
 from urllib.request import urlopen
@@ -43,6 +44,7 @@ BWP_DIGITS_IN_A_DAY = 2
 BWP_IMG_FILE_EXT = ".jpg"
 BWP_DEFAULT_REGION = "us"
 BWP_DEFAULT_DL_SERVICE = "peapix"
+BWP_SCALE_FILE_REFIX = "SCALE"
 
 # -----------------------------------------------------------------------------
 # local functions
@@ -74,6 +76,31 @@ def get_img_region() -> str:
     if img_dl_service != BWP_DEFAULT_DL_SERVICE and img_region != BWP_DEFAULT_REGION:
         return BWP_DEFAULT_REGION
     return img_region
+
+
+@lru_cache(maxsize=1)
+def is_ftv_enabled() -> bool:
+    return bwp_config.get(FTV_KW.FTV.value,{}).get(FTV_KW.ENABLED.value, False)
+
+
+@lru_cache(maxsize=128)
+def get_full_img_dir(img_root_dir: str, img_date: datetime.date) -> str:
+    if is_ftv_enabled():
+        return os.path.join(img_root_dir, f"{img_date.month:02d}", f"{img_date.day:02d}")
+    else:
+        return os.path.join(img_root_dir, f"{img_date.year:04d}", f"{img_date.month:02d}")
+
+
+# -----------------------------------------------------------------------------
+# Download IMage Data
+# -----------------------------------------------------------------------------
+@dataclass
+class DownloadImageData():
+    imageDate: datetime.date
+    title: str
+    imageUrl: str
+    imageScalePath: str
+    imageLocalPath: str
 
 
 # -----------------------------------------------------------------------------
@@ -345,7 +372,7 @@ class PeapixDownloadService(DownLoadServiceBase):
 
 
     @abkCommon.function_trace
-    def _process_peapix_api_data(self, metadata_list: List[Dict[str, str]]) -> List[Dict[str, str]]:  # type: ignore
+    def _process_peapix_api_data(self, metadata_list: List[Dict[str, str]]) -> List[DownloadImageData]:  # type: ignore
         """Processes the received meta data from the peapix API and
            keeps only data about images which needs to be downloaded.
            Filters out data about images we already have.
@@ -355,30 +382,33 @@ class PeapixDownloadService(DownLoadServiceBase):
             List[Dict[str, str]]: metadata about images to download
         """
         self._logger.debug(f"Received from API: {json.dumps(metadata_list, indent=4)}")
-        return_list: List[Dict[str, str]] = []
-        pix_root_dir = get_img_dir()
-        pix_region = get_img_region()
-        self._logger.debug(f"{pix_region=}")
+        return_list: List[DownloadImageData] = []
+        img_root_dir = get_img_dir()
+        img_region = get_img_region()
+        self._logger.debug(f"{img_region=}")
 
-        is_ftv_enabled = bwp_config.get(FTV_KW.FTV.value,{}).get(FTV_KW.ENABLED.value, False)
-        if is_ftv_enabled:
-            # store images in this directory format: mm/dd/yyyy-mm-dd.jpg
-            self._logger.debug(f"ABK: FTV enabled")
-            for img_data in metadata_list:
-                try:
-                    img_date_str = img_data.get("date", "")
-                    img_date = datetime.datetime.strptime(img_date_str, "%Y-%m-%d")
-                    img_to_check = os.path.join(pix_root_dir, f"{img_date.month:02d}", f"{img_date.day:02d}", f"{img_date_str}_{pix_region}{BWP_IMG_FILE_EXT}")
-                    self._logger.debug(f"{img_to_check=}")
-                except:
-                    pass # not a date, need to mark it as to be deleted
-        else:
-            # store images in this directory format: yyyy/mm/yyyy-mm-dd.jpg
-            self._logger.debug(f"ABK: FTV disabled")
+        for img_data in metadata_list:
+            try:
+                img_date_str = img_data.get("date", "")
+                img_date = datetime.datetime.strptime(img_date_str, "%Y-%m-%d")
+                img_to_check = os.path.join(get_full_img_dir(img_root_dir, img_date), f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}")
+                self._logger.debug(f"{img_to_check=}")
+                if os.path.exists(img_to_check) == False:
+                    return_list.append(DownloadImageData(
+                        imageDate=img_date,
+                        title=img_data.get("title", ""),
+                        imageUrl=img_data.get("imageUrl", ""),
+                        imageScalePath=os.path.join(img_root_dir, f"{BWP_SCALE_FILE_REFIX}_{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}"),
+                        imageLocalPath=img_to_check
+                    ))
+            except:
+                pass # nothing to be done, next
 
-        for img_info in metadata_list:
-            pass
-        return metadata_list
+        self._logger.debug(f"Images to download: {return_list=}")
+        return return_list
+
+
+
 
 
 # -----------------------------------------------------------------------------
