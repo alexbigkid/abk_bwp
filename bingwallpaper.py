@@ -76,16 +76,16 @@ class DownLoadServiceBase(metaclass=ABCMeta):
 
     @staticmethod
     @abkCommon.function_trace
-    def _convert_dir_structure_if_needed() -> None:
+    def _convert_dir_structure_if_needed() -> bool:
         root_image_dir = get_pix_dir()
         # get sub directory names from the defined picture directory
+        ftv_enabled = bwp_config.get(FTV_KW.FTV.value, {}).get(FTV_KW.ENABLED.value, False)
         dir_list = sorted(next(os.walk(root_image_dir))[BWP_DIRECTORIES])
         if len(dir_list) == 0:               # empty pix directory, no conversion needed
             # create an empty warning file
             open(f"{root_image_dir}/{BWP_FILE_NAME_WARNING}", "a").close()
-            return
+            return ftv_enabled
 
-        ftv_enabled = bwp_config.get(FTV_KW.FTV.value, {}).get(FTV_KW.ENABLED.value, False)
         if ftv_enabled:
             filtered_year_dir_list = [bwp_dir for bwp_dir in dir_list if len(bwp_dir) == BWP_DIGITS_IN_A_YEAR and bwp_dir.isdigit()]
             if len(filtered_year_dir_list) > 0:
@@ -94,7 +94,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
             filtered_month_dir_list = [bwp_dir for bwp_dir in dir_list if len(bwp_dir) == BWP_DIGITS_IN_A_MONTH and bwp_dir.isdigit() and int(bwp_dir) <= BWP_NUMBER_OF_MONTHS]
             if len(filtered_month_dir_list) > 0:
                 DownLoadServiceBase._convert_to_date_dir_structure(root_image_dir, filtered_month_dir_list)
-
+        return ftv_enabled
 
     @staticmethod
     @abkCommon.function_trace
@@ -189,6 +189,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
         """Corrects the current background image link to the new directory structure
         Args:
             root_image_dir (str): image directory name where images are stored
+            is_ftv_enabled (bool): frame TV directory structure enabled or not
         """
         current_background_file_name = os.path.join(root_image_dir, bwp_config.get(ROOT_KW.CURRENT_BACKGROUND_FILE_NAME.value, ""))
         if os.path.islink(current_background_file_name):
@@ -257,16 +258,15 @@ class PeapixDownloadService(DownLoadServiceBase):
         get_metadata_url = "?".join([bwp_config[CONSTANT_KW.CONSTANT.value][CONSTANT_KW.PEAPIX_URL.value], country_part_url])
         self._logger.debug(f"Getting Image info from: {get_metadata_url=}")
 
-        # is_ftv_dir = self._is_current_ftv_dir()
         is_ftv_dir = DownLoadServiceBase._convert_dir_structure_if_needed()
         self._logger.debug(f"{is_ftv_dir=}")
 
-        # this might throw, but we have an try/catch in the main, so no extra handling here needed.
+        # this might throw, but we have a try/catch in the main, so no extra handling here needed.
         # resp = requests.get(get_metadata_url)
         # if resp.status_code == 200: # good case
         #     metadata = self._process_peapix_api_data(resp.json())
         # else:
-        #     raise ResponseError(f"ERROR: getting bing image return error code: {resp.status_code}")
+        #     raise ResponseError(f"ERROR: getting bing image return error code: {resp.status_code}. Cannot proceed.")
         return ""
 
 
