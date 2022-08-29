@@ -484,7 +484,7 @@ def main():
             raise ValueError(f'ERROR: "{_platform}" is not supported')
 
         # use bing service as defualt, peapix is for a back up solution
-        if bwp_config.get("dl_service", "bing") == "bing":
+        if bwp_config.get(ROOT_KW.DL_SERVICE.value, "bing") == "bing":
             dl_service = BingDownloadService(logger=main_logger)
         else:
             dl_service = PeapixDownloadService(logger=main_logger)
