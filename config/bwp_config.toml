@@ -1,18 +1,25 @@
 time_to_fetch = 08:30:00
 app_name = "bingwallpaper.py"
 image_dir = "Pictures/BingWallpapers"
-current_background_file_name = "current_background.jpg"
-number_images_to_keep = 365
-set_desktop_image = true
+current_background = "current_background.jpg"
+years_images_to_keep = 365
 retain_images = true
 dl_service = "peapix"
 region = "us"
 
+[desktop_img]
+enabled = true
+width = 3840
+height = 2160
+# please do not modify those alternative dimentions
+alt_dimention = [ {"width" = 640, "height" = 480}, {"width" = 1024, "height" = 768}, {"width" = 1600, "height" = 1200}, {"width" = 1920, "height" = 1200}, {"width" = 3840, "height" = 2160} ]
+
+
 [constant]
-dl_service_alternatives = ["bing", "peapix"]
+alt_dl_service = ["bing", "peapix"]
 bing_url = "http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en-US"
 peapix_url = "https://peapix.com/bing/feed"
-peapix_region_alternatives = ["au", "ca", "cn", "de", "fr", "in", "jp", "es", "gb", "us"]
+alt_peapix_region = ["au", "ca", "cn", "de", "fr", "in", "jp", "es", "gb", "us"]
 
 [ftv]
 enabled = true
@@ -21,3 +28,5 @@ ip_address = "192.168.0.119"
 port = 8002
 # image change frequency in sec
 image_change_frequency = 300
+# The image size for ftv is stored in the native 3840x2160 (4K) format.
+# This cannot be changed, because it is the native resilution for Frame TV

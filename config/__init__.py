@@ -18,20 +18,28 @@ class ROOT_KW(Enum):
     TIME_TO_FETCH = "time_to_fetch"
     APP_NAME = "app_name"
     IMAGE_DIR = "image_dir"
-    CURRENT_BACKGROUND_FILE_NAME = "current_background_file_name"
-    NUMBER_IMAGES_TO_KEEP = "number_images_to_keep"
+    CURRENT_BACKGROUND = "current_background"
+    YEARS_IMAGES_TO_KEEP = "years_images_to_keep"
     SET_DESKTOP_IMAGE = "set_desktop_image"
     RETAIN_IMAGES = "retain_images"
     DL_SERVICE = "dl_service"
     REGION = "region"
 
 
+class DESKTOP_IMG_KW(Enum):
+    DESKTOP_IMG = "desktop_img"
+    ENABLED = "enabled"
+    WIDTH = "width"
+    HEIGHT = "height"
+    ALT_DIMENTION = "alt_dimention"
+
+
 class CONSTANT_KW(Enum):
     CONSTANT = "constant"
-    DL_SERVICE_ALTERNATIVES = "dl_service_alternatives"
+    ALT_DL_SERVICE = "alt_dl_service"
     BING_URL = "bing_url"
     PEAPIX_URL = "peapix_url"
-    PEAPIX_REGION_ALTERNATIVES = "peapix_region_alternatives"
+    ALT_PEAPIX_REGION = "alt_peapix_region"
 
 
 class FTV_KW(Enum):

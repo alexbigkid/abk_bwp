@@ -69,7 +69,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
 
 
     @abstractmethod
-    def download_daily_image(self, dst_dir: str) -> str:
+    def download_daily_image(self) -> None:
         """Abstract method - should not be implemented. Interface purpose."""
         raise NotImplemented
 
@@ -107,7 +107,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
         """
         # FTV enabled conversion needed to use mm/dd directory format.
         # print(f"{root_image_dir=}, {year_list=}")
-        region_list = bwp_config.get(CONSTANT_KW.CONSTANT.value, {}).get(CONSTANT_KW.PEAPIX_REGION_ALTERNATIVES.value, [])
+        region_list = bwp_config.get(CONSTANT_KW.CONSTANT.value, {}).get(CONSTANT_KW.ALT_PEAPIX_REGION.value, [])
         for year_dir in year_list:
             if len(year_dir) == BWP_DIGITS_IN_A_YEAR and year_dir.isdigit():
                 # get the subdirectories of the year
@@ -150,7 +150,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
             month_list (List[str]): month list directory names
         """
         # print(f"{root_image_dir=}, {month_list=}")
-        region_list = bwp_config.get(CONSTANT_KW.CONSTANT.value, {}).get(CONSTANT_KW.PEAPIX_REGION_ALTERNATIVES.value, [])
+        region_list = bwp_config.get(CONSTANT_KW.CONSTANT.value, {}).get(CONSTANT_KW.ALT_PEAPIX_REGION.value, [])
         for month_dir in month_list:
             if len(month_dir) == BWP_DIGITS_IN_A_MONTH and month_dir.isdigit() and int(month_dir) <= BWP_NUMBER_OF_MONTHS:
                 # get the subdirectories of the month
@@ -191,7 +191,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
             root_image_dir (str): image directory name where images are stored
             is_ftv_enabled (bool): frame TV directory structure enabled or not
         """
-        current_background_file_name = os.path.join(root_image_dir, bwp_config.get(ROOT_KW.CURRENT_BACKGROUND_FILE_NAME.value, ""))
+        current_background_file_name = os.path.join(root_image_dir, bwp_config.get(ROOT_KW.CURRENT_BACKGROUND.value, ""))
         if os.path.islink(current_background_file_name):
             try:
                 current_background_link = os.readlink(current_background_file_name)
@@ -218,13 +218,9 @@ class BingDownloadService(DownLoadServiceBase):
         super().__init__(logger)
 
     @abkCommon.function_trace
-    def download_daily_image(self, dst_dir: str) -> str:
-        """Downloads bing image and stores it in the defined directory
-        Args:
-            dst_dir (str): directory to store the image
-        Returns:
-            str: full file name downloaded
-        """
+    def download_daily_image(self):
+        """Downloads bing image and stores it in the defined directory"""
+        dst_dir = get_pix_dir()
         self._logger.debug(f"{dst_dir=}")
         response = urlopen("http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en-US")
         obj = json.load(response)
@@ -238,7 +234,10 @@ class BingDownloadService(DownLoadServiceBase):
             pic = urlopen(url)
             fh.write(pic.read())
         self._logger.debug(f"{full_file_name=}")
-        return full_file_name
+
+        # TODO: need to safe file with following name: image_dir/scale_YYYY-mm-dd_us.jpg
+        # TODO: because the scaling job will pick it up later to scale to the correct dimention and move it to correct directory
+        # return full_file_name
 
 
 class PeapixDownloadService(DownLoadServiceBase):
@@ -246,13 +245,9 @@ class PeapixDownloadService(DownLoadServiceBase):
         super().__init__(logger)
 
     @abkCommon.function_trace
-    def download_daily_image(self, dst_dir: str) -> str:
-        """Downloads bing image and stores it in the defined directory
-        Args:
-            dst_dir (str): directory to store the image
-        Returns:
-            str: full file name downloaded
-        """
+    def download_daily_image(self) -> None:
+        """Downloads bing image and stores it in the defined directory"""
+        dst_dir = get_pix_dir()
         self._logger.debug(f"{dst_dir=}")
         country_part_url = "=".join(['country', bwp_config[ROOT_KW.REGION.value]])
         get_metadata_url = "?".join([bwp_config[CONSTANT_KW.CONSTANT.value][CONSTANT_KW.PEAPIX_URL.value], country_part_url])
@@ -265,9 +260,10 @@ class PeapixDownloadService(DownLoadServiceBase):
         # resp = requests.get(get_metadata_url)
         # if resp.status_code == 200: # good case
         #     metadata = self._process_peapix_api_data(resp.json())
+        # TODO: need to safe file with following name: image_dir/scale_YYYY-mm-dd_us.jpg
+        # TODO: because the scaling job will pick it up later to scale to the correct dimention and move it to correct directory
         # else:
         #     raise ResponseError(f"ERROR: getting bing image return error code: {resp.status_code}. Cannot proceed.")
-        return ""
 
 
     @abkCommon.function_trace
@@ -424,8 +420,8 @@ class BingWallPaper(object):
 
 
     @abkCommon.function_trace
-    def scale_images(self):
-        pass
+    def scale_images(self) -> str:
+        return ""
 
 
     @abkCommon.function_trace
@@ -463,14 +459,10 @@ class BingWallPaper(object):
 
 
     @abkCommon.function_trace
-    def download_daily_image(self, dst_dir: str) -> str:
+    def download_daily_image(self) -> None:
         """Downloads bing image and stores it in the defined directory
-        Args:
-            dst_dir (str): directory to store the image
-        Returns:
-            str: full file name downloaded
         """
-        return self._dl_service.download_daily_image(dst_dir)
+        self._dl_service.download_daily_image()
 
 
 # -----------------------------------------------------------------------------
@@ -505,13 +497,16 @@ def main():
             os_dependant=bwp_os_dependent,
             dl_service=dl_service
         )
-        pix_dir = get_pix_dir()
-        bwp.trim_number_of_pix(pix_dir, bwp_config["number_images_to_keep"])
-        file_name = bwp.download_daily_image(pix_dir)
-        bwp.scale_images()
-        if bwp_config.get("set_desktop_image", False):
-            bwp.set_desktop_background(file_name)
-        if bwp_config.get("ftv", {}).get("set_image", False):
+        bwp.download_daily_image()
+        last_img_name = bwp.scale_images()
+
+        # is set desktop image enabled
+        if bwp_config.get(ROOT_KW.SET_DESKTOP_IMAGE.value, False):
+            bwp.set_desktop_background(last_img_name)
+
+        # bwp.trim_number_of_pix(pix_dir, bwp_config["number_images_to_keep"])
+
+        if bwp_config.get(FTV_KW.FTV.value, {}).get(FTV_KW.SET_IMAGE.value, False):
             pass
             # ftv = FTV(config_dict.get('ftv'))
             # if ftv.is_art_mode_supported():
