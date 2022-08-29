@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 
 # Standard library imports
-from functools import cache
+from functools import lru_cache
 import os
 import sys
 import json
@@ -41,21 +41,39 @@ BWP_DIGITS_IN_A_YEAR = 4
 BWP_DIGITS_IN_A_MONTH = 2
 BWP_DIGITS_IN_A_DAY = 2
 BWP_IMG_FILE_EXT = ".jpg"
-
+BWP_DEFAULT_REGION = "us"
+BWP_DEFAULT_DL_SERVICE = "peapix"
 
 # -----------------------------------------------------------------------------
 # local functions
 # -----------------------------------------------------------------------------
-@cache
-def get_pix_dir() -> str:
+@lru_cache(maxsize=1)
+def get_img_dir() -> str:
     """Defines the image directory, creates if not existent yet
     Returns:
         str: full directory name where images will be saved
     """
     user_home_dir = abkCommon.get_home_dir()
-    pix_dir = os.path.join(user_home_dir, bwp_config.get(ROOT_KW.IMAGE_DIR.value, BWP_DEFAULT_PIX_DIR))
-    abkCommon.ensure_dir(pix_dir)
-    return pix_dir
+    img_dir = os.path.join(user_home_dir, bwp_config.get(ROOT_KW.IMAGE_DIR.value, BWP_DEFAULT_PIX_DIR))
+    abkCommon.ensure_dir(img_dir)
+    return img_dir
+
+
+@lru_cache(maxsize=1)
+def get_img_region() -> str:
+    """Gets the region from config toml file
+    Returns:
+        str: region string
+    """
+    img_region = bwp_config.get(ROOT_KW.REGION.value, BWP_DEFAULT_REGION)
+    img_dl_service = bwp_config.get(ROOT_KW.DL_SERVICE.value, BWP_DEFAULT_DL_SERVICE)
+    img_alt_region_list = bwp_config.get(CONSTANT_KW.CONSTANT.value, {}).get(CONSTANT_KW.ALT_PEAPIX_REGION.value, [])
+    # correct image region to default if something is set to an invalid value
+    if img_dl_service == BWP_DEFAULT_DL_SERVICE and img_region not in img_alt_region_list:
+        return BWP_DEFAULT_REGION
+    if img_dl_service != BWP_DEFAULT_DL_SERVICE and img_region != BWP_DEFAULT_REGION:
+        return BWP_DEFAULT_REGION
+    return img_region
 
 
 # -----------------------------------------------------------------------------
@@ -77,7 +95,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
     @staticmethod
     @abkCommon.function_trace
     def convert_dir_structure_if_needed() -> None:
-        root_image_dir = get_pix_dir()
+        root_image_dir = get_img_dir()
         # get sub directory names from the defined picture directory
         dir_list = sorted(next(os.walk(root_image_dir))[BWP_DIRECTORIES])
         if len(dir_list) == 0:               # empty pix directory, no conversion needed
@@ -220,7 +238,7 @@ class BingDownloadService(DownLoadServiceBase):
     @abkCommon.function_trace
     def download_daily_image(self):
         """Downloads bing image and stores it in the defined directory"""
-        dst_dir = get_pix_dir()
+        dst_dir = get_img_dir()
         self._logger.debug(f"{dst_dir=}")
         response = urlopen("http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en-US")
         obj = json.load(response)
@@ -247,26 +265,87 @@ class PeapixDownloadService(DownLoadServiceBase):
     @abkCommon.function_trace
     def download_daily_image(self) -> None:
         """Downloads bing image and stores it in the defined directory"""
-        dst_dir = get_pix_dir()
+        dst_dir = get_img_dir()
         self._logger.debug(f"{dst_dir=}")
         country_part_url = "=".join(['country', bwp_config.get(ROOT_KW.REGION.value, "us")])
         get_metadata_url = "?".join([bwp_config.get(CONSTANT_KW.CONSTANT.value, {}).get(CONSTANT_KW.PEAPIX_URL.value, ""), country_part_url])
         self._logger.debug(f"Getting Image info from: {get_metadata_url=}")
 
-        # self._logger.debug(f"{is_ftv_dir=}")
+        abk_resp_json = [
+    {
+        "title": "Bearded reedlings at a wetland in Flevoland, Netherlands",
+        "fullUrl": "https://img.peapix.com/459318aa7ef7472fa0dd7b43c5b3d90f_1080.jpg",
+        "thumbUrl": "https://img.peapix.com/459318aa7ef7472fa0dd7b43c5b3d90f_480.jpg",
+        "imageUrl": "https://img.peapix.com/459318aa7ef7472fa0dd7b43c5b3d90f.jpg",
+        "date": "2022-08-28",
+        "pageUrl": "https://peapix.com/bing/39843"
+    },
+    {
+        "title": "Boundary Trail in Mount St. Helens National Volcanic Monument, Washington",
+        "fullUrl": "https://img.peapix.com/a27bc3b5bb5f4c10ada9b8308336000f_1080.jpg",
+        "thumbUrl": "https://img.peapix.com/a27bc3b5bb5f4c10ada9b8308336000f_480.jpg",
+        "imageUrl": "https://img.peapix.com/a27bc3b5bb5f4c10ada9b8308336000f.jpg",
+        "date": "2022-08-27",
+        "pageUrl": "https://peapix.com/bing/39831"
+    },
+    {
+        "title": "Kiteboarders and windsurfers off the Pelje\u0161ac Peninsula, Croatia",
+        "fullUrl": "https://img.peapix.com/c22a07765005471d8a9fc22e3244ede2_1080.jpg",
+        "thumbUrl": "https://img.peapix.com/c22a07765005471d8a9fc22e3244ede2_480.jpg",
+        "imageUrl": "https://img.peapix.com/c22a07765005471d8a9fc22e3244ede2.jpg",
+        "date": "2022-08-26",
+        "pageUrl": "https://peapix.com/bing/39819"
+    },
+    {
+        "title": "North Cascades National Park, Washington",
+        "fullUrl": "https://img.peapix.com/532fbfa5af144b73a8896a0cce37f9b8_1080.jpg",
+        "thumbUrl": "https://img.peapix.com/532fbfa5af144b73a8896a0cce37f9b8_480.jpg",
+        "imageUrl": "https://img.peapix.com/532fbfa5af144b73a8896a0cce37f9b8.jpg",
+        "date": "2022-08-25",
+        "pageUrl": "https://peapix.com/bing/39807"
+    },
+    {
+        "title": "Wheat field in Ukraine",
+        "fullUrl": "https://img.peapix.com/7e1e2b20f6c4467393dc24c2dffba55e_1080.jpg",
+        "thumbUrl": "https://img.peapix.com/7e1e2b20f6c4467393dc24c2dffba55e_480.jpg",
+        "imageUrl": "https://img.peapix.com/7e1e2b20f6c4467393dc24c2dffba55e.jpg",
+        "date": "2022-08-24",
+        "pageUrl": "https://peapix.com/bing/39795"
+    },
+    {
+        "title": "Menton, France",
+        "fullUrl": "https://img.peapix.com/45beb957999e46c0ba96027735cabdee_1080.jpg",
+        "thumbUrl": "https://img.peapix.com/45beb957999e46c0ba96027735cabdee_480.jpg",
+        "imageUrl": "https://img.peapix.com/45beb957999e46c0ba96027735cabdee.jpg",
+        "date": "2022-08-23",
+        "pageUrl": "https://peapix.com/bing/39783"
+    },
+    {
+        "title": "A burrowing owl chick and adult in South Florida",
+        "fullUrl": "https://img.peapix.com/e1024949b15e4677acdb0c0b0fe61fcd_1080.jpg",
+        "thumbUrl": "https://img.peapix.com/e1024949b15e4677acdb0c0b0fe61fcd_480.jpg",
+        "imageUrl": "https://img.peapix.com/e1024949b15e4677acdb0c0b0fe61fcd.jpg",
+        "date": "2022-08-22",
+        "pageUrl": "https://peapix.com/bing/39771"
+    }
+]
+
+
+
+        metadata = self._process_peapix_api_data(abk_resp_json)
 
         # this might throw, but we have a try/catch in the main, so no extra handling here needed.
         # resp = requests.get(get_metadata_url)
         # if resp.status_code == 200: # good case
         #     metadata = self._process_peapix_api_data(resp.json())
-        # TODO: need to safe file with following name: image_dir/scale_YYYY-mm-dd_us.jpg
-        # TODO: because the scaling job will pick it up later to scale to the correct dimention and move it to correct directory
+        #     # TODO: need to safe file with following name: image_dir/scale_YYYY-mm-dd_us.jpg
+        #     # TODO: because the scaling job will pick it up later to scale to the correct dimention and move it to correct directory
         # else:
         #     raise ResponseError(f"ERROR: getting bing image return error code: {resp.status_code}. Cannot proceed.")
 
 
     @abkCommon.function_trace
-    def _process_peapix_api_data(self, metadata: List[Dict[str, str]]) -> List[Dict[str, str]]:  # type: ignore
+    def _process_peapix_api_data(self, metadata_list: List[Dict[str, str]]) -> List[Dict[str, str]]:  # type: ignore
         """Processes the received meta data from the peapix API and
            keeps only data about images which needs to be downloaded.
            Filters out data about images we already have.
@@ -275,18 +354,31 @@ class PeapixDownloadService(DownLoadServiceBase):
         Returns:
             List[Dict[str, str]]: metadata about images to download
         """
-        self._logger.debug(f"Received from API: {json.dumps(metadata, indent=4)}")
+        self._logger.debug(f"Received from API: {json.dumps(metadata_list, indent=4)}")
+        return_list: List[Dict[str, str]] = []
+        pix_root_dir = get_img_dir()
+        pix_region = get_img_region()
+        self._logger.debug(f"{pix_region=}")
 
-        if bwp_config.get(FTV_KW.FTV.value,{}).get(FTV_KW.ENABLED.value, False):
+        is_ftv_enabled = bwp_config.get(FTV_KW.FTV.value,{}).get(FTV_KW.ENABLED.value, False)
+        if is_ftv_enabled:
             # store images in this directory format: mm/dd/yyyy-mm-dd.jpg
             self._logger.debug(f"ABK: FTV enabled")
+            for img_data in metadata_list:
+                try:
+                    img_date_str = img_data.get("date", "")
+                    img_date = datetime.datetime.strptime(img_date_str, "%Y-%m-%d")
+                    img_to_check = os.path.join(pix_root_dir, f"{img_date.month:02d}", f"{img_date.day:02d}", f"{img_date_str}_{pix_region}{BWP_IMG_FILE_EXT}")
+                    self._logger.debug(f"{img_to_check=}")
+                except:
+                    pass # not a date, need to mark it as to be deleted
         else:
             # store images in this directory format: yyyy/mm/yyyy-mm-dd.jpg
             self._logger.debug(f"ABK: FTV disabled")
 
-        for img_info in metadata:
+        for img_info in metadata_list:
             pass
-        return metadata
+        return metadata_list
 
 
 # -----------------------------------------------------------------------------
@@ -433,7 +525,7 @@ class BingWallPaper(object):
         """Deletes some images if it reaches max number desirable
            The max number of years images to retain can be defined in the config/bwp_config.toml file
         """
-        pix_dir = get_pix_dir()
+        pix_dir = get_img_dir()
         max_years = bwp_config.get(ROOT_KW.YEARS_IMAGES_TO_KEEP.value, 1)
         self._logger.debug(f"{pix_dir=}, {max_years=}")
 

@@ -17,9 +17,9 @@ alt_dimention = [ {"width" = 640, "height" = 480}, {"width" = 1024, "height" = 7
 
 [constant]
 alt_dl_service = ["bing", "peapix"]
+alt_peapix_region = ["au", "ca", "cn", "de", "fr", "in", "jp", "es", "gb", "us"]
 bing_url = "http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en-US"
 peapix_url = "https://peapix.com/bing/feed"
-alt_peapix_region = ["au", "ca", "cn", "de", "fr", "in", "jp", "es", "gb", "us"]
 
 [ftv]
 enabled = true
