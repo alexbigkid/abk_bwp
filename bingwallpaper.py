@@ -92,10 +92,10 @@ def get_full_img_dir(img_root_dir: str, img_date: datetime.date) -> str:
 
 
 # -----------------------------------------------------------------------------
-# Download IMage Data
+# Image Downlaod Data
 # -----------------------------------------------------------------------------
 @dataclass
-class DownloadImageData():
+class ImageDownloadData():
     imageDate: datetime.date
     title: str
     imageUrl: str
@@ -356,15 +356,13 @@ class PeapixDownloadService(DownLoadServiceBase):
         "pageUrl": "https://peapix.com/bing/39771"
     }
 ]
-
-
-
-        metadata = self._process_peapix_api_data(abk_resp_json)
+        abk_dl_img_data = self._process_peapix_api_data(abk_resp_json)
+        self._download_images(abk_dl_img_data)
 
         # this might throw, but we have a try/catch in the main, so no extra handling here needed.
         # resp = requests.get(get_metadata_url)
         # if resp.status_code == 200: # good case
-        #     metadata = self._process_peapix_api_data(resp.json())
+        #     dl_img_data = self._process_peapix_api_data(resp.json())
         #     # TODO: need to safe file with following name: image_dir/scale_YYYY-mm-dd_us.jpg
         #     # TODO: because the scaling job will pick it up later to scale to the correct dimention and move it to correct directory
         # else:
@@ -372,7 +370,7 @@ class PeapixDownloadService(DownLoadServiceBase):
 
 
     @abkCommon.function_trace
-    def _process_peapix_api_data(self, metadata_list: List[Dict[str, str]]) -> List[DownloadImageData]:  # type: ignore
+    def _process_peapix_api_data(self, metadata_list: List[Dict[str, str]]) -> List[ImageDownloadData]:
         """Processes the received meta data from the peapix API and
            keeps only data about images which needs to be downloaded.
            Filters out data about images we already have.
@@ -382,7 +380,9 @@ class PeapixDownloadService(DownLoadServiceBase):
             List[Dict[str, str]]: metadata about images to download
         """
         self._logger.debug(f"Received from API: {json.dumps(metadata_list, indent=4)}")
-        return_list: List[DownloadImageData] = []
+        IMG_SCALE_PATH_NUMBER = 0
+        IMG_LOCAL_PATH_NUMBER = 1
+        return_list: List[ImageDownloadData] = []
         img_root_dir = get_img_dir()
         img_region = get_img_region()
         self._logger.debug(f"{img_region=}")
@@ -390,25 +390,40 @@ class PeapixDownloadService(DownLoadServiceBase):
         for img_data in metadata_list:
             try:
                 img_date_str = img_data.get("date", "")
-                img_date = datetime.datetime.strptime(img_date_str, "%Y-%m-%d")
-                img_to_check = os.path.join(get_full_img_dir(img_root_dir, img_date), f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}")
-                self._logger.debug(f"{img_to_check=}")
-                if os.path.exists(img_to_check) == False:
-                    return_list.append(DownloadImageData(
+                img_date = datetime.datetime.strptime(img_date_str, "%Y-%m-%d").date()
+                img_to_check_list = (
+                    os.path.join(img_root_dir, f"{BWP_SCALE_FILE_REFIX}_{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}"),
+                    os.path.join(get_full_img_dir(img_root_dir, img_date), f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}")
+                )
+
+                self._logger.debug(f"{img_to_check_list=}")
+                # if all(os.path.exists(imgs_to_check[IMG_SCALE_PATH_NUMBER]) == False and :
+                if all([os.path.exists(img_to_check) == False for img_to_check in img_to_check_list]) :
+                    return_list.append(ImageDownloadData(
                         imageDate=img_date,
                         title=img_data.get("title", ""),
                         imageUrl=img_data.get("imageUrl", ""),
-                        imageScalePath=os.path.join(img_root_dir, f"{BWP_SCALE_FILE_REFIX}_{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}"),
-                        imageLocalPath=img_to_check
+                        imageScalePath=img_to_check_list[IMG_SCALE_PATH_NUMBER],
+                        imageLocalPath=img_to_check_list[IMG_LOCAL_PATH_NUMBER]
                     ))
             except:
                 pass # nothing to be done, next
 
+        self._logger.debug(f"Number if images to download: {len(return_list)}")
         self._logger.debug(f"Images to download: {return_list=}")
         return return_list
 
 
-
+    @abkCommon.function_trace
+    def _download_images(self, img_dl_data_list: List[ImageDownloadData]) -> None:
+        for img_dl_data in img_dl_data_list:
+            try:
+                img_data = requests.get(img_dl_data.imageUrl).content
+                with open(img_dl_data.imageScalePath, mode="wb") as fh:
+                    fh.write(img_data)
+            except Exception as exp:
+                self._logger.error(f"ERROR: {exp=}, downloading image: {img_dl_data.imageScalePath}")
+        return
 
 
 # -----------------------------------------------------------------------------
