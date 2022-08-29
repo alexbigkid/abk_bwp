@@ -1,19 +1,21 @@
 time_to_fetch = 08:30:00
 app_name = "bingwallpaper.py"
 image_dir = "Pictures/BingWallpapers"
+current_background_file_name = "current_background.jpg"
 number_images_to_keep = 365
 set_desktop_image = true
 retain_images = true
-dl_service = "bing"
+dl_service = "peapix"
 region = "us"
 
 [constant]
-bing_dl_service = "http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en-US"
-peapix_dl_service = "https://peapix.com/bing/feed"
 dl_service_alternatives = ["bing", "peapix"]
-region_alternatives = ["au", "ca", "cn", "de", "fr", "in", "jp", "es", "gb", "us"]
+bing_url = "http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en-US"
+peapix_url = "https://peapix.com/bing/feed"
+peapix_region_alternatives = ["au", "ca", "cn", "de", "fr", "in", "jp", "es", "gb", "us"]
 
 [ftv]
+enabled = true
 set_image = true
 ip_address = "192.168.0.119"
 port = 8002
