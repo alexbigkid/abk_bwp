@@ -424,23 +424,6 @@ class BingWallPaper(object):
 
 
     @abkCommon.function_trace
-    def define_pix_dirs(self, images_dir: str) -> str:
-        """Defines the image directory
-        Args:
-            images_dir (str): image directory
-        Returns:
-            str: full directory name where imaghes will be saved
-        """
-        self._logger.debug(f"{images_dir=}")
-        home_dir = abkCommon.get_home_dir()
-        self._logger.info(f"{home_dir=}")
-        pix_dir = os.path.join(home_dir, images_dir)
-        abkCommon.ensure_dir(pix_dir)
-        self._logger.debug(f"{pix_dir=}")
-        return pix_dir
-
-
-    @abkCommon.function_trace
     def scale_images(self):
         pass
 
@@ -516,14 +499,13 @@ def main():
         else:
             dl_service = PeapixDownloadService(logger=main_logger)
 
-
         bwp = BingWallPaper(
             logger=main_logger,
             options=command_line_options.options,
             os_dependant=bwp_os_dependent,
             dl_service=dl_service
         )
-        pix_dir = bwp.define_pix_dirs(bwp_config["image_dir"])
+        pix_dir = get_pix_dir()
         bwp.trim_number_of_pix(pix_dir, bwp_config["number_images_to_keep"])
         file_name = bwp.download_daily_image(pix_dir)
         bwp.scale_images()
