@@ -20,7 +20,7 @@ from datetime import time
 from sys import platform as _platform
 from typing import Tuple
 
-from config import bwp_config
+from config import ROOT_KW, bwp_config
 from abkPackage import abkCommon
 
 
@@ -258,7 +258,7 @@ def main():
     else:
         raise ValueError(f'ERROR: "{_platform}" is not supported')
 
-    installation.setup_installation(bwp_config["time_to_fetch"], bwp_config["app_name"])
+    installation.setup_installation(bwp_config[ROOT_KW.TIME_TO_FETCH.value], bwp_config[ROOT_KW.APP_NAME.value])
 
 
 if __name__ == "__main__":

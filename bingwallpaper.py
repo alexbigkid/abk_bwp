@@ -249,8 +249,8 @@ class PeapixDownloadService(DownLoadServiceBase):
         """Downloads bing image and stores it in the defined directory"""
         dst_dir = get_pix_dir()
         self._logger.debug(f"{dst_dir=}")
-        country_part_url = "=".join(['country', bwp_config[ROOT_KW.REGION.value]])
-        get_metadata_url = "?".join([bwp_config[CONSTANT_KW.CONSTANT.value][CONSTANT_KW.PEAPIX_URL.value], country_part_url])
+        country_part_url = "=".join(['country', bwp_config.get(ROOT_KW.REGION.value, "us")])
+        get_metadata_url = "?".join([bwp_config.get(CONSTANT_KW.CONSTANT.value, {}).get(CONSTANT_KW.PEAPIX_URL.value, ""), country_part_url])
         self._logger.debug(f"Getting Image info from: {get_metadata_url=}")
 
         is_ftv_dir = DownLoadServiceBase._convert_dir_structure_if_needed()
@@ -504,7 +504,7 @@ def main():
         if bwp_config.get(ROOT_KW.SET_DESKTOP_IMAGE.value, False):
             bwp.set_desktop_background(last_img_name)
 
-        # bwp.trim_number_of_pix(pix_dir, bwp_config["number_images_to_keep"])
+        # bwp.trim_number_of_pix(pix_dir, bwp_config.get(ROOT_KW.YEARS_IMAGES_TO_KEEP.value, 1))
 
         if bwp_config.get(FTV_KW.FTV.value, {}).get(FTV_KW.SET_IMAGE.value, False):
             pass

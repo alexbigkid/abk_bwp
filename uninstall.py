@@ -19,7 +19,7 @@ from abc import ABCMeta, abstractmethod
 from sys import platform as _platform
 from typing import Tuple
 
-from config import bwp_config
+from config import ROOT_KW, bwp_config
 from abkPackage import abkCommon
 
 
@@ -236,9 +236,9 @@ def main():
     else:
         raise ValueError(f'ERROR: "{_platform}" is not supported')
 
-    if bwp_config.get("retain_images", False) == False:
-        uninstallation.cleanup_image_dir(bwp_config["image_dir"])
-    uninstallation.cleanup_installation(bwp_config["app_name"])
+    if bwp_config.get(ROOT_KW.RETAIN_IMAGES.value, False) == False:
+        uninstallation.cleanup_image_dir(bwp_config[ROOT_KW.IMAGE_DIR.value])
+    uninstallation.cleanup_installation(bwp_config[ROOT_KW.APP_NAME.value])
 
 
 if __name__ == "__main__":
