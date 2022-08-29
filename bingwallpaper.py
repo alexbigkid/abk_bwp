@@ -425,37 +425,35 @@ class BingWallPaper(object):
 
 
     @abkCommon.function_trace
-    def trim_number_of_pix(self, pix_dir: str, max_number: int) -> None:
+    def trim_number_of_images(self) -> None:
         """Deletes some images if it reaches max number desirable
-           The max number can be defined in the config/bwp_config.toml file
-
-        Args:
-            pix_dir (str): image directory
-            max_number (int): max number of images to keep
+           The max number of years images to retain can be defined in the config/bwp_config.toml file
         """
-        self._logger.debug(f"{pix_dir=}, {max_number=}")
+        pix_dir = get_pix_dir()
+        max_years = bwp_config.get(ROOT_KW.YEARS_IMAGES_TO_KEEP.value, 1)
+        self._logger.debug(f"{pix_dir=}, {max_years=}")
 
-        listOfFiles = []
-        for f in os.listdir(pix_dir):
-            if f.endswith(".jpg"):
-                listOfFiles.append(f)
-        listOfFiles.sort()
-        self._logger.debug(f"listOfFile = [{', '.join(map(str, listOfFiles))}]")
-        numberOfJpgs = len(listOfFiles)
-        self._logger.info(f"{numberOfJpgs=}")
-        if numberOfJpgs > max_number:
-            jpgs2delete = listOfFiles[0:numberOfJpgs-max_number]
-            self._logger.info(f"jpgs2delete = [{', '.join(map(str, jpgs2delete))}]")
-            num2delete = len(jpgs2delete)
-            self._logger.info(f"{num2delete=}")
-            for delFile in jpgs2delete:
-                self._logger.info(f"deleting file: {delFile}")
-                try:
-                    os.unlink(os.path.join(pix_dir, delFile))
-                except:
-                    self._logger.error(f"deleting {delFile} failed")
-        else:
-            self._logger.info("no images to delete")
+        # listOfFiles = []
+        # for f in os.listdir(pix_dir):
+        #     if f.endswith(".jpg"):
+        #         listOfFiles.append(f)
+        # listOfFiles.sort()
+        # self._logger.debug(f"listOfFile = [{', '.join(map(str, listOfFiles))}]")
+        # numberOfJpgs = len(listOfFiles)
+        # self._logger.info(f"{numberOfJpgs=}")
+        # if numberOfJpgs > max_number:
+        #     jpgs2delete = listOfFiles[0:numberOfJpgs-max_number]
+        #     self._logger.info(f"jpgs2delete = [{', '.join(map(str, jpgs2delete))}]")
+        #     num2delete = len(jpgs2delete)
+        #     self._logger.info(f"{num2delete=}")
+        #     for delFile in jpgs2delete:
+        #         self._logger.info(f"deleting file: {delFile}")
+        #         try:
+        #             os.unlink(os.path.join(pix_dir, delFile))
+        #         except:
+        #             self._logger.error(f"deleting {delFile} failed")
+        # else:
+        #     self._logger.info("no images to delete")
 
 
     @abkCommon.function_trace
@@ -504,7 +502,7 @@ def main():
         if bwp_config.get(ROOT_KW.SET_DESKTOP_IMAGE.value, False):
             bwp.set_desktop_background(last_img_name)
 
-        # bwp.trim_number_of_pix(pix_dir, bwp_config.get(ROOT_KW.YEARS_IMAGES_TO_KEEP.value, 1))
+        bwp.trim_number_of_images()
 
         if bwp_config.get(FTV_KW.FTV.value, {}).get(FTV_KW.SET_IMAGE.value, False):
             pass
