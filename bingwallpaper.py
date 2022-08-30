@@ -114,7 +114,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
 
 
     @abstractmethod
-    def download_daily_image(self) -> None:
+    def download_daily_image(self) -> List[ImageDownloadData]:
         """Abstract method - should not be implemented. Interface purpose."""
         raise NotImplemented
 
@@ -263,8 +263,9 @@ class BingDownloadService(DownLoadServiceBase):
         super().__init__(logger)
 
     @abkCommon.function_trace
-    def download_daily_image(self):
+    def download_daily_image(self) -> List[ImageDownloadData]:
         """Downloads bing image and stores it in the defined directory"""
+        img_data_list: List[ImageDownloadData] = []
         dst_dir = get_img_dir()
         self._logger.debug(f"{dst_dir=}")
         response = urlopen("http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en-US")
@@ -283,14 +284,14 @@ class BingDownloadService(DownLoadServiceBase):
         # TODO: need to safe file with following name: image_dir/scale_YYYY-mm-dd_us.jpg
         # TODO: because the scaling job will pick it up later to scale to the correct dimention and move it to correct directory
         # return full_file_name
-
+        return img_data_list
 
 class PeapixDownloadService(DownLoadServiceBase):
     def __init__(self, logger: logging.Logger) -> None:
         super().__init__(logger)
 
     @abkCommon.function_trace
-    def download_daily_image(self) -> None:
+    def download_daily_image(self) -> List[ImageDownloadData]:
         """Downloads bing image and stores it in the defined directory"""
         dst_dir = get_img_dir()
         self._logger.debug(f"{dst_dir=}")
@@ -367,7 +368,7 @@ class PeapixDownloadService(DownLoadServiceBase):
         #     # TODO: because the scaling job will pick it up later to scale to the correct dimention and move it to correct directory
         # else:
         #     raise ResponseError(f"ERROR: getting bing image return error code: {resp.status_code}. Cannot proceed.")
-
+        return abk_dl_img_data
 
     @abkCommon.function_trace
     def _process_peapix_api_data(self, metadata_list: List[Dict[str, str]]) -> List[ImageDownloadData]:
@@ -561,7 +562,13 @@ class BingWallPaper(object):
 
 
     @abkCommon.function_trace
-    def scale_images(self) -> str:
+    def scale_images(self, img_data_list: List[ImageDownloadData]) -> str:
+        img_root_dir = get_img_dir()
+        root_img_file_list = sorted(next(os.walk(img_root_dir))[BWP_FILES])
+        scale_img_file_list = tuple([img for img in root_img_file_list if img.startswith(BWP_SCALE_FILE_REFIX)])
+        self._logger.debug(f"{root_img_file_list=}")
+        self._logger.debug(f"{scale_img_file_list=}")
+
         return ""
 
 
@@ -598,10 +605,10 @@ class BingWallPaper(object):
 
 
     @abkCommon.function_trace
-    def download_daily_image(self) -> None:
+    def download_daily_image(self) -> List[ImageDownloadData]:
         """Downloads bing image and stores it in the defined directory
         """
-        self._dl_service.download_daily_image()
+        return self._dl_service.download_daily_image()
 
 
 # -----------------------------------------------------------------------------
@@ -637,8 +644,8 @@ def main():
             dl_service=dl_service
         )
         bwp.convert_dir_structure_if_needed()
-        bwp.download_daily_image()
-        last_img_name = bwp.scale_images()
+        img_data = bwp.download_daily_image()
+        last_img_name = bwp.scale_images(img_data)
 
         # is set desktop image enabled
         if bwp_config.get(ROOT_KW.SET_DESKTOP_IMAGE.value, False):
