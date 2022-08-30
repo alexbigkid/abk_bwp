@@ -19,6 +19,7 @@ class ROOT_KW(Enum):
     APP_NAME = "app_name"
     IMAGE_DIR = "image_dir"
     CURRENT_BACKGROUND = "current_background"
+    RESIZE_JPEG_QUALITY = "resize_jpeg_quality"
     YEARS_IMAGES_TO_KEEP = "years_images_to_keep"
     SET_DESKTOP_IMAGE = "set_desktop_image"
     RETAIN_IMAGES = "retain_images"

@@ -27,10 +27,9 @@ class TestAbkCommon(unittest.TestCase):
         # cache needs to be clearead after each test for the next test to be able to set different mocks
         # print(f"ABK: cache_info: {bingwallpaper.get_img_region.cache_info()}")
         bingwallpaper.get_img_region.cache_clear()
+        # print(f"ABK: cache_info: {bingwallpaper.get_resize_jpeg_quality.cache_info()}")
+        bingwallpaper.get_resize_jpeg_quality.cache_clear()
         return super().tearDown()
-
-# alt_dl_service = ["bing", "peapix"]
-# alt_peapix_region = ["au", "ca", "cn", "de", "fr", "in", "jp", "es", "gb", "us"]
 
     @parameterized.expand([
         ["au",          "bing"],
@@ -52,7 +51,7 @@ class TestAbkCommon(unittest.TestCase):
         exp_region = "us"
         with patch.dict(bwp_config, {"region": img_region, "dl_service": img_dl_service}) as mock_bwp_config:
             act_region = bingwallpaper.get_img_region()
-        self.assertTrue(act_region, exp_region)
+        self.assertEqual(act_region, exp_region)
 
 
     @parameterized.expand([
@@ -72,8 +71,25 @@ class TestAbkCommon(unittest.TestCase):
     def test__get_img_region__given_a_valid_setting_returns_defined_region(self, img_region:str, img_dl_service:str) -> None:
         with patch.dict(bwp_config, {"region": img_region, "dl_service": img_dl_service}):
             act_region = bingwallpaper.get_img_region()
-        self.assertTrue(act_region, img_region)
+        self.assertEqual(act_region, img_region)
 
+
+    @parameterized.expand([
+        [-1,            70],
+        [0,             70],
+        [1,             70],
+        [71,            71],
+        [72,            72],
+        [89,            89],
+        [99,            99],
+        [100,           100],
+        [101,           100],
+        [898,           100],
+    ])
+    def test__get_resize_jpeg_quality__returns_normalized_resize_jpeg_quality(self, read_jpeg_quality:int, exp_jpeg_quality) -> None:
+        with patch.dict(bwp_config, {"resize_jpeg_quality": read_jpeg_quality}):
+            act_jpeg_quality = bingwallpaper.get_resize_jpeg_quality()
+        self.assertEqual(act_jpeg_quality, exp_jpeg_quality)
 
 
 if __name__ == '__main__':

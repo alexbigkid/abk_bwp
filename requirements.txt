@@ -1,5 +1,6 @@
 colorama
 optparse-pretty
+pillow
 PyYAML
 requests
 samsungtvws[async,encrypted]

@@ -27,6 +27,7 @@ import requests
 # Third party imports
 from optparse import Values
 from colorama import Fore, Style
+from PIL import Image
 
 # Local application imports
 from abkPackage import abkCommon
@@ -44,7 +45,10 @@ BWP_DIGITS_IN_A_DAY = 2
 BWP_IMG_FILE_EXT = ".jpg"
 BWP_DEFAULT_REGION = "us"
 BWP_DEFAULT_DL_SERVICE = "peapix"
-BWP_SCALE_FILE_REFIX = "SCALE"
+BWP_SCALE_FILE_PREFIX = "SCALE"
+BWP_DEFAULT_IMG_SIZE = (3840, 2160)
+BWP_RESIZE_JPEG_QUALITY_MIN = 70
+BWP_RESIZE_JPEG_QUALITY_MAX = 100
 
 # -----------------------------------------------------------------------------
 # local functions
@@ -91,6 +95,17 @@ def get_full_img_dir(img_root_dir: str, img_date: datetime.date) -> str:
         return os.path.join(img_root_dir, f"{img_date.year:04d}", f"{img_date.month:02d}")
 
 
+@lru_cache(maxsize=1)
+def get_resize_jpeg_quality() -> int:
+    jpeg_quality = bwp_config.get(ROOT_KW.RESIZE_JPEG_QUALITY.value, BWP_RESIZE_JPEG_QUALITY_MIN)
+    if jpeg_quality < BWP_RESIZE_JPEG_QUALITY_MIN:
+        return BWP_RESIZE_JPEG_QUALITY_MIN
+    if jpeg_quality > BWP_RESIZE_JPEG_QUALITY_MAX:
+        return BWP_RESIZE_JPEG_QUALITY_MAX
+    return jpeg_quality
+
+
+
 # -----------------------------------------------------------------------------
 # Image Downlaod Data
 # -----------------------------------------------------------------------------
@@ -99,8 +114,8 @@ class ImageDownloadData():
     imageDate: datetime.date
     title: str
     imageUrl: str
-    imageScalePath: str
-    imageLocalPath: str
+    imagePath: str
+    imageName: str
 
 
 # -----------------------------------------------------------------------------
@@ -169,7 +184,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
                             img_date_part, img_region_part = file_name.split("_")
                             if file_ext == BWP_IMG_FILE_EXT and img_region_part in region_list:
                                 try:
-                                    img_date = datetime.datetime.strptime(img_date_part, "%Y-%m-%d")
+                                    img_date = datetime.datetime.strptime(img_date_part, "%Y-%m-%d").date()
                                     # print(f"---- ABK: {img_date.year=}, {img_date.month=}, {img_date.day=}, {img_region_part=}")
                                     # looks like a legit file name -> move it the the new location mm/dd/YYYY-mm-dd_us.jpg
                                     img_src = os.path.join(full_month_dir, img_file)
@@ -212,7 +227,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
                             img_date_part, img_region_part = file_name.split("_")
                             if file_ext == BWP_IMG_FILE_EXT and img_region_part in region_list:
                                 try:
-                                    img_date = datetime.datetime.strptime(img_date_part, "%Y-%m-%d")
+                                    img_date = datetime.datetime.strptime(img_date_part, "%Y-%m-%d").date()
                                     # print(f"---- ABK: {img_date.year=}, {img_date.month=}, {img_date.day=}, {img_region_part=}")
                                     # looks like a legit file name -> move it the the new location YYYY/mm/YYYY-mm-dd_us.jpg
                                     img_src = os.path.join(full_day_dir, img_file)
@@ -243,7 +258,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
                 _, img_file_name = os.path.split(current_background_link)
                 img_file_name_wo_ext, _ = os.path.splitext(img_file_name)
                 img_date_str, _ = img_file_name_wo_ext.split("_")
-                curr_bg_date = datetime.datetime.strptime(img_date_str, "%Y-%m-%d")
+                curr_bg_date = datetime.datetime.strptime(img_date_str, "%Y-%m-%d").date()
 
                 if is_ftv_enabled:
                     new_link_target = os.path.join(f"{curr_bg_date.month:02d}", f"{curr_bg_date.day:02d}", img_file_name)
@@ -358,6 +373,7 @@ class PeapixDownloadService(DownLoadServiceBase):
     }
 ]
         abk_dl_img_data = self._process_peapix_api_data(abk_resp_json)
+        self._logger.debug(f"ABK:download_daily_image: {len(abk_dl_img_data)=}")
         self._download_images(abk_dl_img_data)
 
         # this might throw, but we have a try/catch in the main, so no extra handling here needed.
@@ -393,7 +409,7 @@ class PeapixDownloadService(DownLoadServiceBase):
                 img_date_str = img_data.get("date", "")
                 img_date = datetime.datetime.strptime(img_date_str, "%Y-%m-%d").date()
                 img_to_check_list = (
-                    os.path.join(img_root_dir, f"{BWP_SCALE_FILE_REFIX}_{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}"),
+                    os.path.join(img_root_dir, f"{BWP_SCALE_FILE_PREFIX}_{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}"),
                     os.path.join(get_full_img_dir(img_root_dir, img_date), f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}")
                 )
 
@@ -404,8 +420,8 @@ class PeapixDownloadService(DownLoadServiceBase):
                         imageDate=img_date,
                         title=img_data.get("title", ""),
                         imageUrl=img_data.get("imageUrl", ""),
-                        imageScalePath=img_to_check_list[IMG_SCALE_PATH_NUMBER],
-                        imageLocalPath=img_to_check_list[IMG_LOCAL_PATH_NUMBER]
+                        imagePath=get_full_img_dir(img_root_dir, img_date),
+                        imageName=f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}"
                     ))
             except:
                 pass # nothing to be done, next
@@ -417,13 +433,15 @@ class PeapixDownloadService(DownLoadServiceBase):
 
     @abkCommon.function_trace
     def _download_images(self, img_dl_data_list: List[ImageDownloadData]) -> None:
+        root_img_dir = get_img_dir()
         for img_dl_data in img_dl_data_list:
+            scale_img_name = os.path.join(root_img_dir, f"{BWP_SCALE_FILE_PREFIX}_{img_dl_data.imageName}")
             try:
                 img_data = requests.get(img_dl_data.imageUrl).content
-                with open(img_dl_data.imageScalePath, mode="wb") as fh:
+                with open(scale_img_name, mode="wb") as fh:
                     fh.write(img_data)
             except Exception as exp:
-                self._logger.error(f"ERROR: {exp=}, downloading image: {img_dl_data.imageScalePath}")
+                self._logger.error(f"ERROR: {exp=}, downloading image: {scale_img_name}")
         return
 
 
@@ -563,13 +581,41 @@ class BingWallPaper(object):
 
     @abkCommon.function_trace
     def scale_images(self, img_data_list: List[ImageDownloadData]) -> str:
+        resized_img_name = ""
         img_root_dir = get_img_dir()
-        root_img_file_list = sorted(next(os.walk(img_root_dir))[BWP_FILES])
-        scale_img_file_list = tuple([img for img in root_img_file_list if img.startswith(BWP_SCALE_FILE_REFIX)])
-        self._logger.debug(f"{root_img_file_list=}")
-        self._logger.debug(f"{scale_img_file_list=}")
 
-        return ""
+        for img_data in img_data_list:
+            scale_img_name = os.path.join(img_root_dir, f"{BWP_SCALE_FILE_PREFIX}_{img_data.imageName}")
+            resized_img_name = self._resize_store_and_remove(scale_img_name, img_data.imagePath, img_data.imageName)
+
+        # in case there are still SCALE_images left from previous run
+        root_img_file_list = sorted(next(os.walk(img_root_dir))[BWP_FILES])
+        scale_img_file_list = tuple([img for img in root_img_file_list if img.startswith(BWP_SCALE_FILE_PREFIX)])
+        self._logger.debug(f"{scale_img_file_list=}")
+        for img_file in scale_img_file_list:
+            scale_img_name = os.path.join(img_root_dir, img_file)
+            _, img_date_str, img_post_str = img_file.split("_")
+            img_date = datetime.datetime.strptime(img_date_str, "%Y-%m-%d").date()
+            resized_img_path = get_full_img_dir(img_root_dir, img_date)
+            resized_pix_name = "_".join([img_date_str, img_post_str])
+            self._resize_store_and_remove(scale_img_name, resized_img_path, resized_pix_name)
+
+        return resized_img_name
+
+
+    def _resize_store_and_remove(self, scale_img_name: str, resized_img_path: str, resized_img_name: str) -> str:
+        resized_full_img_name = os.path.join(resized_img_path, resized_img_name)
+        abkCommon.ensure_dir(resized_img_path)
+        try:
+            with Image.open(scale_img_name) as img:
+                self._logger.debug(f"[{scale_img_name}]: {img.size=}")
+                resized_img = img.resize(BWP_DEFAULT_IMG_SIZE, Image.Resampling.LANCZOS)
+                self._logger.debug(f"{resized_full_img_name=}")
+                resized_img.save(resized_full_img_name, optimize=True, quality=get_resize_jpeg_quality())
+            os.remove(scale_img_name)
+        except OSError as exp:
+            self._logger.error(f"ERROR: {exp=}, resizing file: {scale_img_name}")
+        return resized_full_img_name
 
 
     @abkCommon.function_trace

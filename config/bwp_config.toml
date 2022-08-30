@@ -2,6 +2,8 @@ time_to_fetch = 08:30:00
 app_name = "bingwallpaper.py"
 image_dir = "Pictures/BingWallpapers"
 current_background = "current_background.jpg"
+# resize jpeg quality % defines thew size of the resized image. higher number -> better image, greater file size
+resize_jpeg_quality = 89
 years_images_to_keep = 98
 retain_images = true
 dl_service = "peapix"
@@ -13,7 +15,6 @@ width = 3840
 height = 2160
 # please do not modify those alternative dimentions
 alt_dimention = [ {"width" = 640, "height" = 480}, {"width" = 1024, "height" = 768}, {"width" = 1600, "height" = 1200}, {"width" = 1920, "height" = 1200}, {"width" = 3840, "height" = 2160} ]
-
 
 [constant]
 alt_dl_service = ["bing", "peapix"]
