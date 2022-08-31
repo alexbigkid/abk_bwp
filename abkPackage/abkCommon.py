@@ -84,18 +84,6 @@ def ensure_dir(dirName):
                 raise
 
 
-# @function_trace
-# def read_relative_link(link_name: str) -> str:
-#     print(f"{link_name=}")
-#     link_target = ""
-#     if os.path.islink(link_name):
-#         link_target = os.readlink(link_name)
-#         relative_path = os.path.abspath(os.path.dirname(link_name))
-#         print(f"ABK:read_link: {relative_path=}")
-#     print(f"ABK:read_link: {link_target=}")
-#     return link_target
-
-
 @function_trace
 def ensure_link_exists(src: str, dst: str) -> None:
     logger.debug(f"{src=}, {dst=}")

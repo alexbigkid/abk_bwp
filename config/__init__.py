@@ -18,7 +18,7 @@ class ROOT_KW(Enum):
     TIME_TO_FETCH = "time_to_fetch"
     APP_NAME = "app_name"
     IMAGE_DIR = "image_dir"
-    CURRENT_BACKGROUND = "current_background"
+    BACKGROUND_IMG_PREFIX = "background_img_prefix"
     RESIZE_JPEG_QUALITY = "resize_jpeg_quality"
     YEARS_IMAGES_TO_KEEP = "years_images_to_keep"
     SET_DESKTOP_IMAGE = "set_desktop_image"

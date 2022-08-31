@@ -1,7 +1,7 @@
 time_to_fetch = 08:30:00
 app_name = "bingwallpaper.py"
 image_dir = "Pictures/BingWallpapers"
-current_background = "current_background.jpg"
+background_img_prefix = "background_img"
 # resize jpeg quality % defines thew size of the resized image. higher number -> better image, greater file size
 resize_jpeg_quality = 89
 years_images_to_keep = 98

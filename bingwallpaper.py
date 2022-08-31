@@ -49,7 +49,27 @@ BWP_SCALE_FILE_PREFIX = "SCALE"
 BWP_DEFAULT_IMG_SIZE = (3840, 2160)
 BWP_RESIZE_JPEG_QUALITY_MIN = 70
 BWP_RESIZE_JPEG_QUALITY_MAX = 100
-BWP_DEFAULT_CURRENT_BACKGROUND_NAME = "current_background.jpg"
+BWP_DEFAULT_BACKGROUND_IMG_PREFIX = "background_img"
+
+
+# -----------------------------------------------------------------------------
+# Supported Image Sizes
+# -----------------------------------------------------------------------------
+class DirectoryContentType(Enum):
+    FILES_AND_DIRS = 0
+    DIRECTORIES = 1
+    FILES = 2
+
+
+# -----------------------------------------------------------------------------
+# Supported Image Sizes
+# -----------------------------------------------------------------------------
+class ImageSizes(Enum):
+    IMG_640x480     = (640,     480)
+    IMG_1024x768    = (1024,    768)
+    IMG_1600x1200   = (1600,    1200)
+    IMG_1920x1200   = (1920,    1200)
+    IMG_3840x2160   = BWP_DEFAULT_IMG_SIZE
 
 
 # -----------------------------------------------------------------------------
@@ -113,13 +133,12 @@ def get_config_resize_jpeg_quality() -> int:
 
 
 @lru_cache(maxsize=1)
-def get_config_current_background_image_name() -> str:
+def get_config_background_img_prefix() -> str:
     """Gets full name for the current_backgraound image name
     Returns:
         str: background_image name
     """
-    background_image_name = bwp_config.get(ROOT_KW.CURRENT_BACKGROUND.value, BWP_DEFAULT_CURRENT_BACKGROUND_NAME)
-    return os.path.join(get_config_img_dir(), background_image_name)
+    return bwp_config.get(ROOT_KW.BACKGROUND_IMG_PREFIX.value, BWP_DEFAULT_BACKGROUND_IMG_PREFIX)
 
 
 @lru_cache(maxsize=1)
@@ -133,15 +152,21 @@ def get_config_background_img_size() -> Tuple[int, int]:
     return configured_size
 
 
-# -----------------------------------------------------------------------------
-# Supported Image Sizes
-# -----------------------------------------------------------------------------
-class ImageSizes(Enum):
-    IMG_640x480     = (640,     480)
-    IMG_1024x768    = (1024,    768)
-    IMG_1600x1200   = (1600,    1200)
-    IMG_1920x1200   = (1920,    1200)
-    IMG_3840x2160   = BWP_DEFAULT_IMG_SIZE
+def delete_files_in_dir(dir_name: str, file_list: List[str]) -> None:
+    main_logger.debug(f"In directory: {dir_name}0dDeleting files: {file_list}")
+    for file_to_delete in file_list:
+        try:
+            os.remove(os.path.join(dir_name, file_to_delete))
+        except Exception as exp:
+            main_logger.error(f"ERROR: {exp=}, Deleting file: {file_to_delete}")
+
+
+# @lru_cache(maxsize=16)
+# def get_directory_content(content_type: DirectoryContentType) -> List[str]:
+#     if content_type == DirectoryContentType.FILES_AND_DIRS:
+#         return sorted(next(os.walk(get_config_img_dir())))
+#     return sorted(next(os.walk(get_config_img_dir()))[content_type])
+
 
 
 # -----------------------------------------------------------------------------
@@ -518,13 +543,12 @@ class BingWallPaper(object):
         self._dl_service.convert_dir_structure_if_needed()
 
 
-    def set_desktop_background(self) -> None:
+    def set_desktop_background(self, full_img_name: str) -> None:
         """Sets background image on different OS
         Args:
             file_name (str): file name which should be used to set the background
         """
-        background_img = get_config_current_background_image_name()
-        self._os_dependent.set_desktop_background(background_img)
+        self._os_dependent.set_desktop_background(full_img_name)
 
 
     @abkCommon.function_trace
@@ -561,18 +585,23 @@ class BingWallPaper(object):
         except OSError as exp:
             self._logger.error(f"ERROR: {exp=}, resizing file: {scale_img_name}")
 
-    @staticmethod
     @abkCommon.function_trace
-    def update_current_background_image() -> bool:
+    def update_current_background_image(self) -> None:
+        config_img_dir = get_config_img_dir()
         today = datetime.date.today()
         today_img_path = get_full_img_dir(today)
         todays_img_name = f"{today.year:04d}-{today.month:02d}-{today.day:02d}_{get_config_img_region()}{BWP_IMG_FILE_EXT}"
         src_img = os.path.join(today_img_path, todays_img_name)
         if os.path.exists(src_img):
-            dst_img = get_config_current_background_image_name()
+            dst_img_prefix = get_config_background_img_prefix()
             dst_img_size = get_config_background_img_size()
-            return BingWallPaper._resize_image(src_img, dst_img, dst_img_size)
-        return False
+            dst_file_name = f"{dst_img_prefix}_{todays_img_name}"
+            dst_img_full_name = os.path.join(config_img_dir, dst_file_name)
+            if BingWallPaper._resize_image(src_img, dst_img_full_name, dst_img_size):
+                bwp_file_list = sorted(next(os.walk(config_img_dir))[BWP_FILES])
+                old_background_img_list = [f for f in bwp_file_list if f.startswith(dst_img_prefix) and f != dst_file_name]
+                delete_files_in_dir(config_img_dir, old_background_img_list)
+                self.set_desktop_background(dst_img_full_name)
 
 
     @staticmethod
@@ -661,11 +690,8 @@ def main():
         bwp.convert_dir_structure_if_needed()
         img_data = bwp.download_daily_image()
         bwp.scale_images(img_data)
-        if bwp.update_current_background_image():
-            bwp.set_desktop_background()
-
-
-        bwp.trim_number_of_images()
+        bwp.update_current_background_image()
+        # bwp.trim_number_of_images()
 
         if bwp_config.get(FTV_KW.FTV.value, {}).get(FTV_KW.SET_IMAGE.value, False):
             pass
