@@ -52,7 +52,7 @@ BWP_SCALE_FILE_PREFIX = "SCALE"
 BWP_DEFAULT_IMG_SIZE = (3840, 2160)
 BWP_RESIZE_JPEG_QUALITY_MIN = 70
 BWP_RESIZE_JPEG_QUALITY_MAX = 100
-BWP_DEFAULT_CURRENT_BACKGROUND_LINK_NAME = "current_background.jpg"
+BWP_DEFAULT_CURRENT_BACKGROUND_NAME = "current_background.jpg"
 
 # -----------------------------------------------------------------------------
 # local functions
@@ -100,8 +100,8 @@ def get_relative_img_dir(img_date: datetime.date) -> str:
 
 
 @lru_cache(maxsize=128)
-def get_full_img_dir(img_root_dir: str, img_date: datetime.date) -> str:
-    return os.path.join(img_root_dir, get_relative_img_dir(img_date))
+def get_full_img_dir(img_date: datetime.date) -> str:
+    return os.path.join(get_config_img_dir(), get_relative_img_dir(img_date))
 
 
 @lru_cache(maxsize=1)
@@ -114,20 +114,20 @@ def get_config_resize_jpeg_quality() -> int:
     return jpeg_quality
 
 
-def update_link(link_file_name:str, new_link_target: str) -> None:
-    tmp_link = os.path.join(get_config_img_dir(), "tmp_link")
-    os.symlink(new_link_target, tmp_link)
-    os.rename(tmp_link, link_file_name)
+# def update_link(link_file_name:str, new_link_target: str) -> None:
+#     tmp_link = os.path.join(get_config_img_dir(), "tmp_link")
+#     os.symlink(new_link_target, tmp_link)
+#     os.rename(tmp_link, link_file_name)
 
 
 @lru_cache(maxsize=1)
-def get_config_background_link_name() -> str:
-    """Gets full name for the backgraound image link
+def get_config_current_background_image_name() -> str:
+    """Gets full name for the current_backgraound image name
     Returns:
-        str: background_image link name
+        str: background_image name
     """
-    link_name = bwp_config.get(ROOT_KW.CURRENT_BACKGROUND.value, BWP_DEFAULT_CURRENT_BACKGROUND_LINK_NAME)
-    return os.path.join(get_config_img_dir(), link_name)
+    background_image_name = bwp_config.get(ROOT_KW.CURRENT_BACKGROUND.value, BWP_DEFAULT_CURRENT_BACKGROUND_NAME)
+    return os.path.join(get_config_img_dir(), background_image_name)
 
 
 @lru_cache(maxsize=1)
@@ -261,7 +261,6 @@ class DownLoadServiceBase(metaclass=ABCMeta):
                                     raise
                 # if no errors and move was successful delete the old directory structure
                 shutil.rmtree(full_year_dir, ignore_errors=True)
-        DownLoadServiceBase._correct_current_background_link(root_image_dir, is_ftv_enabled=True)
 
 
     @staticmethod
@@ -304,33 +303,6 @@ class DownLoadServiceBase(metaclass=ABCMeta):
                                     raise
                 # if no errors and move was successful delete the old directory structure
                 shutil.rmtree(full_month_dir, ignore_errors=True)
-        DownLoadServiceBase._correct_current_background_link(root_image_dir, is_ftv_enabled=False)
-
-
-    @staticmethod
-    @abkCommon.function_trace
-    def _correct_current_background_link(root_image_dir: str, is_ftv_enabled: bool) -> None:
-        """Corrects the current background image link to the new directory structure
-        Args:
-            root_image_dir (str): image directory name where images are stored
-            is_ftv_enabled (bool): frame TV directory structure enabled or not
-        """
-        current_background_file_name = os.path.join(root_image_dir, bwp_config.get(ROOT_KW.CURRENT_BACKGROUND.value, ""))
-        if os.path.islink(current_background_file_name):
-            try:
-                current_background_link = os.readlink(current_background_file_name)
-                _, img_file_name = os.path.split(current_background_link)
-                img_file_name_wo_ext, _ = os.path.splitext(img_file_name)
-                img_date_str, _ = img_file_name_wo_ext.split("_")
-                curr_bg_date = datetime.datetime.strptime(img_date_str, "%Y-%m-%d").date()
-
-                if is_ftv_enabled:
-                    new_link_target = os.path.join(f"{curr_bg_date.month:02d}", f"{curr_bg_date.day:02d}", img_file_name)
-                else:
-                    new_link_target = os.path.join(f"{curr_bg_date.year:04d}", f"{curr_bg_date.month:02d}", img_file_name)
-                update_link(current_background_file_name, new_link_target)
-            except Exception as exp:
-                print(f"{Fore.RED}ERROR: {exp=}{Style.RESET_ALL}")
 
 
 class BingDownloadService(DownLoadServiceBase):
@@ -411,7 +383,7 @@ class PeapixDownloadService(DownLoadServiceBase):
                 img_date = datetime.datetime.strptime(img_date_str, "%Y-%m-%d").date()
                 img_to_check_list = (
                     os.path.join(img_root_dir, f"{BWP_SCALE_FILE_PREFIX}_{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}"),
-                    os.path.join(get_full_img_dir(img_root_dir, img_date), f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}")
+                    os.path.join(get_full_img_dir(img_date), f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}")
                 )
 
                 self._logger.debug(f"{img_to_check_list=}")
@@ -421,7 +393,7 @@ class PeapixDownloadService(DownLoadServiceBase):
                         imageDate=img_date,
                         title=img_data.get("title", ""),
                         imageUrl=img_data.get("imageUrl", ""),
-                        imagePath=get_full_img_dir(img_root_dir, img_date),
+                        imagePath=get_full_img_dir(img_date),
                         imageName=f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}"
                     ))
             except:
@@ -572,12 +544,13 @@ class BingWallPaper(object):
         self._dl_service.convert_dir_structure_if_needed()
 
 
-    def set_desktop_background(self, file_name: str) -> None:
+    def set_desktop_background(self) -> None:
         """Sets background image on different OS
         Args:
             file_name (str): file name which should be used to set the background
         """
-        self._os_dependent.set_desktop_background(file_name)
+        background_img = get_config_current_background_image_name()
+        self._os_dependent.set_desktop_background(background_img)
 
 
     @abkCommon.function_trace
@@ -596,7 +569,7 @@ class BingWallPaper(object):
             scale_img_name = os.path.join(img_root_dir, img_file)
             _, img_date_str, img_post_str = img_file.split("_")
             img_date = datetime.datetime.strptime(img_date_str, "%Y-%m-%d").date()
-            resized_img_path = get_full_img_dir(img_root_dir, img_date)
+            resized_img_path = get_full_img_dir(img_date)
             resized_pix_name = "_".join([img_date_str, img_post_str])
             self._resize_store_and_remove(scale_img_name, resized_img_path, resized_pix_name)
 
@@ -616,34 +589,33 @@ class BingWallPaper(object):
 
     @staticmethod
     @abkCommon.function_trace
-    def update_current_background_image_link() -> None:
-        # check image exist
-        # create downscaled version of the last image
-        # read link target
-        # delete link
-        # point the link to the newly create downscaled version
-        # print(f"ABK:update_current_background_image_link: {last_know_image=}")
-        root_img_dir = get_config_img_dir()
+    def update_current_background_image() -> bool:
         today = datetime.date.today()
-        print(f"ABK:update_current_background_image_link: {today=}")
-
-        todays_relative_img_path = get_relative_img_dir(today)
-        print(f"ABK:update_current_background_image_link: {todays_relative_img_path=}")
-
+        today_img_path = get_full_img_dir(today)
         todays_img_name = f"{today.year:04d}-{today.month:02d}-{today.day:02d}_{get_config_img_region()}{BWP_IMG_FILE_EXT}"
-        print(f"ABK:update_current_background_image_link: {todays_img_name=}")
+        src_img = os.path.join(today_img_path, todays_img_name)
+        if os.path.exists(src_img):
+            dst_img = get_config_current_background_image_name()
+            dst_img_size = get_config_background_img_size()
+            return BingWallPaper._resize_image(src_img, dst_img, dst_img_size)
+        return False
 
-        today_relative_img_name = os.path.join(todays_relative_img_path, todays_img_name)
-        print(f"ABK:update_current_background_image_link: {today_relative_img_name=}")
 
-        bg_img_size = get_config_background_img_size()
-        print(f"ABK:update_current_background_image_link: {bg_img_size=}")
-
-        # link_info = get_background_link_info()
-        # print(f"ABK:update_current_background_image_link: {link_info=}")
-
-        if os.path.exists(os.path.join(get_config_img_dir(), today_relative_img_name)):
-            update_link(get_config_background_link_name(), today_relative_img_name)
+    @staticmethod
+    @abkCommon.function_trace
+    def _resize_image(src_image: str, dst_image : str, img_size : Tuple[int, int]) -> bool:
+        main_logger.debug(f"ABK:_resize_image: {src_image=}, {dst_image=}, {img_size=}")
+        try:
+            dst_path = os.path.dirname(dst_image)
+            main_logger.debug(f"ABK:_resize_image: {dst_path=}")
+            abkCommon.ensure_dir(dst_path)
+            with Image.open(src_image) as src_img_fh:
+                resized_img = src_img_fh.resize(img_size, Image.Resampling.LANCZOS)
+                resized_img.save(dst_image, optimize=True, quality=get_config_resize_jpeg_quality())
+        except Exception as exp:
+            main_logger.error(f"ERROR: {exp=}, resizing file: {src_image=} to {dst_image=} with {img_size=}")
+            return False
+        return True
 
 
     @abkCommon.function_trace
@@ -690,10 +662,6 @@ class BingWallPaper(object):
 def main():
     exit_code = 0
     try:
-        command_line_options = abkCommon.CommandLineOptions()
-        command_line_options.handle_options()
-        main_logger = command_line_options._logger
-
         # get the correct OS and instantiate OS dependent code
         if _platform in abkCommon.OsPlatformType.PLATFORM_MAC.value:
             bwp_os_dependent = MacOSDependent(logger=main_logger)
@@ -719,11 +687,9 @@ def main():
         bwp.convert_dir_structure_if_needed()
         img_data = bwp.download_daily_image()
         bwp.scale_images(img_data)
-        bwp.update_current_background_image_link()
+        if bwp.update_current_background_image():
+            bwp.set_desktop_background()
 
-        # is set desktop image enabled
-        # if bwp_config.get(ROOT_KW.SET_DESKTOP_IMAGE.value, False):
-        #     bwp.set_desktop_background(last_img_name)
 
         bwp.trim_number_of_images()
 
@@ -742,4 +708,7 @@ def main():
 
 
 if __name__ == "__main__":
+    command_line_options = abkCommon.CommandLineOptions()
+    command_line_options.handle_options()
+    main_logger = command_line_options._logger
     main()
