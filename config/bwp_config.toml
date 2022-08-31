@@ -6,6 +6,7 @@ current_background = "current_background.jpg"
 resize_jpeg_quality = 89
 years_images_to_keep = 98
 retain_images = true
+# peapix is prefered service, since it allows to download better images from different contries
 dl_service = "peapix"
 region = "us"
 

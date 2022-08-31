@@ -59,17 +59,17 @@ def get_user_name():
 
 
 @function_trace
-def get_home_dir():
+def get_home_dir() -> str:
     homeDir = os.environ["HOME"]
     logger.info(f"{homeDir=}")
     return homeDir
 
 
-def get_current_dir(fileName):
+def get_current_dir(fileName) -> str:
     return os.path.dirname(os.path.realpath(fileName))
 
 
-def get_parent_dir(fileName):
+def get_parent_dir(fileName) -> str:
     return os.path.dirname(os.path.dirname(fileName))
 
 
@@ -84,8 +84,20 @@ def ensure_dir(dirName):
                 raise
 
 
+# @function_trace
+# def read_relative_link(link_name: str) -> str:
+#     print(f"{link_name=}")
+#     link_target = ""
+#     if os.path.islink(link_name):
+#         link_target = os.readlink(link_name)
+#         relative_path = os.path.abspath(os.path.dirname(link_name))
+#         print(f"ABK:read_link: {relative_path=}")
+#     print(f"ABK:read_link: {link_target=}")
+#     return link_target
+
+
 @function_trace
-def ensure_link_exists(src, dst):
+def ensure_link_exists(src: str, dst: str) -> None:
     logger.debug(f"{src=}, {dst=}")
     if not os.path.islink(dst):
         logger.info(f"creating link {dst=} to {src=}")
@@ -101,7 +113,7 @@ def ensure_link_exists(src, dst):
 
 
 @function_trace
-def remove_link(fileName):
+def remove_link(fileName: str) -> None:
     logger.debug(f"{fileName=}")
     if os.path.islink(fileName):
         try:

@@ -19,7 +19,7 @@ from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 from functools import lru_cache
 from sys import platform as _platform
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from urllib.request import urlopen
 from xmlrpc.client import Boolean, ResponseError
 import requests
@@ -28,11 +28,12 @@ import requests
 from optparse import Values
 from colorama import Fore, Style
 from PIL import Image
+# from ftv import FTV
 
 # Local application imports
 from abkPackage import abkCommon
 from config import CONSTANT_KW, FTV_KW, ROOT_KW, bwp_config
-# from ftv import FTV
+
 
 BWP_DIRECTORIES = 1
 BWP_FILES = 2
@@ -49,6 +50,7 @@ BWP_SCALE_FILE_PREFIX = "SCALE"
 BWP_DEFAULT_IMG_SIZE = (3840, 2160)
 BWP_RESIZE_JPEG_QUALITY_MIN = 70
 BWP_RESIZE_JPEG_QUALITY_MAX = 100
+BWP_DEFAULT_CURRENT_BACKGROUND_LINK_NAME = "current_background.jpg"
 
 # -----------------------------------------------------------------------------
 # local functions
@@ -84,15 +86,20 @@ def get_img_region() -> str:
 
 @lru_cache(maxsize=1)
 def is_ftv_enabled() -> bool:
-    return bwp_config.get(FTV_KW.FTV.value,{}).get(FTV_KW.ENABLED.value, False)
+    return bwp_config.get(FTV_KW.FTV.value, {}).get(FTV_KW.ENABLED.value, False)
+
+
+@lru_cache(maxsize=128)
+def get_relative_img_dir(img_date: datetime.date) -> str:
+    if is_ftv_enabled():
+        return os.path.join(f"{img_date.month:02d}", f"{img_date.day:02d}")
+    else:
+        return os.path.join(f"{img_date.year:04d}", f"{img_date.month:02d}")
 
 
 @lru_cache(maxsize=128)
 def get_full_img_dir(img_root_dir: str, img_date: datetime.date) -> str:
-    if is_ftv_enabled():
-        return os.path.join(img_root_dir, f"{img_date.month:02d}", f"{img_date.day:02d}")
-    else:
-        return os.path.join(img_root_dir, f"{img_date.year:04d}", f"{img_date.month:02d}")
+    return os.path.join(img_root_dir, get_relative_img_dir(img_date))
 
 
 @lru_cache(maxsize=1)
@@ -104,6 +111,41 @@ def get_resize_jpeg_quality() -> int:
         return BWP_RESIZE_JPEG_QUALITY_MAX
     return jpeg_quality
 
+
+def update_link(link_file_name:str, new_link_target: str) -> None:
+    tmp_link = os.path.join(get_img_dir(), "tmp_link")
+    os.symlink(new_link_target, tmp_link)
+    os.rename(tmp_link, link_file_name)
+
+
+@lru_cache(maxsize=1)
+def get_background_link_name() -> str:
+    """Gets full name for the backgraound image link
+    Returns:
+        str: background_image link name
+    """
+    link_name = bwp_config.get(
+        ROOT_KW.CURRENT_BACKGROUND.value, BWP_DEFAULT_CURRENT_BACKGROUND_LINK_NAME
+    )
+    return os.path.join(get_img_dir(), link_name)
+
+
+# @abkCommon.function_trace
+# def get_background_link_info() -> Tuple[str, str]:
+#     """ Gets information about the background image link
+#         the full link name and the target if exist
+#     Returns:
+#         Tuple[str, str]: (link_name, target_name)
+#     """
+#     link_name = get_background_link_name()
+#     print(f"ABK:get_background_link_info: {link_name=}")
+#     if os.path.exists(link_name) == False:
+#         print(f"ABK:get_background_link_info: 1")
+#         return (link_name, "")
+#     print(f"ABK:get_background_link_info: 2")
+#     target_name = abkCommon.read_relative_link(link_name)
+#     print(f"ABK:get_background_link_info: 3")
+#     return (link_name, target_name)
 
 
 # -----------------------------------------------------------------------------
@@ -188,7 +230,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
                                     # print(f"---- ABK: {img_date.year=}, {img_date.month=}, {img_date.day=}, {img_region_part=}")
                                     # looks like a legit file name -> move it the the new location mm/dd/YYYY-mm-dd_us.jpg
                                     img_src = os.path.join(full_month_dir, img_file)
-                                    img_dst = os.path.join(root_image_dir, f'{img_date.month:02d}', f'{img_date.day:02d}', img_file)
+                                    img_dst = os.path.join(root_image_dir, f"{img_date.month:02d}", f"{img_date.day:02d}", img_file)
                                     # print(f"---- ABK: moving [{img_src}] -> [{img_dst}]")
                                     os.renames(img_src, img_dst)
                                 except Exception as exp:
@@ -231,7 +273,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
                                     # print(f"---- ABK: {img_date.year=}, {img_date.month=}, {img_date.day=}, {img_region_part=}")
                                     # looks like a legit file name -> move it the the new location YYYY/mm/YYYY-mm-dd_us.jpg
                                     img_src = os.path.join(full_day_dir, img_file)
-                                    img_dst = os.path.join(root_image_dir, f'{img_date.year:04d}', f'{img_date.month:02d}', img_file)
+                                    img_dst = os.path.join(root_image_dir, f"{img_date.year:04d}", f"{img_date.month:02d}", img_file)
                                     # print(f"---- ABK: moving [{img_src}] -> [{img_dst}]")
                                     os.renames(img_src, img_dst)
                                 except Exception as exp:
@@ -264,13 +306,9 @@ class DownLoadServiceBase(metaclass=ABCMeta):
                     new_link_target = os.path.join(f"{curr_bg_date.month:02d}", f"{curr_bg_date.day:02d}", img_file_name)
                 else:
                     new_link_target = os.path.join(f"{curr_bg_date.year:04d}", f"{curr_bg_date.month:02d}", img_file_name)
-                os.symlink(new_link_target, "tmp_link")
-                os.rename("tmp_link", current_background_file_name)
+                update_link(current_background_file_name, new_link_target)
             except Exception as exp:
-                print(f"{Fore.RED}ERROR: {exp=}{Style.RESET_ALL}")     # type: ignore
-                # if there was an error, no worries, this link will be recreated anyway
-                pass
-
+                print(f"{Fore.RED}ERROR: {exp=}{Style.RESET_ALL}")
 
 
 class BingDownloadService(DownLoadServiceBase):
@@ -301,90 +339,31 @@ class BingDownloadService(DownLoadServiceBase):
         # return full_file_name
         return img_data_list
 
+
+
 class PeapixDownloadService(DownLoadServiceBase):
     def __init__(self, logger: logging.Logger) -> None:
         super().__init__(logger)
+
 
     @abkCommon.function_trace
     def download_daily_image(self) -> List[ImageDownloadData]:
         """Downloads bing image and stores it in the defined directory"""
         dst_dir = get_img_dir()
         self._logger.debug(f"{dst_dir=}")
-        country_part_url = "=".join(['country', bwp_config.get(ROOT_KW.REGION.value, "us")])
+        country_part_url = "=".join(["country", bwp_config.get(ROOT_KW.REGION.value, "us")])
         get_metadata_url = "?".join([bwp_config.get(CONSTANT_KW.CONSTANT.value, {}).get(CONSTANT_KW.PEAPIX_URL.value, ""), country_part_url])
         self._logger.debug(f"Getting Image info from: {get_metadata_url=}")
 
-        abk_resp_json = [
-    {
-        "title": "Bearded reedlings at a wetland in Flevoland, Netherlands",
-        "fullUrl": "https://img.peapix.com/459318aa7ef7472fa0dd7b43c5b3d90f_1080.jpg",
-        "thumbUrl": "https://img.peapix.com/459318aa7ef7472fa0dd7b43c5b3d90f_480.jpg",
-        "imageUrl": "https://img.peapix.com/459318aa7ef7472fa0dd7b43c5b3d90f.jpg",
-        "date": "2022-08-28",
-        "pageUrl": "https://peapix.com/bing/39843"
-    },
-    {
-        "title": "Boundary Trail in Mount St. Helens National Volcanic Monument, Washington",
-        "fullUrl": "https://img.peapix.com/a27bc3b5bb5f4c10ada9b8308336000f_1080.jpg",
-        "thumbUrl": "https://img.peapix.com/a27bc3b5bb5f4c10ada9b8308336000f_480.jpg",
-        "imageUrl": "https://img.peapix.com/a27bc3b5bb5f4c10ada9b8308336000f.jpg",
-        "date": "2022-08-27",
-        "pageUrl": "https://peapix.com/bing/39831"
-    },
-    {
-        "title": "Kiteboarders and windsurfers off the Pelje\u0161ac Peninsula, Croatia",
-        "fullUrl": "https://img.peapix.com/c22a07765005471d8a9fc22e3244ede2_1080.jpg",
-        "thumbUrl": "https://img.peapix.com/c22a07765005471d8a9fc22e3244ede2_480.jpg",
-        "imageUrl": "https://img.peapix.com/c22a07765005471d8a9fc22e3244ede2.jpg",
-        "date": "2022-08-26",
-        "pageUrl": "https://peapix.com/bing/39819"
-    },
-    {
-        "title": "North Cascades National Park, Washington",
-        "fullUrl": "https://img.peapix.com/532fbfa5af144b73a8896a0cce37f9b8_1080.jpg",
-        "thumbUrl": "https://img.peapix.com/532fbfa5af144b73a8896a0cce37f9b8_480.jpg",
-        "imageUrl": "https://img.peapix.com/532fbfa5af144b73a8896a0cce37f9b8.jpg",
-        "date": "2022-08-25",
-        "pageUrl": "https://peapix.com/bing/39807"
-    },
-    {
-        "title": "Wheat field in Ukraine",
-        "fullUrl": "https://img.peapix.com/7e1e2b20f6c4467393dc24c2dffba55e_1080.jpg",
-        "thumbUrl": "https://img.peapix.com/7e1e2b20f6c4467393dc24c2dffba55e_480.jpg",
-        "imageUrl": "https://img.peapix.com/7e1e2b20f6c4467393dc24c2dffba55e.jpg",
-        "date": "2022-08-24",
-        "pageUrl": "https://peapix.com/bing/39795"
-    },
-    {
-        "title": "Menton, France",
-        "fullUrl": "https://img.peapix.com/45beb957999e46c0ba96027735cabdee_1080.jpg",
-        "thumbUrl": "https://img.peapix.com/45beb957999e46c0ba96027735cabdee_480.jpg",
-        "imageUrl": "https://img.peapix.com/45beb957999e46c0ba96027735cabdee.jpg",
-        "date": "2022-08-23",
-        "pageUrl": "https://peapix.com/bing/39783"
-    },
-    {
-        "title": "A burrowing owl chick and adult in South Florida",
-        "fullUrl": "https://img.peapix.com/e1024949b15e4677acdb0c0b0fe61fcd_1080.jpg",
-        "thumbUrl": "https://img.peapix.com/e1024949b15e4677acdb0c0b0fe61fcd_480.jpg",
-        "imageUrl": "https://img.peapix.com/e1024949b15e4677acdb0c0b0fe61fcd.jpg",
-        "date": "2022-08-22",
-        "pageUrl": "https://peapix.com/bing/39771"
-    }
-]
-        abk_dl_img_data = self._process_peapix_api_data(abk_resp_json)
-        self._logger.debug(f"ABK:download_daily_image: {len(abk_dl_img_data)=}")
-        self._download_images(abk_dl_img_data)
-
         # this might throw, but we have a try/catch in the main, so no extra handling here needed.
-        # resp = requests.get(get_metadata_url)
-        # if resp.status_code == 200: # good case
-        #     dl_img_data = self._process_peapix_api_data(resp.json())
-        #     # TODO: need to safe file with following name: image_dir/scale_YYYY-mm-dd_us.jpg
-        #     # TODO: because the scaling job will pick it up later to scale to the correct dimention and move it to correct directory
-        # else:
-        #     raise ResponseError(f"ERROR: getting bing image return error code: {resp.status_code}. Cannot proceed.")
-        return abk_dl_img_data
+        resp = requests.get(get_metadata_url)
+        if resp.status_code == 200: # good case
+            dl_img_data = self._process_peapix_api_data(resp.json())
+            self._download_images(dl_img_data)
+        else:
+            raise ResponseError(f"ERROR: getting bing image return error code: {resp.status_code}. Cannot proceed.")
+        return dl_img_data
+
 
     @abkCommon.function_trace
     def _process_peapix_api_data(self, metadata_list: List[Dict[str, str]]) -> List[ImageDownloadData]:
@@ -415,7 +394,7 @@ class PeapixDownloadService(DownLoadServiceBase):
 
                 self._logger.debug(f"{img_to_check_list=}")
                 # if all(os.path.exists(imgs_to_check[IMG_SCALE_PATH_NUMBER]) == False and :
-                if all([os.path.exists(img_to_check) == False for img_to_check in img_to_check_list]) :
+                if all([os.path.exists(img_to_check) == False for img_to_check in img_to_check_list]):
                     return_list.append(ImageDownloadData(
                         imageDate=img_date,
                         title=img_data.get("title", ""),
@@ -557,8 +536,8 @@ class BingWallPaper(object):
     def __init__(self,
                  logger: logging.Logger,
                  options: Values,
-                 os_dependant : IOsDependentBase,
-                 dl_service : DownLoadServiceBase
+                 os_dependant: IOsDependentBase,
+                 dl_service: DownLoadServiceBase
     ):
         self._logger = logger or logging.getLogger(__name__)
         self._options = options
@@ -580,13 +559,12 @@ class BingWallPaper(object):
 
 
     @abkCommon.function_trace
-    def scale_images(self, img_data_list: List[ImageDownloadData]) -> str:
-        resized_img_name = ""
+    def scale_images(self, img_data_list: List[ImageDownloadData]) -> None:
         img_root_dir = get_img_dir()
 
         for img_data in img_data_list:
             scale_img_name = os.path.join(img_root_dir, f"{BWP_SCALE_FILE_PREFIX}_{img_data.imageName}")
-            resized_img_name = self._resize_store_and_remove(scale_img_name, img_data.imagePath, img_data.imageName)
+            self._resize_store_and_remove(scale_img_name, img_data.imagePath, img_data.imageName)
 
         # in case there are still SCALE_images left from previous run
         root_img_file_list = sorted(next(os.walk(img_root_dir))[BWP_FILES])
@@ -600,10 +578,8 @@ class BingWallPaper(object):
             resized_pix_name = "_".join([img_date_str, img_post_str])
             self._resize_store_and_remove(scale_img_name, resized_img_path, resized_pix_name)
 
-        return resized_img_name
 
-
-    def _resize_store_and_remove(self, scale_img_name: str, resized_img_path: str, resized_img_name: str) -> str:
+    def _resize_store_and_remove(self, scale_img_name: str, resized_img_path: str, resized_img_name: str) -> None:
         resized_full_img_name = os.path.join(resized_img_path, resized_img_name)
         abkCommon.ensure_dir(resized_img_path)
         try:
@@ -615,7 +591,34 @@ class BingWallPaper(object):
             os.remove(scale_img_name)
         except OSError as exp:
             self._logger.error(f"ERROR: {exp=}, resizing file: {scale_img_name}")
-        return resized_full_img_name
+
+    @staticmethod
+    @abkCommon.function_trace
+    def update_current_background_image_link() -> None:
+        # check image exist
+        # create downscaled version of the last image
+        # read link target
+        # delete link
+        # point the link to the newly create downscaled version
+        # print(f"ABK:update_current_background_image_link: {last_know_image=}")
+        root_img_dir = get_img_dir()
+        today = datetime.date.today()
+        print(f"ABK:update_current_background_image_link: {today=}")
+
+        todays_relative_img_path = get_relative_img_dir(today)
+        print(f"ABK:update_current_background_image_link: {todays_relative_img_path=}")
+
+        todays_img_name = f"{today.year:04d}-{today.month:02d}-{today.day:02d}_{get_img_region()}{BWP_IMG_FILE_EXT}"
+        print(f"ABK:update_current_background_image_link: {todays_img_name=}")
+
+        today_relative_img_name = os.path.join(todays_relative_img_path, todays_img_name)
+        print(f"ABK:update_current_background_image_link: {today_relative_img_name=}")
+
+        # link_info = get_background_link_info()
+        # print(f"ABK:update_current_background_image_link: {link_info=}")
+
+        if os.path.exists(os.path.join(get_img_dir(), today_relative_img_name)):
+            update_link(get_background_link_name(), today_relative_img_name)
 
 
     @abkCommon.function_trace
@@ -652,8 +655,7 @@ class BingWallPaper(object):
 
     @abkCommon.function_trace
     def download_daily_image(self) -> List[ImageDownloadData]:
-        """Downloads bing image and stores it in the defined directory
-        """
+        """Downloads bing image and stores it in the defined directory"""
         return self._dl_service.download_daily_image()
 
 
@@ -691,11 +693,12 @@ def main():
         )
         bwp.convert_dir_structure_if_needed()
         img_data = bwp.download_daily_image()
-        last_img_name = bwp.scale_images(img_data)
+        bwp.scale_images(img_data)
+        bwp.update_current_background_image_link()
 
         # is set desktop image enabled
-        if bwp_config.get(ROOT_KW.SET_DESKTOP_IMAGE.value, False):
-            bwp.set_desktop_background(last_img_name)
+        # if bwp_config.get(ROOT_KW.SET_DESKTOP_IMAGE.value, False):
+        #     bwp.set_desktop_background(last_img_name)
 
         bwp.trim_number_of_images()
 
