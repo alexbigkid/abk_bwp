@@ -1,11 +1,6 @@
 #!/usr/bin/env python
 """Main program for downloading and upscaling/downscaling bing images to use as wallpaper sized """
 
-# -----------------------------------------------------------------------------
-# http://www.owenrumney.co.uk/2014/09/13/Update_Bing_Desktop_For_Mac.html
-# Modified by Alex Berger @ http://www.abkcompany.com
-# -----------------------------------------------------------------------------
-
 # Standard library imports
 import os
 import sys
@@ -36,7 +31,9 @@ from abkPackage import abkCommon
 from config import CONSTANT_KW, DESKTOP_IMG_KW, FTV_KW, ROOT_KW, bwp_config
 
 
-
+# -----------------------------------------------------------------------------
+# LOcal Constants
+# -----------------------------------------------------------------------------
 BWP_DIRECTORIES = 1
 BWP_FILES = 2
 BWP_DEFAULT_PIX_DIR = "Pictures/BWP"
@@ -53,6 +50,7 @@ BWP_DEFAULT_IMG_SIZE = (3840, 2160)
 BWP_RESIZE_JPEG_QUALITY_MIN = 70
 BWP_RESIZE_JPEG_QUALITY_MAX = 100
 BWP_DEFAULT_CURRENT_BACKGROUND_NAME = "current_background.jpg"
+
 
 # -----------------------------------------------------------------------------
 # local functions
@@ -114,12 +112,6 @@ def get_config_resize_jpeg_quality() -> int:
     return jpeg_quality
 
 
-# def update_link(link_file_name:str, new_link_target: str) -> None:
-#     tmp_link = os.path.join(get_config_img_dir(), "tmp_link")
-#     os.symlink(new_link_target, tmp_link)
-#     os.rename(tmp_link, link_file_name)
-
-
 @lru_cache(maxsize=1)
 def get_config_current_background_image_name() -> str:
     """Gets full name for the current_backgraound image name
@@ -139,24 +131,6 @@ def get_config_background_img_size() -> Tuple[int, int]:
     if configured_size not in [img_size.value for img_size in ImageSizes]:
         return BWP_DEFAULT_IMG_SIZE
     return configured_size
-
-
-# @abkCommon.function_trace
-# def get_background_link_info() -> Tuple[str, str]:
-#     """ Gets information about the background image link
-#         the full link name and the target if exist
-#     Returns:
-#         Tuple[str, str]: (link_name, target_name)
-#     """
-#     link_name = get_background_link_name()
-#     print(f"ABK:get_background_link_info: {link_name=}")
-#     if os.path.exists(link_name) == False:
-#         print(f"ABK:get_background_link_info: 1")
-#         return (link_name, "")
-#     print(f"ABK:get_background_link_info: 2")
-#     target_name = abkCommon.read_relative_link(link_name)
-#     print(f"ABK:get_background_link_info: 3")
-#     return (link_name, target_name)
 
 
 # -----------------------------------------------------------------------------
