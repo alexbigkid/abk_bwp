@@ -204,7 +204,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
             year_list (List[str]): year list directory names
         """
         # FTV enabled conversion needed to use mm/dd directory format.
-        # print(f"{root_image_dir=}, {year_list=}")
+        main_logger.debug(f"{root_image_dir=}, {year_list=}")
         region_list = bwp_config.get(CONSTANT_KW.CONSTANT.value, {}).get(CONSTANT_KW.ALT_PEAPIX_REGION.value, [])
         for year_dir in year_list:
             if len(year_dir) == BWP_DIGITS_IN_A_YEAR and year_dir.isdigit():
@@ -215,22 +215,22 @@ class DownLoadServiceBase(metaclass=ABCMeta):
                     if len(month_dir) == BWP_DIGITS_IN_A_MONTH and month_dir.isdigit() and int(month_dir) <= BWP_NUMBER_OF_MONTHS:
                         full_month_dir = os.path.join(full_year_dir, month_dir)
                         img_file_list = sorted(next(os.walk(full_month_dir))[BWP_FILES])
-                        # print(f"\n---- ABK: {year_dir=}, {month_dir=}, {img_file_list=}")
+                        # main_logger(f"\n---- ABK: {year_dir=}, {month_dir=}, {img_file_list=}")
                         for img_file in img_file_list:
                             file_name, file_ext = os.path.splitext(img_file)
-                            # print(f"---- ABK: {file_name=}, {file_ext=}")
+                            # main_logger.debug(f"---- ABK: {file_name=}, {file_ext=}")
                             img_date_part, img_region_part = file_name.split("_")
                             if file_ext == BWP_IMG_FILE_EXT and img_region_part in region_list:
                                 try:
                                     img_date = datetime.datetime.strptime(img_date_part, "%Y-%m-%d").date()
-                                    # print(f"---- ABK: {img_date.year=}, {img_date.month=}, {img_date.day=}, {img_region_part=}")
+                                    # main_logger.debug(f"---- ABK: {img_date.year=}, {img_date.month=}, {img_date.day=}, {img_region_part=}")
                                     # looks like a legit file name -> move it the the new location mm/dd/YYYY-mm-dd_us.jpg
                                     img_src = os.path.join(full_month_dir, img_file)
                                     img_dst = os.path.join(root_image_dir, f"{img_date.month:02d}", f"{img_date.day:02d}", img_file)
-                                    # print(f"---- ABK: moving [{img_src}] -> [{img_dst}]")
+                                    # main_logger.debug(f"---- ABK: moving [{img_src}] -> [{img_dst}]")
                                     os.renames(img_src, img_dst)
                                 except Exception as exp:
-                                    print(f"{Fore.RED}ERROR: moving [{img_src=}] to [{img_dst=}] with EXCEPTION: {exp=}. INVESTIGATE!{Style.RESET_ALL}")     # type: ignore
+                                    main_logger.error(f"{Fore.RED}ERROR: moving [{img_src=}] to [{img_dst=}] with EXCEPTION: {exp=}. INVESTIGATE!{Style.RESET_ALL}")     # type: ignore
                                     # we don't want to move on here. since there is something wrong, we just re-throw end exit.
                                     raise
                 # if no errors and move was successful delete the old directory structure
@@ -246,7 +246,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
             root_image_dir (str): directory where images are stored
             month_list (List[str]): month list directory names
         """
-        # print(f"{root_image_dir=}, {month_list=}")
+        main_logger.debug(f"{root_image_dir=}, {month_list=}")
         region_list = bwp_config.get(CONSTANT_KW.CONSTANT.value, {}).get(CONSTANT_KW.ALT_PEAPIX_REGION.value, [])
         for month_dir in month_list:
             if len(month_dir) == BWP_DIGITS_IN_A_MONTH and month_dir.isdigit() and int(month_dir) <= BWP_NUMBER_OF_MONTHS:
@@ -257,22 +257,22 @@ class DownLoadServiceBase(metaclass=ABCMeta):
                     if len(day_dir) == BWP_DIGITS_IN_A_DAY and day_dir.isdigit():
                         full_day_dir = os.path.join(full_month_dir, day_dir)
                         img_file_list = sorted(next(os.walk(full_day_dir))[BWP_FILES])
-                        # print(f"\n---- ABK: {month_dir=}, {day_dir=}, {img_file_list=}")
+                        # main_logger.debug(f"\n---- ABK: {month_dir=}, {day_dir=}, {img_file_list=}")
                         for img_file in img_file_list:
                             file_name, file_ext = os.path.splitext(img_file)
-                            # print(f"---- ABK: {file_name=}, {file_ext=}")
+                            # main_logger.debug(f"---- ABK: {file_name=}, {file_ext=}")
                             img_date_part, img_region_part = file_name.split("_")
                             if file_ext == BWP_IMG_FILE_EXT and img_region_part in region_list:
                                 try:
                                     img_date = datetime.datetime.strptime(img_date_part, "%Y-%m-%d").date()
-                                    # print(f"---- ABK: {img_date.year=}, {img_date.month=}, {img_date.day=}, {img_region_part=}")
+                                    # main_logger.debug(f"---- ABK: {img_date.year=}, {img_date.month=}, {img_date.day=}, {img_region_part=}")
                                     # looks like a legit file name -> move it the the new location YYYY/mm/YYYY-mm-dd_us.jpg
                                     img_src = os.path.join(full_day_dir, img_file)
                                     img_dst = os.path.join(root_image_dir, f"{img_date.year:04d}", f"{img_date.month:02d}", img_file)
-                                    # print(f"---- ABK: moving [{img_src}] -> [{img_dst}]")
+                                    # main_logger.debug(f"---- ABK: moving [{img_src}] -> [{img_dst}]")
                                     os.renames(img_src, img_dst)
                                 except Exception as exp:
-                                    print(f"{Fore.RED}ERROR: moving [{img_src=}] to [{img_dst=}] with EXCEPTION: {exp=}. INVESTIGATE!{Style.RESET_ALL}")     # type: ignore
+                                    main_logger.error(f"{Fore.RED}ERROR: moving [{img_src=}] to [{img_dst=}] with EXCEPTION: {exp=}. INVESTIGATE!{Style.RESET_ALL}")     # type: ignore
                                     # we don't want to move on here. since there is something wrong, we just re-throw end exit.
                                     raise
                 # if no errors and move was successful delete the old directory structure
@@ -674,8 +674,8 @@ def main():
             #     ftv.change_daily_images()
 
     except Exception as exception:
-        print(f"{Fore.RED}ERROR: executing bingwallpaper")
-        print(f"EXCEPTION: {exception}{Style.RESET_ALL}")
+        main_logger.error(f"{Fore.RED}ERROR: executing bingwallpaper")
+        main_logger.error(f"EXCEPTION: {exception}{Style.RESET_ALL}")
         exit_code = 1
     finally:
         sys.exit(exit_code)
