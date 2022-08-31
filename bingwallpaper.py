@@ -55,15 +55,6 @@ BWP_DEFAULT_BACKGROUND_IMG_PREFIX = "background_img"
 # -----------------------------------------------------------------------------
 # Supported Image Sizes
 # -----------------------------------------------------------------------------
-class DirectoryContentType(Enum):
-    FILES_AND_DIRS = 0
-    DIRECTORIES = 1
-    FILES = 2
-
-
-# -----------------------------------------------------------------------------
-# Supported Image Sizes
-# -----------------------------------------------------------------------------
 class ImageSizes(Enum):
     IMG_640x480     = (640,     480)
     IMG_1024x768    = (1024,    768)
@@ -159,14 +150,6 @@ def delete_files_in_dir(dir_name: str, file_list: List[str]) -> None:
             os.remove(os.path.join(dir_name, file_to_delete))
         except Exception as exp:
             main_logger.error(f"ERROR: {exp=}, Deleting file: {file_to_delete}")
-
-
-# @lru_cache(maxsize=16)
-# def get_directory_content(content_type: DirectoryContentType) -> List[str]:
-#     if content_type == DirectoryContentType.FILES_AND_DIRS:
-#         return sorted(next(os.walk(get_config_img_dir())))
-#     return sorted(next(os.walk(get_config_img_dir()))[content_type])
-
 
 
 # -----------------------------------------------------------------------------
