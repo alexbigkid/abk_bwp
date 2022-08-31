@@ -6,15 +6,16 @@ current_background = "current_background.jpg"
 resize_jpeg_quality = 89
 years_images_to_keep = 98
 retain_images = true
-# peapix is prefered service, since it allows to download better images from different contries
+# peapix is prefered service, since it allows to download better images from different contriesWIDTH
 dl_service = "peapix"
 region = "us"
 
 [desktop_img]
 enabled = true
+# if height or width is configured to not supported size, it will be defaulted to 4K resolution: 3840x2160
 width = 3840
 height = 2160
-# please do not modify those alternative dimentions
+# the alternative sizes are not configurable, there are here just for information what is supported
 alt_dimention = [ {"width" = 640, "height" = 480}, {"width" = 1024, "height" = 768}, {"width" = 1600, "height" = 1200}, {"width" = 1920, "height" = 1200}, {"width" = 3840, "height" = 2160} ]
 
 [constant]

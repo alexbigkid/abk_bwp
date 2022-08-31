@@ -15,24 +15,26 @@ import logging
 import logging.config
 import datetime
 import shutil
+from enum import Enum
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 from functools import lru_cache
 from sys import platform as _platform
 from typing import Dict, List, Tuple
-from urllib.request import urlopen
-from xmlrpc.client import Boolean, ResponseError
-import requests
+from xmlrpc.client import ResponseError
 
 # Third party imports
+import requests
 from optparse import Values
+from urllib.request import urlopen
 from colorama import Fore, Style
 from PIL import Image
 # from ftv import FTV
 
 # Local application imports
 from abkPackage import abkCommon
-from config import CONSTANT_KW, FTV_KW, ROOT_KW, bwp_config
+from config import CONSTANT_KW, DESKTOP_IMG_KW, FTV_KW, ROOT_KW, bwp_config
+
 
 
 BWP_DIRECTORIES = 1
@@ -56,7 +58,7 @@ BWP_DEFAULT_CURRENT_BACKGROUND_LINK_NAME = "current_background.jpg"
 # local functions
 # -----------------------------------------------------------------------------
 @lru_cache(maxsize=1)
-def get_img_dir() -> str:
+def get_config_img_dir() -> str:
     """Defines the image directory, creates if not existent yet
     Returns:
         str: full directory name where images will be saved
@@ -68,7 +70,7 @@ def get_img_dir() -> str:
 
 
 @lru_cache(maxsize=1)
-def get_img_region() -> str:
+def get_config_img_region() -> str:
     """Gets the region from config toml file
     Returns:
         str: region string
@@ -85,13 +87,13 @@ def get_img_region() -> str:
 
 
 @lru_cache(maxsize=1)
-def is_ftv_enabled() -> bool:
+def is_config_ftv_enabled() -> bool:
     return bwp_config.get(FTV_KW.FTV.value, {}).get(FTV_KW.ENABLED.value, False)
 
 
 @lru_cache(maxsize=128)
 def get_relative_img_dir(img_date: datetime.date) -> str:
-    if is_ftv_enabled():
+    if is_config_ftv_enabled():
         return os.path.join(f"{img_date.month:02d}", f"{img_date.day:02d}")
     else:
         return os.path.join(f"{img_date.year:04d}", f"{img_date.month:02d}")
@@ -103,7 +105,7 @@ def get_full_img_dir(img_root_dir: str, img_date: datetime.date) -> str:
 
 
 @lru_cache(maxsize=1)
-def get_resize_jpeg_quality() -> int:
+def get_config_resize_jpeg_quality() -> int:
     jpeg_quality = bwp_config.get(ROOT_KW.RESIZE_JPEG_QUALITY.value, BWP_RESIZE_JPEG_QUALITY_MIN)
     if jpeg_quality < BWP_RESIZE_JPEG_QUALITY_MIN:
         return BWP_RESIZE_JPEG_QUALITY_MIN
@@ -113,21 +115,30 @@ def get_resize_jpeg_quality() -> int:
 
 
 def update_link(link_file_name:str, new_link_target: str) -> None:
-    tmp_link = os.path.join(get_img_dir(), "tmp_link")
+    tmp_link = os.path.join(get_config_img_dir(), "tmp_link")
     os.symlink(new_link_target, tmp_link)
     os.rename(tmp_link, link_file_name)
 
 
 @lru_cache(maxsize=1)
-def get_background_link_name() -> str:
+def get_config_background_link_name() -> str:
     """Gets full name for the backgraound image link
     Returns:
         str: background_image link name
     """
-    link_name = bwp_config.get(
-        ROOT_KW.CURRENT_BACKGROUND.value, BWP_DEFAULT_CURRENT_BACKGROUND_LINK_NAME
-    )
-    return os.path.join(get_img_dir(), link_name)
+    link_name = bwp_config.get(ROOT_KW.CURRENT_BACKGROUND.value, BWP_DEFAULT_CURRENT_BACKGROUND_LINK_NAME)
+    return os.path.join(get_config_img_dir(), link_name)
+
+
+@lru_cache(maxsize=1)
+def get_config_background_img_size() -> Tuple[int, int]:
+    width = bwp_config.get(DESKTOP_IMG_KW.DESKTOP_IMG.value, {}).get(DESKTOP_IMG_KW.WIDTH.value, 0)
+    height = bwp_config.get(DESKTOP_IMG_KW.DESKTOP_IMG.value, {}).get(DESKTOP_IMG_KW.HEIGHT.value, 0)
+    # if missconfigured return default size
+    configured_size = (width, height)
+    if configured_size not in [img_size.value for img_size in ImageSizes]:
+        return BWP_DEFAULT_IMG_SIZE
+    return configured_size
 
 
 # @abkCommon.function_trace
@@ -146,6 +157,17 @@ def get_background_link_name() -> str:
 #     target_name = abkCommon.read_relative_link(link_name)
 #     print(f"ABK:get_background_link_info: 3")
 #     return (link_name, target_name)
+
+
+# -----------------------------------------------------------------------------
+# Supported Image Sizes
+# -----------------------------------------------------------------------------
+class ImageSizes(Enum):
+    IMG_640x480     = (640,     480)
+    IMG_1024x768    = (1024,    768)
+    IMG_1600x1200   = (1600,    1200)
+    IMG_1920x1200   = (1920,    1200)
+    IMG_3840x2160   = BWP_DEFAULT_IMG_SIZE
 
 
 # -----------------------------------------------------------------------------
@@ -179,7 +201,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
     @staticmethod
     @abkCommon.function_trace
     def convert_dir_structure_if_needed() -> None:
-        root_image_dir = get_img_dir()
+        root_image_dir = get_config_img_dir()
         # get sub directory names from the defined picture directory
         dir_list = sorted(next(os.walk(root_image_dir))[BWP_DIRECTORIES])
         if len(dir_list) == 0:               # empty pix directory, no conversion needed
@@ -319,7 +341,7 @@ class BingDownloadService(DownLoadServiceBase):
     def download_daily_image(self) -> List[ImageDownloadData]:
         """Downloads bing image and stores it in the defined directory"""
         img_data_list: List[ImageDownloadData] = []
-        dst_dir = get_img_dir()
+        dst_dir = get_config_img_dir()
         self._logger.debug(f"{dst_dir=}")
         response = urlopen("http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en-US")
         obj = json.load(response)
@@ -349,7 +371,7 @@ class PeapixDownloadService(DownLoadServiceBase):
     @abkCommon.function_trace
     def download_daily_image(self) -> List[ImageDownloadData]:
         """Downloads bing image and stores it in the defined directory"""
-        dst_dir = get_img_dir()
+        dst_dir = get_config_img_dir()
         self._logger.debug(f"{dst_dir=}")
         country_part_url = "=".join(["country", bwp_config.get(ROOT_KW.REGION.value, "us")])
         get_metadata_url = "?".join([bwp_config.get(CONSTANT_KW.CONSTANT.value, {}).get(CONSTANT_KW.PEAPIX_URL.value, ""), country_part_url])
@@ -379,8 +401,8 @@ class PeapixDownloadService(DownLoadServiceBase):
         IMG_SCALE_PATH_NUMBER = 0
         IMG_LOCAL_PATH_NUMBER = 1
         return_list: List[ImageDownloadData] = []
-        img_root_dir = get_img_dir()
-        img_region = get_img_region()
+        img_root_dir = get_config_img_dir()
+        img_region = get_config_img_region()
         self._logger.debug(f"{img_region=}")
 
         for img_data in metadata_list:
@@ -412,7 +434,7 @@ class PeapixDownloadService(DownLoadServiceBase):
 
     @abkCommon.function_trace
     def _download_images(self, img_dl_data_list: List[ImageDownloadData]) -> None:
-        root_img_dir = get_img_dir()
+        root_img_dir = get_config_img_dir()
         for img_dl_data in img_dl_data_list:
             scale_img_name = os.path.join(root_img_dir, f"{BWP_SCALE_FILE_PREFIX}_{img_dl_data.imageName}")
             try:
@@ -560,7 +582,7 @@ class BingWallPaper(object):
 
     @abkCommon.function_trace
     def scale_images(self, img_data_list: List[ImageDownloadData]) -> None:
-        img_root_dir = get_img_dir()
+        img_root_dir = get_config_img_dir()
 
         for img_data in img_data_list:
             scale_img_name = os.path.join(img_root_dir, f"{BWP_SCALE_FILE_PREFIX}_{img_data.imageName}")
@@ -587,7 +609,7 @@ class BingWallPaper(object):
                 self._logger.debug(f"[{scale_img_name}]: {img.size=}")
                 resized_img = img.resize(BWP_DEFAULT_IMG_SIZE, Image.Resampling.LANCZOS)
                 self._logger.debug(f"{resized_full_img_name=}")
-                resized_img.save(resized_full_img_name, optimize=True, quality=get_resize_jpeg_quality())
+                resized_img.save(resized_full_img_name, optimize=True, quality=get_config_resize_jpeg_quality())
             os.remove(scale_img_name)
         except OSError as exp:
             self._logger.error(f"ERROR: {exp=}, resizing file: {scale_img_name}")
@@ -601,24 +623,27 @@ class BingWallPaper(object):
         # delete link
         # point the link to the newly create downscaled version
         # print(f"ABK:update_current_background_image_link: {last_know_image=}")
-        root_img_dir = get_img_dir()
+        root_img_dir = get_config_img_dir()
         today = datetime.date.today()
         print(f"ABK:update_current_background_image_link: {today=}")
 
         todays_relative_img_path = get_relative_img_dir(today)
         print(f"ABK:update_current_background_image_link: {todays_relative_img_path=}")
 
-        todays_img_name = f"{today.year:04d}-{today.month:02d}-{today.day:02d}_{get_img_region()}{BWP_IMG_FILE_EXT}"
+        todays_img_name = f"{today.year:04d}-{today.month:02d}-{today.day:02d}_{get_config_img_region()}{BWP_IMG_FILE_EXT}"
         print(f"ABK:update_current_background_image_link: {todays_img_name=}")
 
         today_relative_img_name = os.path.join(todays_relative_img_path, todays_img_name)
         print(f"ABK:update_current_background_image_link: {today_relative_img_name=}")
 
+        bg_img_size = get_config_background_img_size()
+        print(f"ABK:update_current_background_image_link: {bg_img_size=}")
+
         # link_info = get_background_link_info()
         # print(f"ABK:update_current_background_image_link: {link_info=}")
 
-        if os.path.exists(os.path.join(get_img_dir(), today_relative_img_name)):
-            update_link(get_background_link_name(), today_relative_img_name)
+        if os.path.exists(os.path.join(get_config_img_dir(), today_relative_img_name)):
+            update_link(get_config_background_link_name(), today_relative_img_name)
 
 
     @abkCommon.function_trace
@@ -626,7 +651,7 @@ class BingWallPaper(object):
         """Deletes some images if it reaches max number desirable
            The max number of years images to retain can be defined in the config/bwp_config.toml file
         """
-        pix_dir = get_img_dir()
+        pix_dir = get_config_img_dir()
         max_years = bwp_config.get(ROOT_KW.YEARS_IMAGES_TO_KEEP.value, 1)
         self._logger.debug(f"{pix_dir=}, {max_years=}")
 
