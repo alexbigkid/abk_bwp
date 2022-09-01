@@ -15,14 +15,14 @@ from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 from functools import lru_cache
 from sys import platform as _platform
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 from xmlrpc.client import ResponseError
 
 # Third party imports
 import requests
 from optparse import Values
 from colorama import Fore, Style
-from PIL import Image
+from PIL import Image, ExifTags
 # from ftv import FTV
 
 # Local application imports
@@ -169,7 +169,7 @@ def get_full_img_dir_from_file_name(img_file_name: str) -> str:
     return os.path.join(get_config_img_dir(), get_relative_img_dir(img_date))
 
 
-def get_date_from_img_file_name(img_file_name: str) -> datetime.date | None:
+def get_date_from_img_file_name(img_file_name: str) -> Union[datetime.date, None]:
     try:
         date_str, _ = img_file_name.split("_")
         img_date = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
@@ -347,6 +347,13 @@ class DownLoadServiceBase(metaclass=ABCMeta):
                 img_data = requests.get(img_dl_data.imageUrl).content
                 with open(scale_img_name, mode="wb") as fh:
                     fh.write(img_data)
+                # TODO: add exif info here
+                # self._logger.debug(f"{ExifTags.TAGS=}")
+                # im = Image.open(img_data)
+                # exif_data = im.getexif()
+                # exif_data[0x010e] = img_dl_data.title
+                # im.save(f"test_{img_data}", exif=exif_data)
+                # im.close()
             except Exception as exp:
                 self._logger.error(f"ERROR: {exp=}, downloading image: {scale_img_name}")
         return
