@@ -4,7 +4,8 @@ image_dir = "Pictures/BingWallpapers"
 background_img_prefix = "background_img"
 # resize jpeg quality % defines thew size of the resized image. higher number -> better image, greater file size
 resize_jpeg_quality = 89
-years_images_to_keep = 98
+# trim number of images collected always to this number: for me ~9 years: 9 * 365 = 3285
+number_of_images_to_keep = 3285
 retain_images = true
 # peapix is prefered service, since it allows to download better images from different contriesWIDTH
 dl_service = "peapix"
@@ -25,7 +26,7 @@ bing_url = "http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en-U
 peapix_url = "https://peapix.com/bing/feed"
 
 [ftv]
-enabled = true
+enabled = false
 set_image = true
 ip_address = "192.168.0.119"
 port = 8002

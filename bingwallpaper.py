@@ -108,11 +108,6 @@ def get_relative_img_dir(img_date: datetime.date) -> str:
         return os.path.join(f"{img_date.year:04d}", f"{img_date.month:02d}")
 
 
-@lru_cache(maxsize=128)
-def get_full_img_dir(img_date: datetime.date) -> str:
-    return os.path.join(get_config_img_dir(), get_relative_img_dir(img_date))
-
-
 @lru_cache(maxsize=1)
 def get_config_resize_jpeg_quality() -> int:
     jpeg_quality = bwp_config.get(ROOT_KW.RESIZE_JPEG_QUALITY.value, BWP_RESIZE_JPEG_QUALITY_MIN)
@@ -144,12 +139,49 @@ def get_config_background_img_size() -> Tuple[int, int]:
 
 
 def delete_files_in_dir(dir_name: str, file_list: List[str]) -> None:
-    main_logger.debug(f"In directory: {dir_name}0dDeleting files: {file_list}")
+    # main_logger.debug(f"In directory: {dir_name} deleting files: {file_list}")
     for file_to_delete in file_list:
         try:
             os.remove(os.path.join(dir_name, file_to_delete))
         except Exception as exp:
-            main_logger.error(f"ERROR: {exp=}, Deleting file: {file_to_delete}")
+            # main_logger.error(f"ERROR: {exp=}, deleting file: {file_to_delete}")
+            pass
+
+
+@lru_cache(maxsize=128)
+def get_full_img_dir_from_date(img_date: datetime.date) -> str:
+    return os.path.join(get_config_img_dir(), get_relative_img_dir(img_date))
+
+
+def get_full_img_dir_from_file_name(img_file_name: str) -> str:
+    img_date = get_date_from_img_file_name(img_file_name)
+    return os.path.join(get_config_img_dir(), get_relative_img_dir(img_date))
+
+
+def get_date_from_img_file_name(img_file_name: str) -> datetime.date | None:
+    try:
+        date_str, _ = img_file_name.split("_")
+        img_date = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
+    except ValueError:
+        return None
+    return img_date
+
+
+def get_all_background_img_names(dir_name: str) -> List[str]:
+    file_name_list = []
+    if os.path.isdir(dir_name):
+        for _, _, file_list in os.walk(dir_name):
+            for file_name in file_list:
+                if get_date_from_img_file_name(file_name):
+                    file_name_list.append(file_name)
+    return sorted(file_name_list)
+
+
+def get_config_number_of_images_to_keep() -> int:
+    number_of_images_to_keep = bwp_config.get(ROOT_KW.NUMBER_OF_IMAGES_TO_KEEP.value, 0)
+    if number_of_images_to_keep < 0:
+        return 0
+    return number_of_images_to_keep
 
 
 # -----------------------------------------------------------------------------
@@ -352,8 +384,6 @@ class PeapixDownloadService(DownLoadServiceBase):
             List[Dict[str, str]]: metadata about images to download
         """
         self._logger.debug(f"Received from API: {json.dumps(metadata_list, indent=4)}")
-        IMG_SCALE_PATH_NUMBER = 0
-        IMG_LOCAL_PATH_NUMBER = 1
         return_list: List[ImageDownloadData] = []
         img_root_dir = get_config_img_dir()
         img_region = get_config_img_region()
@@ -365,17 +395,16 @@ class PeapixDownloadService(DownLoadServiceBase):
                 img_date = datetime.datetime.strptime(img_date_str, "%Y-%m-%d").date()
                 img_to_check_list = (
                     os.path.join(img_root_dir, f"{BWP_SCALE_FILE_PREFIX}_{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}"),
-                    os.path.join(get_full_img_dir(img_date), f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}")
+                    os.path.join(get_full_img_dir_from_date(img_date), f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}")
                 )
 
                 self._logger.debug(f"{img_to_check_list=}")
-                # if all(os.path.exists(imgs_to_check[IMG_SCALE_PATH_NUMBER]) == False and :
                 if all([os.path.exists(img_to_check) == False for img_to_check in img_to_check_list]):
                     return_list.append(ImageDownloadData(
                         imageDate=img_date,
                         title=img_data.get("title", ""),
                         imageUrl=img_data.get("imageUrl", ""),
-                        imagePath=get_full_img_dir(img_date),
+                        imagePath=get_full_img_dir_from_date(img_date),
                         imageName=f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}"
                     ))
             except:
@@ -412,6 +441,7 @@ class IOsDependentBase(metaclass=ABCMeta):
         """Super class init"""
         self._logger = logger or logging.getLogger(__name__)
         self._logger.info(f"({__class__.__name__}) {self.os_type} OS dependent environment ...")
+
 
     @abstractmethod
     def set_desktop_background(self, file_name: str) -> None:
@@ -526,6 +556,12 @@ class BingWallPaper(object):
         self._dl_service.convert_dir_structure_if_needed()
 
 
+    @abkCommon.function_trace
+    def download_daily_image(self) -> List[ImageDownloadData]:
+        """Downloads bing image and stores it in the defined directory"""
+        return self._dl_service.download_daily_image()
+
+
     def set_desktop_background(self, full_img_name: str) -> None:
         """Sets background image on different OS
         Args:
@@ -550,7 +586,7 @@ class BingWallPaper(object):
             scale_img_name = os.path.join(img_root_dir, img_file)
             _, img_date_str, img_post_str = img_file.split("_")
             img_date = datetime.datetime.strptime(img_date_str, "%Y-%m-%d").date()
-            resized_img_path = get_full_img_dir(img_date)
+            resized_img_path = get_full_img_dir_from_date(img_date)
             resized_pix_name = "_".join([img_date_str, img_post_str])
             self._resize_store_and_remove(scale_img_name, resized_img_path, resized_pix_name)
 
@@ -572,7 +608,7 @@ class BingWallPaper(object):
     def update_current_background_image(self) -> None:
         config_img_dir = get_config_img_dir()
         today = datetime.date.today()
-        today_img_path = get_full_img_dir(today)
+        today_img_path = get_full_img_dir_from_date(today)
         todays_img_name = f"{today.year:04d}-{today.month:02d}-{today.day:02d}_{get_config_img_region()}{BWP_IMG_FILE_EXT}"
         src_img = os.path.join(today_img_path, todays_img_name)
         if os.path.exists(src_img):
@@ -606,40 +642,26 @@ class BingWallPaper(object):
 
     @abkCommon.function_trace
     def trim_number_of_images(self) -> None:
-        """Deletes some images if it reaches max number desirable
-           The max number of years images to retain can be defined in the config/bwp_config.toml file
+        """Deletes some images if it reaches max number to keep
+           The max number of images to retain an be defined in the config/bwp_config.toml file
+           config parameter number_of_images_to_keep
         """
-        pix_dir = get_config_img_dir()
-        max_years = bwp_config.get(ROOT_KW.YEARS_IMAGES_TO_KEEP.value, 1)
-        self._logger.debug(f"{pix_dir=}, {max_years=}")
+        img_dir = get_config_img_dir()
+        background_img_file_list = get_all_background_img_names(img_dir)
+        max_img_num = get_config_number_of_images_to_keep()
+        self._logger.debug(f"{img_dir=}, {len(background_img_file_list)=}, {max_img_num=}")
+        self._logger.debug(f"{background_img_file_list=}")
 
-        # listOfFiles = []
-        # for f in os.listdir(pix_dir):
-        #     if f.endswith(".jpg"):
-        #         listOfFiles.append(f)
-        # listOfFiles.sort()
-        # self._logger.debug(f"listOfFile = [{', '.join(map(str, listOfFiles))}]")
-        # numberOfJpgs = len(listOfFiles)
-        # self._logger.info(f"{numberOfJpgs=}")
-        # if numberOfJpgs > max_number:
-        #     jpgs2delete = listOfFiles[0:numberOfJpgs-max_number]
-        #     self._logger.info(f"jpgs2delete = [{', '.join(map(str, jpgs2delete))}]")
-        #     num2delete = len(jpgs2delete)
-        #     self._logger.info(f"{num2delete=}")
-        #     for delFile in jpgs2delete:
-        #         self._logger.info(f"deleting file: {delFile}")
-        #         try:
-        #             os.unlink(os.path.join(pix_dir, delFile))
-        #         except:
-        #             self._logger.error(f"deleting {delFile} failed")
-        # else:
-        #     self._logger.info("no images to delete")
-
-
-    @abkCommon.function_trace
-    def download_daily_image(self) -> List[ImageDownloadData]:
-        """Downloads bing image and stores it in the defined directory"""
-        return self._dl_service.download_daily_image()
+        # do we need to trim number of images collected?
+        if (number_to_trim := len(background_img_file_list) - max_img_num) > 0:
+            img_to_trim_list = background_img_file_list[0:number_to_trim]
+            self._logger.debug(f"{img_to_trim_list=}")
+            for img_to_delete in img_to_trim_list:
+                img_path = get_full_img_dir_from_file_name(img_to_delete)
+                abkCommon.delete_file(os.path.join(img_path, img_to_delete))
+                abkCommon.delete_dir(img_path)
+                img_parent_dir, _ = os.path.split(img_path)
+                abkCommon.delete_dir(img_parent_dir)
 
 
 # -----------------------------------------------------------------------------
@@ -674,7 +696,7 @@ def main():
         img_data = bwp.download_daily_image()
         bwp.scale_images(img_data)
         bwp.update_current_background_image()
-        # bwp.trim_number_of_images()
+        bwp.trim_number_of_images()
 
         if bwp_config.get(FTV_KW.FTV.value, {}).get(FTV_KW.SET_IMAGE.value, False):
             pass

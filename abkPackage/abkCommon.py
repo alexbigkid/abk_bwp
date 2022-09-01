@@ -115,20 +115,30 @@ def remove_link(fileName: str) -> None:
 
 
 @function_trace
-def delete_dir(dir2delete):
-    logger.debug(f"{dir2delete=}")
-    if os.path.isdir(dir2delete):
-        if len(os.listdir(dir2delete)) == 0:
+def delete_dir(dir_to_delete: str) -> None:
+    logger.debug(f"{dir_to_delete=}")
+    if os.path.isdir(dir_to_delete):
+        if len(os.listdir(dir_to_delete)) == 0:
             try:
-                os.rmdir(dir2delete)
-                logger.info(f"deleted dir {dir2delete}")
+                os.rmdir(dir_to_delete)
+                logger.info(f"deleted dir {dir_to_delete}")
             except OSError as ex:
                 if ex.errno == errno.ENOTEMPTY:
-                    logger.error(f"directory {dir2delete} is not empty")
+                    logger.error(f"directory {dir_to_delete} is not empty")
         else:
-            logger.debug(f"dir {dir2delete} is not empty")
-            for fileName in os.listdir(dir2delete):
+            logger.debug(f"dir {dir_to_delete} is not empty")
+            for fileName in os.listdir(dir_to_delete):
                 logger.debug(f"{fileName=}")
+
+
+@function_trace
+def delete_file(file_to_delete: str) -> None:
+    logger.debug(f"{file_to_delete=}")
+    try:
+        if os.path.exists(file_to_delete) and os.path.isfile(file_to_delete):
+            os.remove(file_to_delete)
+    except IOError as exp:
+        logger.error(f"ERROR: {exp=}, deleting file: {file_to_delete}")
 
 
 class PerformanceTimer(object):

@@ -20,7 +20,7 @@ class ROOT_KW(Enum):
     IMAGE_DIR = "image_dir"
     BACKGROUND_IMG_PREFIX = "background_img_prefix"
     RESIZE_JPEG_QUALITY = "resize_jpeg_quality"
-    YEARS_IMAGES_TO_KEEP = "years_images_to_keep"
+    NUMBER_OF_IMAGES_TO_KEEP = "number_of_images_to_keep"
     SET_DESKTOP_IMAGE = "set_desktop_image"
     RETAIN_IMAGES = "retain_images"
     DL_SERVICE = "dl_service"
