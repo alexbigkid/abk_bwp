@@ -21,7 +21,6 @@ from xmlrpc.client import ResponseError
 # Third party imports
 import requests
 from optparse import Values
-from urllib.request import urlopen
 from colorama import Fore, Style
 from PIL import Image
 # from ftv import FTV
@@ -44,12 +43,16 @@ BWP_DIGITS_IN_A_MONTH = 2
 BWP_DIGITS_IN_A_DAY = 2
 BWP_IMG_FILE_EXT = ".jpg"
 BWP_DEFAULT_REGION = "us"
+BWP_DEFAULT_BING_REGION = "en-US"
 BWP_DEFAULT_DL_SERVICE = "peapix"
 BWP_SCALE_FILE_PREFIX = "SCALE"
 BWP_DEFAULT_IMG_SIZE = (3840, 2160)
 BWP_RESIZE_JPEG_QUALITY_MIN = 70
 BWP_RESIZE_JPEG_QUALITY_MAX = 100
 BWP_DEFAULT_BACKGROUND_IMG_PREFIX = "background_img"
+BWP_BING_NUMBER_OF_IMAGES_TO_REQUEST = 7
+BWP_BING_IMG_URL_PREFIX = "http://www.bing.com"
+BWP_BING_IMG_URL_POSTFIX = "_1920x1080.jpg"
 
 
 # -----------------------------------------------------------------------------
@@ -84,15 +87,25 @@ def get_config_img_region() -> str:
     Returns:
         str: region string
     """
-    img_region = bwp_config.get(ROOT_KW.REGION.value, BWP_DEFAULT_REGION)
-    img_dl_service = bwp_config.get(ROOT_KW.DL_SERVICE.value, BWP_DEFAULT_DL_SERVICE)
-    img_alt_region_list = bwp_config.get(CONSTANT_KW.CONSTANT.value, {}).get(CONSTANT_KW.ALT_PEAPIX_REGION.value, [])
-    # correct image region to default if something is set to an invalid value
-    if img_dl_service == BWP_DEFAULT_DL_SERVICE and img_region not in img_alt_region_list:
+    conf_img_region = bwp_config.get(ROOT_KW.REGION.value, BWP_DEFAULT_REGION)
+    # img_dl_service = bwp_config.get(ROOT_KW.DL_SERVICE.value, BWP_DEFAULT_DL_SERVICE)
+    conf_img_alt_region_list = bwp_config.get(CONSTANT_KW.CONSTANT.value, {}).get(CONSTANT_KW.ALT_PEAPIX_REGION.value, [])
+    for img_region in conf_img_alt_region_list:
+        if img_region == conf_img_region:
+            return img_region
+    else:
         return BWP_DEFAULT_REGION
-    if img_dl_service != BWP_DEFAULT_DL_SERVICE and img_region != BWP_DEFAULT_REGION:
-        return BWP_DEFAULT_REGION
-    return img_region
+
+
+@lru_cache(maxsize=1)
+def get_config_bing_img_region() -> str:
+    img_region: str = get_config_img_region()
+    img_alt_bing_region_list: List[str] = bwp_config.get(CONSTANT_KW.CONSTANT.value, {}).get(CONSTANT_KW.ALT_BING_REGION.value, [])
+    for bing_region in img_alt_bing_region_list:
+        if bing_region.endswith(img_region.upper()):
+            return bing_region
+    else:
+        return BWP_DEFAULT_BING_REGION
 
 
 @lru_cache(maxsize=1)
@@ -194,6 +207,14 @@ class ImageDownloadData():
     imageUrl: str
     imagePath: str
     imageName: str
+
+
+# -----------------------------------------------------------------------------
+# Supported Download services
+# -----------------------------------------------------------------------------
+class DownloadServiceType(Enum):
+    PEAPIX  = "peapix"
+    BING    = "bing"
 
 
 # -----------------------------------------------------------------------------
@@ -319,6 +340,21 @@ class DownLoadServiceBase(metaclass=ABCMeta):
                 shutil.rmtree(full_month_dir, ignore_errors=True)
 
 
+    @abkCommon.function_trace
+    def _download_images(self, img_dl_data_list: List[ImageDownloadData]) -> None:
+        root_img_dir = get_config_img_dir()
+        for img_dl_data in img_dl_data_list:
+            scale_img_name = os.path.join(root_img_dir, f"{BWP_SCALE_FILE_PREFIX}_{img_dl_data.imageName}")
+            try:
+                img_data = requests.get(img_dl_data.imageUrl).content
+                with open(scale_img_name, mode="wb") as fh:
+                    fh.write(img_data)
+            except Exception as exp:
+                self._logger.error(f"ERROR: {exp=}, downloading image: {scale_img_name}")
+        return
+
+
+
 class BingDownloadService(DownLoadServiceBase):
     def __init__(self, logger: logging.Logger) -> None:
         super().__init__(logger)
@@ -326,26 +362,60 @@ class BingDownloadService(DownLoadServiceBase):
     @abkCommon.function_trace
     def download_daily_image(self) -> List[ImageDownloadData]:
         """Downloads bing image and stores it in the defined directory"""
-        img_data_list: List[ImageDownloadData] = []
-        dst_dir = get_config_img_dir()
-        self._logger.debug(f"{dst_dir=}")
-        response = urlopen("http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en-US")
-        obj = json.load(response)
-        url = obj["images"][0]["urlbase"]
-        name = obj["images"][0]["fullstartdate"]
-        url = f"http://www.bing.com{url}_1920x1080.jpg"
-        full_file_name = os.path.join(dst_dir, f"{name}.jpg")
+        DDI_RESP_FORMAT     = "format=js"
+        DDI_RESP_IDX        = "idx=0"
+        DDI_RESP_NUMBER     = f"n={BWP_BING_NUMBER_OF_IMAGES_TO_REQUEST}"
+        DDI_BING_REGION     = f"mkt={get_config_bing_img_region()}"
 
-        self._logger.info(f"Downloading {url} to {full_file_name}")
-        with open(full_file_name, "wb") as fh:
-            pic = urlopen(url)
-            fh.write(pic.read())
-        self._logger.debug(f"{full_file_name=}")
+        bing_config_url = bwp_config.get(CONSTANT_KW.CONSTANT.value, {}).get(CONSTANT_KW.BING_URL.value, "")
+        bing_url_params = "&".join([DDI_RESP_FORMAT, DDI_RESP_IDX, DDI_RESP_NUMBER, DDI_BING_REGION])
+        bing_meta_url   = "?".join([bing_config_url, bing_url_params])
+        self._logger.debug(f"{bing_meta_url=}")
 
-        # TODO: need to safe file with following name: image_dir/scale_YYYY-mm-dd_us.jpg
-        # TODO: because the scaling job will pick it up later to scale to the correct dimention and move it to correct directory
-        # return full_file_name
-        return img_data_list
+        resp = requests.get(bing_meta_url)
+        if resp.status_code == 200: # good case
+            dl_img_data = self._process_bing_api_data(resp.json().get("images", []))
+            self._download_images(dl_img_data)
+        else:
+            raise ResponseError(f"ERROR: getting bing image return error code: {resp.status_code}. Cannot proceed.")
+        return dl_img_data
+
+
+    def _process_bing_api_data(self, metadata_list: list) -> List[ImageDownloadData]:
+        return_list: List[ImageDownloadData] = []
+        self._logger.debug(f"Received from API: {json.dumps(metadata_list, indent=4)}")
+        img_root_dir = get_config_img_dir()
+        img_region = get_config_img_region()
+        self._logger.debug(f"{img_region=}")
+
+
+        for img_data in metadata_list:
+            try:
+                bing_img_date_str = img_data.get("startdate", "")
+                img_date = datetime.datetime.strptime(bing_img_date_str, "%Y%m%d").date()
+                img_date_str = f"{img_date.year:04d}-{img_date.month:02d}-{img_date.day:02d}"
+                img_to_check_list = (
+                    os.path.join(img_root_dir, f"{BWP_SCALE_FILE_PREFIX}_{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}"),
+                    os.path.join(get_full_img_dir_from_date(img_date), f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}")
+                )
+                img_url_base = img_data.get("urlbase", "")
+
+                self._logger.debug(f"{img_to_check_list=}")
+                if all([os.path.exists(img_to_check) == False for img_to_check in img_to_check_list]):
+                    return_list.append(ImageDownloadData(
+                        imageDate=img_date,
+                        title=img_data.get("copyright", ""),
+                        imageUrl=f"{BWP_BING_IMG_URL_PREFIX}{img_url_base}{BWP_BING_IMG_URL_POSTFIX}",
+                        imagePath=get_full_img_dir_from_date(img_date),
+                        imageName=f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}"
+                    ))
+
+            except:
+                pass # nothing to be done, next
+
+        self._logger.debug(f"Number if images to download: {len(return_list)}")
+        self._logger.debug(f"Images to download: {return_list=}")
+        return return_list
 
 
 
@@ -413,20 +483,6 @@ class PeapixDownloadService(DownLoadServiceBase):
         self._logger.debug(f"Number if images to download: {len(return_list)}")
         self._logger.debug(f"Images to download: {return_list=}")
         return return_list
-
-
-    @abkCommon.function_trace
-    def _download_images(self, img_dl_data_list: List[ImageDownloadData]) -> None:
-        root_img_dir = get_config_img_dir()
-        for img_dl_data in img_dl_data_list:
-            scale_img_name = os.path.join(root_img_dir, f"{BWP_SCALE_FILE_PREFIX}_{img_dl_data.imageName}")
-            try:
-                img_data = requests.get(img_dl_data.imageUrl).content
-                with open(scale_img_name, mode="wb") as fh:
-                    fh.write(img_data)
-            except Exception as exp:
-                self._logger.error(f"ERROR: {exp=}, downloading image: {scale_img_name}")
-        return
 
 
 # -----------------------------------------------------------------------------
@@ -681,10 +737,13 @@ def main():
             raise ValueError(f'ERROR: "{_platform}" is not supported')
 
         # use bing service as defualt, peapix is for a back up solution
-        if bwp_config.get(ROOT_KW.DL_SERVICE.value, "bing") == "bing":
+        bwp_dl_service = bwp_config.get(ROOT_KW.DL_SERVICE.value, DownloadServiceType.PEAPIX.value)
+        if  bwp_dl_service == DownloadServiceType.BING.value:
             dl_service = BingDownloadService(logger=main_logger)
-        else:
+        elif bwp_dl_service == DownloadServiceType.PEAPIX.value:
             dl_service = PeapixDownloadService(logger=main_logger)
+        else:
+            raise ValueError(f'ERROR: Download service: "{bwp_dl_service=}" is not supported')
 
         bwp = BingWallPaper(
             logger=main_logger,

@@ -28,6 +28,8 @@ class TestAbkCommon(unittest.TestCase):
         # cache needs to be clearead after each test for the next test to be able to set different mocks
         # print(f"ABK: cache_info: {bingwallpaper.get_img_region.cache_info()}")
         bingwallpaper.get_config_img_region.cache_clear()
+        # print(f"ABK: cache_info: {bingwallpaper.get_config_bing_img_region.cache_info()}")
+        bingwallpaper.get_config_bing_img_region.cache_clear()
         # print(f"ABK: cache_info: {bingwallpaper.get_resize_jpeg_quality.cache_info()}")
         bingwallpaper.get_config_resize_jpeg_quality.cache_clear()
         # print(f"ABK: cache_info: {bingwallpaper.get_config_background_img_size.cache_info()}")
@@ -35,19 +37,8 @@ class TestAbkCommon(unittest.TestCase):
         return super().tearDown()
 
     @parameterized.expand([
-        ["au",          "bing"],
-        ["ca",          "bing"],
-        ["cn",          "bing"],
-        ["de",          "bing"],
-        ["fr",          "bing"],
-        ["in",          "bing"],
-        ["jp",          "bing"],
-        ["es",          "bing"],
-        ["gb",          "bing"],
         ["notValidReg", "bing"],
         ["notValidReg", "peapix"],
-        ["de",          "NotValidService"],
-        ["us",          "NotValidService"],
         ["NotValidReg", "NotValidService"],
     ])
     def test__get_img_region__given_an_invalid_setting_returns_default_region(self, img_region:str, img_dl_service:str) -> None:
@@ -67,14 +58,43 @@ class TestAbkCommon(unittest.TestCase):
         ["jp",          "peapix"],
         ["es",          "peapix"],
         ["gb",          "peapix"],
-        ["gb",          "peapix"],
         ["us",          "peapix"],
-        ["us",          "bing"],
+        ["au",          "bing"  ],
+        ["ca",          "bing"  ],
+        ["cn",          "bing"  ],
+        ["de",          "bing"  ],
+        ["fr",          "bing"  ],
+        ["in",          "bing"  ],
+        ["jp",          "bing"  ],
+        ["es",          "bing"  ],
+        ["gb",          "bing"  ],
+        ["us",          "bing"  ],
     ])
     def test__get_img_region__given_a_valid_setting_returns_defined_region(self, img_region:str, img_dl_service:str) -> None:
         with patch.dict(bwp_config, {"region": img_region, "dl_service": img_dl_service}):
             act_region = bingwallpaper.get_config_img_region()
         self.assertEqual(act_region, img_region)
+
+
+    @parameterized.expand([
+        ["au",          "bing",             "en-AU"],
+        ["ca",          "bing",             "en-CA"],
+        ["cn",          "bing",             "zh-CN"],
+        ["de",          "bing",             "de-DE"],
+        ["fr",          "bing",             "fr-FR"],
+        ["in",          "bing",             "hi-IN"],
+        ["jp",          "bing",             "ja-JP"],
+        ["es",          "bing",             "es-ES"],
+        ["gb",          "bing",             "en-GB"],
+        ["us",          "bing",             "en-US"],
+        ["notValid",    "bing",             "en-US"],
+        ["notValid",    "peapix",           "en-US"],
+        ["notValid",    "notValidService",  "en-US"],
+    ])
+    def test__get_img_region__given_a_valid_setting_returns_defined_bing_region(self, img_region:str, img_dl_service:str, exp_bing_region:str) -> None:
+        with patch.dict(bwp_config, {"region": img_region, "dl_service": img_dl_service}):
+            act_bing_region = bingwallpaper.get_config_bing_img_region()
+        self.assertEqual(act_bing_region, exp_bing_region)
 
 
     @parameterized.expand([

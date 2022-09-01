@@ -5,3 +5,4 @@
 pip-check
 pip-date
 pip-chill
+pipdeptree

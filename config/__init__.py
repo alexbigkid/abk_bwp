@@ -41,6 +41,7 @@ class CONSTANT_KW(Enum):
     BING_URL = "bing_url"
     PEAPIX_URL = "peapix_url"
     ALT_PEAPIX_REGION = "alt_peapix_region"
+    ALT_BING_REGION = "alt_bing_region"
 
 
 class FTV_KW(Enum):
