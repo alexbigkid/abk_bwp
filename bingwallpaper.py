@@ -44,7 +44,6 @@ BWP_DIGITS_IN_A_DAY = 2
 BWP_IMG_FILE_EXT = ".jpg"
 BWP_DEFAULT_REGION = "us"
 BWP_DEFAULT_BING_REGION = "en-US"
-BWP_DEFAULT_DL_SERVICE = "peapix"
 BWP_SCALE_FILE_PREFIX = "SCALE"
 BWP_DEFAULT_IMG_SIZE = (3840, 2160)
 BWP_RESIZE_JPEG_QUALITY_MIN = 70
@@ -88,7 +87,6 @@ def get_config_img_region() -> str:
         str: region string
     """
     conf_img_region = bwp_config.get(ROOT_KW.REGION.value, BWP_DEFAULT_REGION)
-    # img_dl_service = bwp_config.get(ROOT_KW.DL_SERVICE.value, BWP_DEFAULT_DL_SERVICE)
     conf_img_alt_region_list = bwp_config.get(CONSTANT_KW.CONSTANT.value, {}).get(CONSTANT_KW.ALT_PEAPIX_REGION.value, [])
     for img_region in conf_img_alt_region_list:
         if img_region == conf_img_region:
