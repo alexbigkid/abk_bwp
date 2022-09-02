@@ -2,6 +2,7 @@
 """Main program for downloading and upscaling/downscaling bing images to use as wallpaper sized """
 
 # Standard library imports
+import io
 import os
 import sys
 import json
@@ -226,7 +227,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
 
 
     @abstractmethod
-    def download_daily_image(self) -> List[ImageDownloadData]:
+    def download_new_images(self) -> None:
         """Abstract method - should not be implemented. Interface purpose."""
         raise NotImplemented
 
@@ -340,22 +341,22 @@ class DownLoadServiceBase(metaclass=ABCMeta):
 
     @abkCommon.function_trace
     def _download_images(self, img_dl_data_list: List[ImageDownloadData]) -> None:
-        root_img_dir = get_config_img_dir()
+        EXIF_IMAGE_DESCRIPTION_FIELD = 0x010e
         for img_dl_data in img_dl_data_list:
-            scale_img_name = os.path.join(root_img_dir, f"{BWP_SCALE_FILE_PREFIX}_{img_dl_data.imageName}")
+            full_img_path = get_full_img_dir_from_file_name(img_dl_data.imageName)
+            full_img_name = os.path.join(full_img_path, img_dl_data.imageName)
+            self._logger.debug(f"{full_img_name=}")
             try:
-                img_data = requests.get(img_dl_data.imageUrl).content
-                with open(scale_img_name, mode="wb") as fh:
-                    fh.write(img_data)
-                # TODO: add exif info here
-                # self._logger.debug(f"{ExifTags.TAGS=}")
-                # im = Image.open(img_data)
-                # exif_data = im.getexif()
-                # exif_data[0x010e] = img_dl_data.title
-                # im.save(f"test_{img_data}", exif=exif_data)
-                # im.close()
+                abkCommon.ensure_dir(full_img_path)
+                resp = requests.get(img_dl_data.imageUrl, stream=True)
+                if resp.status_code == 200:
+                    with Image.open(io.BytesIO(resp.content)) as img:
+                        resized_img = img.resize(BWP_DEFAULT_IMG_SIZE, Image.Resampling.LANCZOS)
+                        exif_data = resized_img.getexif()
+                        exif_data.setdefault(EXIF_IMAGE_DESCRIPTION_FIELD, img_dl_data.title)
+                        resized_img.save(full_img_name, exif=exif_data, optimize=True, quality=get_config_resize_jpeg_quality())
             except Exception as exp:
-                self._logger.error(f"ERROR: {exp=}, downloading image: {scale_img_name}")
+                self._logger.error(f"ERROR: {exp=}, downloading image: {full_img_name}")
         return
 
 
@@ -365,7 +366,7 @@ class BingDownloadService(DownLoadServiceBase):
         super().__init__(logger)
 
     @abkCommon.function_trace
-    def download_daily_image(self) -> List[ImageDownloadData]:
+    def download_new_images(self) -> None:
         """Downloads bing image and stores it in the defined directory"""
         DDI_RESP_FORMAT     = "format=js"
         DDI_RESP_IDX        = "idx=0"
@@ -383,7 +384,6 @@ class BingDownloadService(DownLoadServiceBase):
             self._download_images(dl_img_data)
         else:
             raise ResponseError(f"ERROR: getting bing image return error code: {resp.status_code}. Cannot proceed.")
-        return dl_img_data
 
 
     def _process_bing_api_data(self, metadata_list: list) -> List[ImageDownloadData]:
@@ -430,7 +430,7 @@ class PeapixDownloadService(DownLoadServiceBase):
 
 
     @abkCommon.function_trace
-    def download_daily_image(self) -> List[ImageDownloadData]:
+    def download_new_images(self) -> None:
         """Downloads bing image and stores it in the defined directory"""
         dst_dir = get_config_img_dir()
         self._logger.debug(f"{dst_dir=}")
@@ -445,7 +445,6 @@ class PeapixDownloadService(DownLoadServiceBase):
             self._download_images(dl_img_data)
         else:
             raise ResponseError(f"ERROR: getting bing image return error code: {resp.status_code}. Cannot proceed.")
-        return dl_img_data
 
 
     @abkCommon.function_trace
@@ -618,9 +617,9 @@ class BingWallPaper(object):
 
 
     @abkCommon.function_trace
-    def download_daily_image(self) -> List[ImageDownloadData]:
+    def download_new_images(self) -> None:
         """Downloads bing image and stores it in the defined directory"""
-        return self._dl_service.download_daily_image()
+        self._dl_service.download_new_images()
 
 
     def set_desktop_background(self, full_img_name: str) -> None:
@@ -757,10 +756,10 @@ def main():
             dl_service=dl_service
         )
         bwp.convert_dir_structure_if_needed()
-        img_data = bwp.download_daily_image()
-        bwp.scale_images(img_data)
-        bwp.update_current_background_image()
-        bwp.trim_number_of_images()
+        bwp.download_new_images()
+        # bwp.scale_images(img_data)
+        # bwp.update_current_background_image()
+        # bwp.trim_number_of_images()
 
         if bwp_config.get(FTV_KW.FTV.value, {}).get(FTV_KW.SET_IMAGE.value, False):
             pass
