@@ -94,7 +94,7 @@ def ensure_link_exists(src: str, dst: str) -> None:
             logger.info(f"created link {dst=} to {src=}")
         except OSError as error:
             if error.errno != errno.EEXIST:
-                logger.error(f"create link failed with error = {error.errno}")
+                logger.error(f"ERROR:ensure_link_exists: create link failed with error = {error.errno}")
                 raise
     else:
         logger.info(f"link {dst=} exists, do nothing")
@@ -108,7 +108,7 @@ def remove_link(fileName: str) -> None:
             os.unlink(fileName)
             logger.info(f"deleted link {fileName}")
         except OSError as error:
-            logger.error(f"failed to delete link {fileName}, with error={error.errno}")
+            logger.error(f"ERROR:remove_link: failed to delete link {fileName}, with error={error.errno}")
             pass
     else:
         logger.info(f"link {fileName} does not exist, do nothing")
@@ -124,7 +124,7 @@ def delete_dir(dir_to_delete: str) -> None:
                 logger.info(f"deleted dir {dir_to_delete}")
             except OSError as ex:
                 if ex.errno == errno.ENOTEMPTY:
-                    logger.error(f"directory {dir_to_delete} is not empty")
+                    logger.error(f"ERROR:delete_dir: directory {dir_to_delete} is not empty")
         else:
             logger.debug(f"dir {dir_to_delete} is not empty")
             for fileName in os.listdir(dir_to_delete):
@@ -138,7 +138,18 @@ def delete_file(file_to_delete: str) -> None:
         if os.path.exists(file_to_delete) and os.path.isfile(file_to_delete):
             os.remove(file_to_delete)
     except IOError as exp:
-        logger.error(f"ERROR: {exp=}, deleting file: {file_to_delete}")
+        logger.error(f"ERROR:delete_file: {exp=}, deleting file: {file_to_delete}")
+
+
+def read_json_file(json_file_name: str) -> dict:
+    json_data:dict = {}
+    if os.path.exists(json_file_name) and os.path.isfile(json_file_name):
+        try:
+            with open(json_file_name) as fh:
+                json_data = json.load(fh)
+        except Exception as exp:
+            logger.error(f"ERROR:read_json_file: {exp=} opening and reading json file")
+    return json_data
 
 
 class PerformanceTimer(object):

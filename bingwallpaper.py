@@ -46,13 +46,17 @@ BWP_IMG_FILE_EXT = ".jpg"
 BWP_DEFAULT_REGION = "us"
 BWP_DEFAULT_BING_REGION = "en-US"
 BWP_SCALE_FILE_PREFIX = "SCALE"
-BWP_DEFAULT_IMG_SIZE = (3840, 2160)
+BWP_DEFAULT_IMG_SIZE    = (3840, 2160)
+BWP_RESIZE_MID_IMG_SIZE = (2880, 1620)
+BWP_RESIZE_MIN_IMG_SIZE = (1920, 1080)
 BWP_RESIZE_JPEG_QUALITY_MIN = 70
 BWP_RESIZE_JPEG_QUALITY_MAX = 100
 BWP_DEFAULT_BACKGROUND_IMG_PREFIX = "background_img"
 BWP_BING_NUMBER_OF_IMAGES_TO_REQUEST = 7
 BWP_BING_IMG_URL_PREFIX = "http://www.bing.com"
 BWP_BING_IMG_URL_POSTFIX = "_1920x1080.jpg"
+BWP_META_DATA_FILE_NAME = "IMAGES_METADATA.json"
+BWP_EXIF_IMAGE_DESCRIPTION_FIELD = 0x010e
 
 
 # -----------------------------------------------------------------------------
@@ -62,6 +66,7 @@ class ImageSizes(Enum):
     IMG_640x480     = (640,     480)
     IMG_1024x768    = (1024,    768)
     IMG_1600x1200   = (1600,    1200)
+    IMG_1920x1080   = (1920,    1080)
     IMG_1920x1200   = (1920,    1200)
     IMG_3840x2160   = BWP_DEFAULT_IMG_SIZE
 
@@ -341,7 +346,6 @@ class DownLoadServiceBase(metaclass=ABCMeta):
 
     @abkCommon.function_trace
     def _download_images(self, img_dl_data_list: List[ImageDownloadData]) -> None:
-        EXIF_IMAGE_DESCRIPTION_FIELD = 0x010e
         for img_dl_data in img_dl_data_list:
             full_img_path = get_full_img_dir_from_file_name(img_dl_data.imageName)
             full_img_name = os.path.join(full_img_path, img_dl_data.imageName)
@@ -353,7 +357,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
                     with Image.open(io.BytesIO(resp.content)) as img:
                         resized_img = img.resize(BWP_DEFAULT_IMG_SIZE, Image.Resampling.LANCZOS)
                         exif_data = resized_img.getexif()
-                        exif_data.setdefault(EXIF_IMAGE_DESCRIPTION_FIELD, img_dl_data.title)
+                        exif_data.setdefault(BWP_EXIF_IMAGE_DESCRIPTION_FIELD, img_dl_data.title)
                         resized_img.save(full_img_name, exif=exif_data, optimize=True, quality=get_config_resize_jpeg_quality())
             except Exception as exp:
                 self._logger.error(f"ERROR: {exp=}, downloading image: {full_img_name}")
@@ -618,33 +622,53 @@ class BingWallPaper(object):
         self._os_dependent.set_desktop_background(full_img_name)
 
 
+    @staticmethod
     @abkCommon.function_trace
-    def process_manually_downloaded_images(self) -> None:
+    def process_manually_downloaded_images() -> None:
         img_root_dir = get_config_img_dir()
+        img_metadata = abkCommon.read_json_file(os.path.join(img_root_dir, BWP_META_DATA_FILE_NAME))
+        main_logger.debug(f"{json.dumps(img_metadata, indent=4)}")
         root_img_file_list = sorted(next(os.walk(img_root_dir))[BWP_FILES])
         scale_img_file_list = tuple([img for img in root_img_file_list if img.startswith(BWP_SCALE_FILE_PREFIX)])
-        self._logger.debug(f"{scale_img_file_list=}")
+        main_logger.debug(f"{scale_img_file_list=}")
         for img_file in scale_img_file_list:
             scale_img_name = os.path.join(img_root_dir, img_file)
             _, img_date_str, img_post_str = img_file.split("_")
             img_date = datetime.datetime.strptime(img_date_str, "%Y-%m-%d").date()
             resized_img_path = get_full_img_dir_from_date(img_date)
-            resized_pix_name = "_".join([img_date_str, img_post_str])
-            self._resize_store_and_remove(scale_img_name, resized_img_path, resized_pix_name)
+            resized_img_name = "_".join([img_date_str, img_post_str])
+            resized_full_img_name = os.path.join(resized_img_path, resized_img_name)
+            abkCommon.ensure_dir(resized_img_path)
+            try:
+                with Image.open(scale_img_name) as img:
+                    new_size = BingWallPaper._calculate_image_resizing(img.size)
+                    main_logger.debug(f"[{resized_full_img_name}]: {img.size=}, {new_size=}")
+                    resized_img = img if img.size == new_size else img.resize(new_size, Image.Resampling.LANCZOS)
+                    if (img_title := img_metadata.get(resized_img_name, None)):
+                        exif_data = resized_img.getexif()
+                        exif_data.setdefault(BWP_EXIF_IMAGE_DESCRIPTION_FIELD, img_title)
+                        main_logger.debug(f"process_manually_downloaded_images: {img_title=}")
+                        resized_img.save(resized_full_img_name, exif=exif_data, optimize=True, quality=get_config_resize_jpeg_quality())
+                    else:
+                        resized_img.save(resized_full_img_name, optimize=True, quality=get_config_resize_jpeg_quality())
+                # os.remove(scale_img_name)
+            except OSError as exp:
+                main_logger.error(f"ERROR: {exp=}, resizing file: {scale_img_name}")
 
 
-    def _resize_store_and_remove(self, scale_img_name: str, resized_img_path: str, resized_img_name: str) -> None:
-        resized_full_img_name = os.path.join(resized_img_path, resized_img_name)
-        abkCommon.ensure_dir(resized_img_path)
-        try:
-            with Image.open(scale_img_name) as img:
-                self._logger.debug(f"[{scale_img_name}]: {img.size=}")
-                resized_img = img.resize(BWP_DEFAULT_IMG_SIZE, Image.Resampling.LANCZOS)
-                self._logger.debug(f"{resized_full_img_name=}")
-                resized_img.save(resized_full_img_name, optimize=True, quality=get_config_resize_jpeg_quality())
-            os.remove(scale_img_name)
-        except OSError as exp:
-            self._logger.error(f"ERROR: {exp=}, resizing file: {scale_img_name}")
+    @staticmethod
+    @abkCommon.function_trace
+    def _calculate_image_resizing(img_size: Tuple[int, int]) -> Tuple[int, int]:
+        WIDTH = 0
+        HEIGHT = 1
+        if img_size == BWP_RESIZE_MIN_IMG_SIZE or img_size == BWP_DEFAULT_IMG_SIZE:
+            return img_size
+        # if we are over mid treshold scale to default image size BWP_DEFAULT_IMG_SIZE (3840x2160)
+        elif img_size[WIDTH] > BWP_RESIZE_MID_IMG_SIZE[WIDTH] or img_size[HEIGHT] > BWP_RESIZE_MID_IMG_SIZE[HEIGHT]:
+            return BWP_DEFAULT_IMG_SIZE
+        else:
+            return BWP_RESIZE_MIN_IMG_SIZE
+
 
     @abkCommon.function_trace
     def update_current_background_image(self) -> None:
@@ -658,7 +682,7 @@ class BingWallPaper(object):
             dst_img_size = get_config_background_img_size()
             dst_file_name = f"{dst_img_prefix}_{todays_img_name}"
             dst_img_full_name = os.path.join(config_img_dir, dst_file_name)
-            if BingWallPaper._resize_image(src_img, dst_img_full_name, dst_img_size):
+            if BingWallPaper._resize_background_image(src_img, dst_img_full_name, dst_img_size):
                 bwp_file_list = sorted(next(os.walk(config_img_dir))[BWP_FILES])
                 old_background_img_list = [f for f in bwp_file_list if f.startswith(dst_img_prefix) and f != dst_file_name]
                 delete_files_in_dir(config_img_dir, old_background_img_list)
@@ -667,17 +691,17 @@ class BingWallPaper(object):
 
     @staticmethod
     @abkCommon.function_trace
-    def _resize_image(src_image: str, dst_image : str, img_size : Tuple[int, int]) -> bool:
-        main_logger.debug(f"ABK:_resize_image: {src_image=}, {dst_image=}, {img_size=}")
+    def _resize_background_image(src_image: str, dst_image : str, img_size : Tuple[int, int]) -> bool:
+        main_logger.debug(f"{src_image=}, {dst_image=}, {img_size=}")
         try:
             dst_path = os.path.dirname(dst_image)
-            main_logger.debug(f"ABK:_resize_image: {dst_path=}")
+            main_logger.debug(f"{dst_path=}")
             abkCommon.ensure_dir(dst_path)
             with Image.open(src_image) as src_img_fh:
                 resized_img = src_img_fh.resize(img_size, Image.Resampling.LANCZOS)
                 resized_img.save(dst_image, optimize=True, quality=get_config_resize_jpeg_quality())
         except Exception as exp:
-            main_logger.error(f"ERROR: {exp=}, resizing file: {src_image=} to {dst_image=} with {img_size=}")
+            main_logger.error(f"ERROR:_resize_background_image: {exp=}, resizing file: {src_image=} to {dst_image=} with {img_size=}")
             return False
         return True
 
@@ -739,7 +763,7 @@ def main():
         )
         bwp.convert_dir_structure_if_needed()
         bwp.download_new_images()
-        bwp.process_manually_downloaded_images()
+        BingWallPaper.process_manually_downloaded_images()
         # bwp.update_current_background_image()
         # bwp.trim_number_of_images()
 
