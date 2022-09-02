@@ -4,6 +4,7 @@
 # Standard library imports
 import io
 import os
+import random
 import sys
 import json
 import subprocess
@@ -23,7 +24,7 @@ from xmlrpc.client import ResponseError
 import requests
 from optparse import Values
 from colorama import Fore, Style
-from PIL import Image, ExifTags
+from PIL import Image, ImageDraw, ImageFont
 # from ftv import FTV
 
 # Local application imports
@@ -57,6 +58,9 @@ BWP_BING_IMG_URL_PREFIX = "http://www.bing.com"
 BWP_BING_IMG_URL_POSTFIX = "_1920x1080.jpg"
 BWP_META_DATA_FILE_NAME = "IMAGES_METADATA.json"
 BWP_EXIF_IMAGE_DESCRIPTION_FIELD = 0x010e
+BWP_IMAGE_TITLE_TEXT_OVERLAY_SIZE = 42
+BWP_TITLE_TEXT_OVERLAY_POSITION_OFFSET = (20, 60)
+BWP_IMAGE_TITLE_TEXT_OVERLAY_COLOR = (255, 255, 255)
 
 
 # -----------------------------------------------------------------------------
@@ -199,6 +203,16 @@ def get_config_number_of_images_to_keep() -> int:
     if number_of_images_to_keep < 0:
         return 0
     return number_of_images_to_keep
+
+
+def get_text_overlay_font_name() -> str:
+    font_path = os.path.join(os.path.dirname(__file__), "fonts")
+    font_list_all = sorted(next(os.walk(font_path))[BWP_FILES])
+    font_list = [font for font in font_list_all if font.endswith(".ttf")]
+    if len(font_list) > 0:
+        random_num = random.randint(0,len(font_list)-1)
+        return os.path.join(font_path, font_list[random_num])
+    return ""
 
 
 # -----------------------------------------------------------------------------
@@ -651,7 +665,7 @@ class BingWallPaper(object):
                         resized_img.save(resized_full_img_name, exif=exif_data, optimize=True, quality=get_config_resize_jpeg_quality())
                     else:
                         resized_img.save(resized_full_img_name, optimize=True, quality=get_config_resize_jpeg_quality())
-                # os.remove(scale_img_name)
+                os.remove(scale_img_name)
             except OSError as exp:
                 main_logger.error(f"ERROR: {exp=}, resizing file: {scale_img_name}")
 
@@ -691,17 +705,26 @@ class BingWallPaper(object):
 
     @staticmethod
     @abkCommon.function_trace
-    def _resize_background_image(src_image: str, dst_image : str, img_size : Tuple[int, int]) -> bool:
-        main_logger.debug(f"{src_image=}, {dst_image=}, {img_size=}")
+    def _resize_background_image(src_img_name: str, dst_img_name : str, dst_img_size : Tuple[int, int]) -> bool:
+        main_logger.debug(f"{src_img_name=}, {dst_img_name=}, {dst_img_size=}")
         try:
-            dst_path = os.path.dirname(dst_image)
+            dst_path = os.path.dirname(dst_img_name)
             main_logger.debug(f"{dst_path=}")
             abkCommon.ensure_dir(dst_path)
-            with Image.open(src_image) as src_img_fh:
-                resized_img = src_img_fh.resize(img_size, Image.Resampling.LANCZOS)
-                resized_img.save(dst_image, optimize=True, quality=get_config_resize_jpeg_quality())
+            with Image.open(src_img_name) as src_img:
+                resized_img = src_img if src_img.size == dst_img_size else src_img.resize(dst_img_size, Image.Resampling.LANCZOS)
+                # check if image title available and it can be written as overlay
+                if (exif_data := src_img.getexif()) is not None:
+                    if (img_title := exif_data.get(BWP_EXIF_IMAGE_DESCRIPTION_FIELD, None)) is not None:
+                        # title available so draw title over image
+                        main_logger.debug(f"_resize_background_image: adding overlay text: {img_title=}")
+                        title_draw = ImageDraw.Draw(resized_img)
+                        title_font = ImageFont.truetype(get_text_overlay_font_name(), BWP_IMAGE_TITLE_TEXT_OVERLAY_SIZE)
+                        title_position = (BWP_TITLE_TEXT_OVERLAY_POSITION_OFFSET[0], resized_img.size[1] - BWP_TITLE_TEXT_OVERLAY_POSITION_OFFSET[1])
+                        title_draw.text(xy=title_position, text=img_title, color=BWP_IMAGE_TITLE_TEXT_OVERLAY_COLOR, font=title_font)
+                resized_img.save(dst_img_name, optimize=True, quality=get_config_resize_jpeg_quality())
         except Exception as exp:
-            main_logger.error(f"ERROR:_resize_background_image: {exp=}, resizing file: {src_image=} to {dst_image=} with {img_size=}")
+            main_logger.error(f"ERROR:_resize_background_image: {exp=}, resizing file: {src_img_name=} to {dst_img_name=} with {dst_img_size=}")
             return False
         return True
 
@@ -764,7 +787,7 @@ def main():
         bwp.convert_dir_structure_if_needed()
         bwp.download_new_images()
         BingWallPaper.process_manually_downloaded_images()
-        # bwp.update_current_background_image()
+        bwp.update_current_background_image()
         # bwp.trim_number_of_images()
 
         if bwp_config.get(FTV_KW.FTV.value, {}).get(FTV_KW.SET_IMAGE.value, False):
