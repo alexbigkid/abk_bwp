@@ -399,14 +399,9 @@ class BingDownloadService(DownLoadServiceBase):
                 bing_img_date_str = img_data.get("startdate", "")
                 img_date = datetime.datetime.strptime(bing_img_date_str, "%Y%m%d").date()
                 img_date_str = f"{img_date.year:04d}-{img_date.month:02d}-{img_date.day:02d}"
-                img_to_check_list = (
-                    os.path.join(img_root_dir, f"{BWP_SCALE_FILE_PREFIX}_{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}"),
-                    os.path.join(get_full_img_dir_from_date(img_date), f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}")
-                )
+                img_to_check = os.path.join(get_full_img_dir_from_date(img_date), f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}")
                 img_url_base = img_data.get("urlbase", "")
-
-                self._logger.debug(f"{img_to_check_list=}")
-                if all([os.path.exists(img_to_check) == False for img_to_check in img_to_check_list]):
+                if os.path.exists(img_to_check) == False:
                     return_list.append(ImageDownloadData(
                         imageDate=img_date,
                         title=img_data.get("copyright", ""),
@@ -414,7 +409,6 @@ class BingDownloadService(DownLoadServiceBase):
                         imagePath=get_full_img_dir_from_date(img_date),
                         imageName=f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}"
                     ))
-
             except:
                 pass # nothing to be done, next
 
@@ -459,7 +453,6 @@ class PeapixDownloadService(DownLoadServiceBase):
         """
         self._logger.debug(f"Received from API: {json.dumps(metadata_list, indent=4)}")
         return_list: List[ImageDownloadData] = []
-        img_root_dir = get_config_img_dir()
         img_region = get_config_img_region()
         self._logger.debug(f"{img_region=}")
 
@@ -467,13 +460,8 @@ class PeapixDownloadService(DownLoadServiceBase):
             try:
                 img_date_str = img_data.get("date", "")
                 img_date = datetime.datetime.strptime(img_date_str, "%Y-%m-%d").date()
-                img_to_check_list = (
-                    os.path.join(img_root_dir, f"{BWP_SCALE_FILE_PREFIX}_{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}"),
-                    os.path.join(get_full_img_dir_from_date(img_date), f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}")
-                )
-
-                self._logger.debug(f"{img_to_check_list=}")
-                if all([os.path.exists(img_to_check) == False for img_to_check in img_to_check_list]):
+                img_to_check = os.path.join(get_full_img_dir_from_date(img_date), f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}")
+                if os.path.exists(img_to_check) == False:
                     return_list.append(ImageDownloadData(
                         imageDate=img_date,
                         title=img_data.get("title", ""),
@@ -631,14 +619,8 @@ class BingWallPaper(object):
 
 
     @abkCommon.function_trace
-    def scale_images(self, img_data_list: List[ImageDownloadData]) -> None:
+    def process_manually_downloaded_images(self) -> None:
         img_root_dir = get_config_img_dir()
-
-        for img_data in img_data_list:
-            scale_img_name = os.path.join(img_root_dir, f"{BWP_SCALE_FILE_PREFIX}_{img_data.imageName}")
-            self._resize_store_and_remove(scale_img_name, img_data.imagePath, img_data.imageName)
-
-        # in case there are still SCALE_images left from previous run
         root_img_file_list = sorted(next(os.walk(img_root_dir))[BWP_FILES])
         scale_img_file_list = tuple([img for img in root_img_file_list if img.startswith(BWP_SCALE_FILE_PREFIX)])
         self._logger.debug(f"{scale_img_file_list=}")
@@ -757,7 +739,7 @@ def main():
         )
         bwp.convert_dir_structure_if_needed()
         bwp.download_new_images()
-        # bwp.scale_images(img_data)
+        bwp.process_manually_downloaded_images()
         # bwp.update_current_background_image()
         # bwp.trim_number_of_images()
 
