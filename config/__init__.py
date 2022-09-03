@@ -19,7 +19,7 @@ class ROOT_KW(Enum):
     APP_NAME = "app_name"
     IMAGE_DIR = "image_dir"
     BACKGROUND_IMG_PREFIX = "background_img_prefix"
-    RESIZE_JPEG_QUALITY = "resize_jpeg_quality"
+    STORE_JPG_QUALITY = "store_jpg_quality"
     NUMBER_OF_IMAGES_TO_KEEP = "number_of_images_to_keep"
     SET_DESKTOP_IMAGE = "set_desktop_image"
     RETAIN_IMAGES = "retain_images"
@@ -32,6 +32,7 @@ class DESKTOP_IMG_KW(Enum):
     ENABLED = "enabled"
     WIDTH = "width"
     HEIGHT = "height"
+    JPG_QUALITY = "jpg_quality"
     ALT_DIMENTION = "alt_dimention"
 
 
@@ -48,6 +49,7 @@ class FTV_KW(Enum):
     FTV = "ftv"
     ENABLED = "enabled"
     SET_IMAGE = "set_image"
+    JPG_QUALITY = "jpg_quality"
     IP_ADDRESS = "ip_address"
     PORT = "port"
     IMAGE_CHANGE_FREQUENCY = "image_change_frequency"

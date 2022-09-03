@@ -4,7 +4,7 @@ app_name = "bingwallpaper.py"
 image_dir = "Pictures/BingWallpapers"
 background_img_prefix = "background_img"
 # resize jpeg quality % defines thew size of the resized image. higher number -> better image, greater file size
-resize_jpeg_quality = 89
+store_jpg_quality = 89
 # trim number of images collected always to this number: for me ~9 years: 9 * 365 = 3285
 number_of_images_to_keep = 3285
 retain_images = true
@@ -17,6 +17,7 @@ enabled = true
 # if height or width is configured to not supported size, it will be defaulted to 4K resolution: 3840x2160
 width = 3840
 height = 2160
+jpg_quality = 80
 # the alternative sizes are not configurable, there are here just for information what is supported
 alt_dimention = [ {"width" = 640, "height" = 480}, {"width" = 1024, "height" = 768}, {"width" = 1600, "height" = 1200}, {"width" = 1920, "height" = 1080}, {"width" = 1920, "height" = 1200}, {"width" = 3840, "height" = 2160} ]
 
@@ -31,6 +32,7 @@ peapix_url = "https://peapix.com/bing/feed"
 [ftv]
 enabled = false
 set_image = true
+jpg_quality = 80
 ip_address = "192.168.0.119"
 port = 8002
 # image change frequency in sec

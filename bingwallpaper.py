@@ -24,7 +24,7 @@ from xmlrpc.client import ResponseError
 import requests
 from optparse import Values
 from colorama import Fore, Style
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 # from ftv import FTV
 
 # Local application imports
@@ -50,8 +50,8 @@ BWP_SCALE_FILE_PREFIX = "SCALE"
 BWP_DEFAULT_IMG_SIZE    = (3840, 2160)
 BWP_RESIZE_MID_IMG_SIZE = (2880, 1620)
 BWP_RESIZE_MIN_IMG_SIZE = (1920, 1080)
-BWP_RESIZE_JPEG_QUALITY_MIN = 70
-BWP_RESIZE_JPEG_QUALITY_MAX = 100
+BWP_RESIZE_JPG_QUALITY_MIN = 70
+BWP_RESIZE_JPG_QUALITY_MAX = 100
 BWP_DEFAULT_BACKGROUND_IMG_PREFIX = "background_img"
 BWP_BING_NUMBER_OF_IMAGES_TO_REQUEST = 7
 BWP_BING_IMG_URL_PREFIX = "http://www.bing.com"
@@ -129,14 +129,31 @@ def get_relative_img_dir(img_date: datetime.date) -> str:
         return os.path.join(f"{img_date.year:04d}", f"{img_date.month:02d}")
 
 
+@lru_cache(maxsize=3)
+def normalize_jpg_quality(jpg_quality: int) -> int:
+    if jpg_quality < BWP_RESIZE_JPG_QUALITY_MIN:
+        return BWP_RESIZE_JPG_QUALITY_MIN
+    if jpg_quality > BWP_RESIZE_JPG_QUALITY_MAX:
+        return BWP_RESIZE_JPG_QUALITY_MAX
+    return jpg_quality
+
+
 @lru_cache(maxsize=1)
-def get_config_resize_jpeg_quality() -> int:
-    jpeg_quality = bwp_config.get(ROOT_KW.RESIZE_JPEG_QUALITY.value, BWP_RESIZE_JPEG_QUALITY_MIN)
-    if jpeg_quality < BWP_RESIZE_JPEG_QUALITY_MIN:
-        return BWP_RESIZE_JPEG_QUALITY_MIN
-    if jpeg_quality > BWP_RESIZE_JPEG_QUALITY_MAX:
-        return BWP_RESIZE_JPEG_QUALITY_MAX
-    return jpeg_quality
+def get_config_store_jpg_quality() -> int:
+    jpg_quality = bwp_config.get(ROOT_KW.STORE_JPG_QUALITY.value, BWP_RESIZE_JPG_QUALITY_MIN)
+    return normalize_jpg_quality(jpg_quality)
+
+
+@lru_cache(maxsize=1)
+def get_config_desktop_jpg_quality() -> int:
+    jpg_quality:int =bwp_config.get(DESKTOP_IMG_KW.DESKTOP_IMG.value, {}).get(DESKTOP_IMG_KW.JPG_QUALITY.value, BWP_RESIZE_JPG_QUALITY_MIN)
+    return normalize_jpg_quality(jpg_quality)
+
+
+@lru_cache(maxsize=1)
+def get_config_ftv_jpg_quality() -> int:
+    jpg_quality:int =bwp_config.get(FTV_KW.FTV.value, {}).get(FTV_KW.JPG_QUALITY.value, BWP_RESIZE_JPG_QUALITY_MIN)
+    return normalize_jpg_quality(jpg_quality)
 
 
 @lru_cache(maxsize=1)
@@ -208,7 +225,7 @@ def get_config_number_of_images_to_keep() -> int:
 def get_text_overlay_font_name() -> str:
     font_path = os.path.join(os.path.dirname(__file__), "fonts")
     font_list_all = sorted(next(os.walk(font_path))[BWP_FILES])
-    font_list = [font for font in font_list_all if font.endswith(".ttf")]
+    font_list = [font for font in font_list_all if font.endswith("tf")]
     if len(font_list) > 0:
         random_num = random.randint(0,len(font_list)-1)
         return os.path.join(font_path, font_list[random_num])
@@ -370,9 +387,12 @@ class DownLoadServiceBase(metaclass=ABCMeta):
                 if resp.status_code == 200:
                     with Image.open(io.BytesIO(resp.content)) as img:
                         resized_img = img.resize(BWP_DEFAULT_IMG_SIZE, Image.Resampling.LANCZOS)
-                        exif_data = resized_img.getexif()
-                        exif_data.setdefault(BWP_EXIF_IMAGE_DESCRIPTION_FIELD, img_dl_data.title)
-                        resized_img.save(full_img_name, exif=exif_data, optimize=True, quality=get_config_resize_jpeg_quality())
+                        if img_dl_data.title:
+                            exif_data = resized_img.getexif()
+                            exif_data.setdefault(BWP_EXIF_IMAGE_DESCRIPTION_FIELD, img_dl_data.title)
+                            resized_img.save(full_img_name, exif=exif_data, optimize=True, quality=get_config_store_jpg_quality())
+                        else:
+                            resized_img.save(full_img_name, optimize=True, quality=get_config_store_jpg_quality())
             except Exception as exp:
                 self._logger.error(f"ERROR: {exp=}, downloading image: {full_img_name}")
         return
@@ -662,9 +682,9 @@ class BingWallPaper(object):
                         exif_data = resized_img.getexif()
                         exif_data.setdefault(BWP_EXIF_IMAGE_DESCRIPTION_FIELD, img_title)
                         main_logger.debug(f"process_manually_downloaded_images: {img_title=}")
-                        resized_img.save(resized_full_img_name, exif=exif_data, optimize=True, quality=get_config_resize_jpeg_quality())
+                        resized_img.save(resized_full_img_name, exif=exif_data, optimize=True, quality=get_config_store_jpg_quality())
                     else:
-                        resized_img.save(resized_full_img_name, optimize=True, quality=get_config_resize_jpeg_quality())
+                        resized_img.save(resized_full_img_name, optimize=True, quality=get_config_store_jpg_quality())
                 os.remove(scale_img_name)
             except OSError as exp:
                 main_logger.error(f"ERROR: {exp=}, resizing file: {scale_img_name}")
@@ -722,7 +742,7 @@ class BingWallPaper(object):
                         title_font = ImageFont.truetype(get_text_overlay_font_name(), BWP_IMAGE_TITLE_TEXT_OVERLAY_SIZE)
                         title_position = (BWP_TITLE_TEXT_OVERLAY_POSITION_OFFSET[0], resized_img.size[1] - BWP_TITLE_TEXT_OVERLAY_POSITION_OFFSET[1])
                         title_draw.text(xy=title_position, text=img_title, color=BWP_IMAGE_TITLE_TEXT_OVERLAY_COLOR, font=title_font)
-                resized_img.save(dst_img_name, optimize=True, quality=get_config_resize_jpeg_quality())
+                resized_img.save(dst_img_name, optimize=True, quality=get_config_desktop_jpg_quality())
         except Exception as exp:
             main_logger.error(f"ERROR:_resize_background_image: {exp=}, resizing file: {src_img_name=} to {dst_img_name=} with {dst_img_size=}")
             return False
