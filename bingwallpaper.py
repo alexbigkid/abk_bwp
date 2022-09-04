@@ -58,11 +58,12 @@ BWP_BING_IMG_URL_PREFIX = "http://www.bing.com"
 BWP_BING_IMG_URL_POSTFIX = "_1920x1080.jpg"
 BWP_META_DATA_FILE_NAME = "IMAGES_METADATA.json"
 BWP_EXIF_IMAGE_DESCRIPTION_FIELD = 0x010e
-BWP_TITLE_TEXT_OVERLAY_FONT_SIZE = 42
-# BWP_TITLE_TEXT_OVERLAY_POSITION_OFFSET = (20, 20)
-BWP_TITLE_TEXT_OVERLAY_POSITION_OFFSET = (20, 60)
-BWP_IMAGE_TITLE_TEXT_OVERLAY_COLOR = (255, 255, 255)
-BWP_IMAGE_TITLE_GLOW_OVERLAY_COLOR = (0,   0,   0)
+BWP_TITLE_TEXT_FONT_SIZE = 42
+BWP_TITLE_TEXT_POSITION_OFFSET = (100, 100)
+BWP_TITLE_TEXT_COLOR = (255, 255, 255)
+BWP_TITLE_GLOW_COLOR = (0,   0,   0)
+NWP_TITLE_OUTLINE_AMOUNT = 6
+
 
 
 # -----------------------------------------------------------------------------
@@ -741,119 +742,7 @@ class BingWallPaper(object):
                     if (title_txt := exif_data.get(BWP_EXIF_IMAGE_DESCRIPTION_FIELD, None)) is not None:
                         # title available so draw title over image
                         main_logger.debug(f"_resize_background_image: adding overlay text: {title_txt=}")
-                        # title_draw = ImageDraw.Draw(resized_img)
-                        # title_font = ImageFont.truetype(get_text_overlay_font_name(), BWP_IMAGE_TITLE_TEXT_OVERLAY_SIZE)
-                        # title_position = (BWP_TITLE_TEXT_OVERLAY_POSITION_OFFSET[0], resized_img.size[1] - BWP_TITLE_TEXT_OVERLAY_POSITION_OFFSET[1])
-                        # title_draw.text(xy=title_position, text=title_txt, color=BWP_IMAGE_TITLE_TEXT_OVERLAY_COLOR, font=title_font)
-
-
-
-                        title_font = ImageFont.truetype(get_text_overlay_font_name(), BWP_TITLE_TEXT_OVERLAY_FONT_SIZE)
-                        title_img_size = title_font.getsize(title_txt)
-                        textColor = 'white'
-                        shadowColor = 'black'
-                        outlineAmount = 6
-
-                        #open image
-                        # img = src_img
-                        draw = ImageDraw.Draw(src_img)
-
-                        #get the size of the image
-                        imgWidth,imgHeight = src_img.size
-
-                        #get text size
-                        txtWidth, txtHeight = draw.textsize(title_txt, font=title_font)
-
-                        #get location to place text
-                        x = imgWidth - txtWidth - 100
-                        y = imgHeight - txtHeight - 100
-
-                        #create outline text
-                        for adj in range(outlineAmount):
-                            #move right
-                            draw.text((x-adj, y), title_txt, font=title_font, fill=shadowColor)
-                            #move left
-                            draw.text((x+adj, y), title_txt, font=title_font, fill=shadowColor)
-                            #move up
-                            draw.text((x, y+adj), title_txt, font=title_font, fill=shadowColor)
-                            #move down
-                            draw.text((x, y-adj), title_txt, font=title_font, fill=shadowColor)
-                            #diagnal left up
-                            draw.text((x-adj, y+adj), title_txt, font=title_font, fill=shadowColor)
-                            #diagnal right up
-                            draw.text((x+adj, y+adj), title_txt, font=title_font, fill=shadowColor)
-                            #diagnal left down
-                            draw.text((x-adj, y-adj), title_txt, font=title_font, fill=shadowColor)
-                            #diagnal right down
-                            draw.text((x+adj, y-adj), title_txt, font=title_font, fill=shadowColor)
-
-                        #create normal text on image
-                        draw.text((x,y), title_txt, font=title_font, fill=textColor)
-
-                        file_name = os.path.join(get_config_img_dir(), "my_test_006.png")
-                        src_img.save(file_name, optimize=True, quality=get_config_desktop_jpg_quality())
-
-
-
-
-
-
-
-
-
-                        # title_font = ImageFont.truetype(get_text_overlay_font_name(), BWP_TITLE_TEXT_OVERLAY_FONT_SIZE)
-                        # title_img_size = title_font.getsize(title_txt)
-                        # text_col = (255, 255, 255) # bright green
-                        # halo_col = (0, 0, 0)   # black
-                        # position = (BWP_TITLE_TEXT_OVERLAY_POSITION_OFFSET[0], resized_img.size[1] - BWP_TITLE_TEXT_OVERLAY_POSITION_OFFSET[1])
-                        # i2 = BingWallPaper.draw_text_with_halo(resized_img, position, title_txt, title_font, text_col, halo_col)
-                        # file_name = os.path.join(get_config_img_dir(), "my_test.png")
-                        # i2.save(file_name, optimize=True, quality=get_config_desktop_jpg_quality())
-
-
-                        # BWP_IMAGE_TITLE_TEXT_OVERLAY_COLOR = (255, 255, 255, 128)
-                        # BWP_IMAGE_TITLE_GLOW_OVERLAY_COLOR = (0,   0,   0,   128)
-                        # # create font
-                        # title_font = ImageFont.truetype(get_text_overlay_font_name(), BWP_TITLE_TEXT_OVERLAY_FONT_SIZE)
-                        # title_img_size = title_font.getsize(title_txt)
-                        # # create canvas
-                        # title_canvas = Image.new('RGBA', title_img_size)
-                        # # title_canvas = Image.new('RGBA', title_img_size, (255,255,255,128))
-                        # title_draw = ImageDraw.Draw(title_canvas)
-                        # title_draw.text(xy=title_img_size, text=title_txt, fill='cyan', font=title_font, anchor='la')
-                        # # title_draw.text(xy=title_img_size, text=title_txt, fill=BWP_IMAGE_TITLE_GLOW_OVERLAY_COLOR, font=title_font, anchor='la')
-                        # title_canvas =title_canvas.filter(ImageFilter.BoxBlur(7))
-                        # # paste soft text onto background
-                        # title_top_left = (BWP_TITLE_TEXT_OVERLAY_POSITION_OFFSET[0], resized_img.size[1] - BWP_TITLE_TEXT_OVERLAY_POSITION_OFFSET[1])
-                        # resized_img.paste(im=title_canvas, box=title_top_left)
-                        # # draw on sharp text
-                        # title_draw = ImageDraw.Draw(title_canvas)
-                        # title_draw.text(xy=title_img_size, text=title_txt, fill='navy', font=title_font, anchor='la')
-                        # # title_draw.text(xy=title_img_size, text=title_txt, color=BWP_IMAGE_TITLE_TEXT_OVERLAY_COLOR, font=title_font, anchor='la')
-
-
-
-                        # # title_canvas = Image.new('RGBA', title_img_size, (255,255,255,0))
-                        # title_canvas = Image.new('RGBA', title_img_size, (255,255,255,0))
-                        # text_draw = ImageDraw.Draw(title_canvas)
-                        # title_position = (BWP_TITLE_TEXT_OVERLAY_POSITION_OFFSET[0], resized_img.size[1] - BWP_TITLE_TEXT_OVERLAY_POSITION_OFFSET[1])
-                        # text_draw.text(xy=title_position, text=title_txt, fill=(0,0,0,128), font=title_font)
-                        # out = Image.alpha_composite(resized_img, title_canvas)
-                        # # text_draw.text(xy=title_position, text=title_txt, color=BWP_IMAGE_TITLE_TEXT_OVERLAY_COLOR, font=title_font)
-                        # # # text_draw.text(xy=(0,0), text=title_txt, fill=BWP_IMAGE_TITLE_GLOW_OVERLAY_COLOR, font=title_font, anchor="lb")
-                        # # # text_draw.text(xy=(0,0), text=title_txt, font=title_font, anchor="lb")
-                        # # text_draw.text(xy=(0,0), text=title_txt, font=title_font, fill=(255,255,255,128))
-                        # # title_canvas = title_canvas.filter(ImageFilter.BoxBlur(8))
-                        # # # title_top_left = (BWP_TITLE_TEXT_OVERLAY_POSITION_OFFSET[0], resized_img.size[1] - BWP_TITLE_TEXT_OVERLAY_POSITION_OFFSET[1])
-                        # # box_top_left = BWP_TITLE_TEXT_OVERLAY_POSITION_OFFSET
-                        # # # box_bottom_right = (BWP_TITLE_TEXT_OVERLAY_POSITION_OFFSET[0] + title_img_size[0], BWP_TITLE_TEXT_OVERLAY_POSITION_OFFSET[1] + title_img_size[1])
-                        # # # resized_img.paste(im=title_canvas, box=(*box_top_left, *box_bottom_right))
-                        # # # text_draw = ImageDraw.Draw(resized_img)
-                        # # text_draw.text(xy=box_top_left, text=title_txt, color=BWP_IMAGE_TITLE_TEXT_OVERLAY_COLOR, font=title_font)
-                        # # # title_draw.text(xy=title_position, text=title_txt, color=BWP_IMAGE_TITLE_TEXT_OVERLAY_COLOR, font=title_font)
-                        # out.save(dst_img_name, optimize=True, quality=get_config_desktop_jpg_quality())
-
-
+                        BingWallPaper.add_outline_text(resized_img, title_txt)
                 resized_img.save(dst_img_name, optimize=True, quality=get_config_desktop_jpg_quality())
         except Exception as exp:
             main_logger.error(f"ERROR:_resize_background_image: {exp=}, resizing file: {src_img_name=} to {dst_img_name=} with {dst_img_size=}")
@@ -861,14 +750,28 @@ class BingWallPaper(object):
         return True
 
 
-    # @staticmethod
-    # def draw_text_with_halo(img, position, text, font, col, halo_col):
-    #     halo = Image.new('RGBA', img.size, (0, 0, 0, 0))
-    #     ImageDraw.Draw(halo).text(position, text, font = font, fill = halo_col)
-    #     blurred_halo = halo.filter(ImageFilter.BoxBlur(20))
-    #     ImageDraw.Draw(blurred_halo).text(position, text, font = font, fill = col)
-    #     return Image.composite(img, blurred_halo, ImageChops.invert(blurred_halo))
+    @staticmethod
+    def add_outline_text(resized_img: Image.Image, title_txt: str) -> None:
+        WIDTH               = 0
+        HEIGHT              = 1
+        title_font          = ImageFont.truetype(get_text_overlay_font_name(), BWP_TITLE_TEXT_FONT_SIZE)
+        title_size          = title_font.getsize(title_txt)
+        resized_img_size    = resized_img.size
+        # location to place text
+        x = resized_img_size[WIDTH]  - title_size[WIDTH]  - BWP_TITLE_TEXT_POSITION_OFFSET[WIDTH]
+        y = resized_img_size[HEIGHT] - title_size[HEIGHT] - BWP_TITLE_TEXT_POSITION_OFFSET[HEIGHT]
 
+        draw = ImageDraw.Draw(resized_img)
+        for i in range(NWP_TITLE_OUTLINE_AMOUNT):
+            draw.text(xy=(x+i, y),   text=title_txt, font=title_font, fill=BWP_TITLE_GLOW_COLOR) # move text to the left
+            draw.text(xy=(x-i, y),   text=title_txt, font=title_font, fill=BWP_TITLE_GLOW_COLOR) # move text to the right
+            draw.text(xy=(x, y-i),   text=title_txt, font=title_font, fill=BWP_TITLE_GLOW_COLOR) # move text down
+            draw.text(xy=(x, y+i),   text=title_txt, font=title_font, fill=BWP_TITLE_GLOW_COLOR) # move text up
+            draw.text(xy=(x+i, y+i), text=title_txt, font=title_font, fill=BWP_TITLE_GLOW_COLOR) # move right and up
+            draw.text(xy=(x+i, y-i), text=title_txt, font=title_font, fill=BWP_TITLE_GLOW_COLOR) # move right and down
+            draw.text(xy=(x-i, y+i), text=title_txt, font=title_font, fill=BWP_TITLE_GLOW_COLOR) # move left and up
+            draw.text(xy=(x-i, y-i), text=title_txt, font=title_font, fill=BWP_TITLE_GLOW_COLOR) # move left and down
+        draw.text(xy=(x,y), text=title_txt, font=title_font, fill=BWP_TITLE_TEXT_COLOR) # write actual text
 
 
     @abkCommon.function_trace
