@@ -48,7 +48,6 @@ class CONSTANT_KW(Enum):
 class FTV_KW(Enum):
     FTV = "ftv"
     ENABLED = "enabled"
-    SET_IMAGE = "set_image"
     JPG_QUALITY = "jpg_quality"
     IP_ADDRESS = "ip_address"
     PORT = "port"

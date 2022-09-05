@@ -31,7 +31,6 @@ peapix_url = "https://peapix.com/bing/feed"
 
 [ftv]
 enabled = false
-set_image = true
 jpg_quality = 80
 ip_address = "192.168.0.119"
 port = 8002

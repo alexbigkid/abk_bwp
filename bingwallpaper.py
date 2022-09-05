@@ -38,6 +38,7 @@ from config import CONSTANT_KW, DESKTOP_IMG_KW, FTV_KW, ROOT_KW, bwp_config
 BWP_DIRECTORIES = 1
 BWP_FILES = 2
 BWP_DEFAULT_PIX_DIR = "Pictures/BWP"
+BWP_FTV_IMAGES_TODAY_DIR = "ftv_images_today"
 BWP_FILE_NAME_WARNING = "Please_do_not_modify_anything_in_this_directory.Handled_by_BingWallpaper_automagic"
 BWP_NUMBER_OF_MONTHS = 12
 BWP_DIGITS_IN_A_YEAR = 4
@@ -752,6 +753,12 @@ class BingWallPaper(object):
 
     @staticmethod
     def add_outline_text(resized_img: Image.Image, title_txt: str) -> None:
+        """Adds an outlined (Glow effect) text to the image
+
+        Args:
+            resized_img (Image.Image): image the text will be added to
+            title_txt (str): text to add to the image
+        """
         WIDTH               = 0
         HEIGHT              = 1
         title_font          = ImageFont.truetype(get_text_overlay_font_name(), BWP_TITLE_TEXT_FONT_SIZE)
@@ -774,8 +781,9 @@ class BingWallPaper(object):
         draw.text(xy=(x,y), text=title_txt, font=title_font, fill=BWP_TITLE_TEXT_COLOR) # write actual text
 
 
+    @staticmethod
     @abkCommon.function_trace
-    def trim_number_of_images(self) -> None:
+    def trim_number_of_images() -> None:
         """Deletes some images if it reaches max number to keep
            The max number of images to retain an be defined in the config/bwp_config.toml file
            config parameter number_of_images_to_keep
@@ -783,19 +791,40 @@ class BingWallPaper(object):
         img_dir = get_config_img_dir()
         background_img_file_list = get_all_background_img_names(img_dir)
         max_img_num = get_config_number_of_images_to_keep()
-        self._logger.debug(f"{img_dir=}, {len(background_img_file_list)=}, {max_img_num=}")
-        self._logger.debug(f"{background_img_file_list=}")
+        main_logger.debug(f"{img_dir=}, {len(background_img_file_list)=}, {max_img_num=}")
+        main_logger.debug(f"{background_img_file_list=}")
 
         # do we need to trim number of images collected?
         if (number_to_trim := len(background_img_file_list) - max_img_num) > 0:
             img_to_trim_list = background_img_file_list[0:number_to_trim]
-            self._logger.debug(f"{img_to_trim_list=}")
+            main_logger.debug(f"{img_to_trim_list=}")
             for img_to_delete in img_to_trim_list:
                 img_path = get_full_img_dir_from_file_name(img_to_delete)
                 abkCommon.delete_file(os.path.join(img_path, img_to_delete))
                 abkCommon.delete_dir(img_path)
                 img_parent_dir, _ = os.path.split(img_path)
                 abkCommon.delete_dir(img_parent_dir)
+
+
+    @staticmethod
+    @abkCommon.function_trace
+    def prepare_ftv_images() -> None:
+        config_img_dir = get_config_img_dir()
+        todays_ftv_dir = os.path.join(config_img_dir, BWP_FTV_IMAGES_TODAY_DIR)
+        abkCommon.ensure_dir(todays_ftv_dir)
+        ftv_files_to_delete = sorted(next(os.walk(todays_ftv_dir))[BWP_FILES])
+        main_logger.debug(f"prepare_ftv_images: {ftv_files_to_delete=}")
+        # delete_files_in_dir(dir_name=todays_ftv_dir, file_list=all_ftv_files)
+
+        today = datetime.date.today()
+        todays_dir = get_full_img_dir_from_date(today)
+        files_to_copy = sorted(next(os.walk(todays_dir))[BWP_FILES])
+        main_logger.debug(f"prepare_ftv_images: {files_to_copy=}")
+
+        # today_img_path = get_full_img_dir_from_date(today)
+        # todays_img_name = f"{today.year:04d}-{today.month:02d}-{today.day:02d}_{get_config_img_region()}{BWP_IMG_FILE_EXT}"
+        # src_img = os.path.join(today_img_path, todays_img_name)
+
 
 
 # -----------------------------------------------------------------------------
@@ -833,10 +862,10 @@ def main():
         bwp.download_new_images()
         BingWallPaper.process_manually_downloaded_images()
         bwp.update_current_background_image()
-        # bwp.trim_number_of_images()
+        BingWallPaper.trim_number_of_images()
 
-        if bwp_config.get(FTV_KW.FTV.value, {}).get(FTV_KW.SET_IMAGE.value, False):
-            pass
+        if is_config_ftv_enabled():
+            BingWallPaper.prepare_ftv_images()
             # ftv = FTV(config_dict.get('ftv'))
             # if ftv.is_art_mode_supported():
             #     ftv.change_daily_images()
