@@ -736,7 +736,11 @@ class BingWallPaper(object):
             main_logger.debug(f"{dst_path=}")
             abkCommon.ensure_dir(dst_path)
             with Image.open(src_img_name) as src_img:
-                resized_img = src_img.convert('RGB') if src_img.size == dst_img_size else src_img.resize(dst_img_size, Image.Resampling.LANCZOS).convert('RGB')
+                # check whether resize is needed
+                if dst_img_size == src_img.size or dst_img_size == (0, 0):
+                    resized_img = src_img.convert('RGB')
+                else:
+                    resized_img = src_img.resize(dst_img_size, Image.Resampling.LANCZOS).convert('RGB')
                 # resized_img = src_img if src_img.size == dst_img_size else src_img.resize(dst_img_size, Image.Resampling.LANCZOS)
                 # check if image title available and it can be written as overlay
                 if (exif_data := src_img.getexif()) is not None:
@@ -810,20 +814,23 @@ class BingWallPaper(object):
     @abkCommon.function_trace
     def prepare_ftv_images() -> None:
         config_img_dir = get_config_img_dir()
-        todays_ftv_dir = os.path.join(config_img_dir, BWP_FTV_IMAGES_TODAY_DIR)
-        abkCommon.ensure_dir(todays_ftv_dir)
-        ftv_files_to_delete = sorted(next(os.walk(todays_ftv_dir))[BWP_FILES])
+        ftv_dir = os.path.join(config_img_dir, BWP_FTV_IMAGES_TODAY_DIR)
+        abkCommon.ensure_dir(ftv_dir)
+        ftv_files_to_delete = sorted(next(os.walk(ftv_dir))[BWP_FILES])
+        main_logger.debug(f"prepare_ftv_images: {ftv_dir=}")
         main_logger.debug(f"prepare_ftv_images: {ftv_files_to_delete=}")
         # delete_files_in_dir(dir_name=todays_ftv_dir, file_list=all_ftv_files)
 
         today = datetime.date.today()
         todays_dir = get_full_img_dir_from_date(today)
-        files_to_copy = sorted(next(os.walk(todays_dir))[BWP_FILES])
-        main_logger.debug(f"prepare_ftv_images: {files_to_copy=}")
+        to_copy_file_list = sorted(next(os.walk(todays_dir))[BWP_FILES])
+        main_logger.debug(f"prepare_ftv_images: {todays_dir=}")
+        main_logger.debug(f"prepare_ftv_images: {to_copy_file_list=}")
 
-        # today_img_path = get_full_img_dir_from_date(today)
-        # todays_img_name = f"{today.year:04d}-{today.month:02d}-{today.day:02d}_{get_config_img_region()}{BWP_IMG_FILE_EXT}"
-        # src_img = os.path.join(today_img_path, todays_img_name)
+        for img in to_copy_file_list:
+            src_img_file_name = os.path.join(todays_dir, img)
+            dst_img_file_name = os.path.join(ftv_dir, img)
+            BingWallPaper._resize_background_image(src_img_file_name, dst_img_file_name, (0,0))
 
 
 
