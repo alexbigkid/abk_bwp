@@ -830,7 +830,7 @@ class BingWallPaper(object):
         for img in to_copy_file_list:
             src_img_file_name = os.path.join(todays_dir, img)
             dst_img_file_name = os.path.join(ftv_dir, img)
-            BingWallPaper._resize_background_image(src_img_file_name, dst_img_file_name, (0,0))
+            BingWallPaper._resize_background_image(src_img_file_name, dst_img_file_name, BWP_DEFAULT_IMG_SIZE)
 
 
 
