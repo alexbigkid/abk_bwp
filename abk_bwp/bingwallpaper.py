@@ -830,30 +830,30 @@ class BingWallPaper(object):
 # -----------------------------------------------------------------------------
 # Main
 # -----------------------------------------------------------------------------
-def bingwallpaper():
+def bingwallpaper(bwp_logger:  logging.Logger):
     exit_code = 0
     try:
         # get the correct OS and instantiate OS dependent code
         if _platform in abk_common.OsPlatformType.PLATFORM_MAC.value:
-            bwp_os_dependent = MacOSDependent(logger=main_logger)
+            bwp_os_dependent = MacOSDependent(logger=bwp_logger)
         elif _platform in abk_common.OsPlatformType.PLATFORM_LINUX.value:
-            bwp_os_dependent = LinuxDependent(logger=main_logger)
+            bwp_os_dependent = LinuxDependent(logger=bwp_logger)
         elif _platform in abk_common.OsPlatformType.PLATFORM_WINDOWS.value:
-            bwp_os_dependent = WindowsDependent(logger=main_logger)
+            bwp_os_dependent = WindowsDependent(logger=bwp_logger)
         else:
             raise ValueError(f'ERROR: "{_platform}" is not supported')
 
         # use bing service as defualt, peapix is for a back up solution
         bwp_dl_service = bwp_config.get(ROOT_KW.DL_SERVICE.value, DownloadServiceType.PEAPIX.value)
         if  bwp_dl_service == DownloadServiceType.BING.value:
-            dl_service = BingDownloadService(logger=main_logger)
+            dl_service = BingDownloadService(logger=bwp_logger)
         elif bwp_dl_service == DownloadServiceType.PEAPIX.value:
-            dl_service = PeapixDownloadService(logger=main_logger)
+            dl_service = PeapixDownloadService(logger=bwp_logger)
         else:
             raise ValueError(f'ERROR: Download service: "{bwp_dl_service=}" is not supported')
 
         bwp = BingWallPaper(
-            logger=main_logger,
+            logger=bwp_logger,
             options=command_line_options.options,
             os_dependant=bwp_os_dependent,
             dl_service=dl_service
@@ -866,13 +866,13 @@ def bingwallpaper():
 
         if is_config_ftv_enabled():
             BingWallPaper.prepare_ftv_images()
-            ftv = FTV(logger=main_logger)
+            ftv = FTV(logger=bwp_logger)
             if ftv.is_art_mode_supported():
                 ftv.change_daily_images()
 
     except Exception as exception:
-        main_logger.error(f"{Fore.RED}ERROR: executing bingwallpaper")
-        main_logger.error(f"EXCEPTION: {exception}{Style.RESET_ALL}")
+        bwp_logger.error(f"{Fore.RED}ERROR: executing bingwallpaper")
+        bwp_logger.error(f"EXCEPTION: {exception}{Style.RESET_ALL}")
         exit_code = 1
     finally:
         sys.exit(exit_code)
@@ -882,4 +882,4 @@ if __name__ == "__main__":
     command_line_options = abk_common.CommandLineOptions()
     command_line_options.handle_options()
     main_logger = command_line_options._logger
-    bingwallpaper()
+    bingwallpaper(main_logger)
