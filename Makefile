@@ -1,20 +1,36 @@
-.PHONY:	upgrade_setuptools install install_dev test test_verbose exif_rename exif_rename3 settings help
-.SILENT: bwp coverage clean bwp_install bwp_uninstall
+.PHONY:	upgrade_setuptools install install_dev install_nth test test_v test_ff test_vff settings help
+.SILENT: main bwp bwp_log bwp_trace bwp_install bwp_uninstall coverage clean
+BWP_HOME = abk_bwp
+
+main:
+	echo "[ python $(BWP_HOME)/main.py ]"
+	echo "------------------------------------------------------------------------------------"
+	python $(BWP_HOME)/main.py
 
 bwp:
-	echo "[ python ./bingwallpaper.py -c ./logging.yaml -v ]"
+	echo "[ python $(BWP_HOME)/bingwallpaper.py ]"
 	echo "------------------------------------------------------------------------------------"
-	python ./bingwallpaper.py -c ./logging.yaml -v
+	python $(BWP_HOME)/bingwallpaper.py
+
+bwp_log:
+	echo "[ python $(BWP_HOME)/bingwallpaper.py -c $(BWP_HOME)/logging.yaml -l bingwallpaper.log -v ]"
+	echo "------------------------------------------------------------------------------------"
+	python $(BWP_HOME)/bingwallpaper.py -c $(BWP_HOME)/logging.yaml -l bingwallpaper.log -v
+
+bwp_trace:
+	echo "[ python $(BWP_HOME)/bingwallpaper.py -c $(BWP_HOME)/logging.yaml -v ]"
+	echo "------------------------------------------------------------------------------------"
+	python $(BWP_HOME)/bingwallpaper.py -c $(BWP_HOME)/logging.yaml -v
 
 bwp_install:
-	echo "[ python ./install.py -v ]"
+	echo "[ python $(BWP_HOME)/install.py -v ]"
 	echo "------------------------------------------------------------------------------------"
-	python ./install.py -v
+	python $(BWP_HOME)/install.py -v
 
 bwp_uninstall:
-	echo "[ python ./uninstall.py -v ]"
+	echo "[ python $(BWP_HOME)/uninstall.py -v ]"
 	echo "------------------------------------------------------------------------------------"
-	python ./uninstall.py -v
+	python $(BWP_HOME)/uninstall.py -v
 
 upgrade_setuptools:
 	pip install --upgrade setuptools
@@ -56,7 +72,7 @@ clean:
 # those rules should be universal
 # ----------------------------
 coverage:
-	coverage run --source ./,abkPackage --omit abkPackage/__init__.py,./tests/* -m unittest discover --start-directory tests
+	coverage run --source $(BWP_HOME) --omit ./config/*,./tests/*,./fonts,./samsung-tv-ws-api/*  -m unittest discover --start-directory tests
 	@echo
 	coverage report
 	coverage xml
@@ -65,11 +81,14 @@ settings:
 	@echo "HOME             = ${HOME}"
 	@echo "PWD              = ${PWD}"
 	@echo "SHELL            = ${SHELL}"
+	@echo "BWP_HOME         = $(BWP_HOME)"
 
 help:
 	@echo "Targets:"
 	@echo "--------------------------------------------------------------------------------"
 	@echo "  bwp                - executes the main program"
+	@echo "  bwp_log            - executes the main program with logging into a file"
+	@echo "  bwp_trace          - executes the main program with traces in console"
 	@echo "  bwp_install        - executes the main install.py"
 	@echo "  bwp_uninstall      - executes the main uninstall.py"
 	@echo "  install            - installs required packages"

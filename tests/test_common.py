@@ -10,13 +10,14 @@ import json
 import unittest
 from unittest import mock
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../abk_bwp")))
 
 # Third party imports
 from optparse import Values
-from abkPackage import abkCommon
-from abkPackage.abkCommon import CommandLineOptions
 from parameterized import parameterized
+
+# Local imports
+import abk_common
 
 
 GENERAL_EXCEPTION_MSG = "General Exception Raised"
@@ -30,12 +31,12 @@ class TestGetpassGetuser(unittest.TestCase):
     def test_Getuser__username_takes_username_from_env(self, environ) -> None:
         expected_user_name = "user_name_001"
         environ.get.return_value = expected_user_name
-        actual_user_name = abkCommon.get_user_name()
+        actual_user_name = abk_common.get_user_name()
         self.assertEqual(actual_user_name, expected_user_name, "ERROR: unexpected user name")
 
     def test_Getuser__username_priorities_of_env_values(self, environ) -> None:
         environ.get.return_value = None
-        abkCommon.get_user_name()
+        abk_common.get_user_name()
         self.assertEqual(
             [mock.call(x) for x in ("LOGNAME", "USER", "LNAME", "USERNAME")],
             environ.get.call_args_list,
@@ -47,7 +48,7 @@ class TestGetpassGetuser(unittest.TestCase):
         with mock.patch("os.getuid") as uid, mock.patch("pwd.getpwuid") as getpw:
             uid.return_value = 42
             getpw.return_value = [expected_user_name]
-            self.assertEqual(abkCommon.get_user_name(), expected_user_name)
+            self.assertEqual(abk_common.get_user_name(), expected_user_name)
             getpw.assert_called_once_with(42)
 
 
@@ -57,7 +58,7 @@ class TestGetHomeDir(unittest.TestCase):
     @mock.patch.dict(os.environ, {"HOME": "users_home_dir_001"})
     def test_GetHomeDir__returns_users_homedir_from_env(self) -> None:
         exp_home_dir = "users_home_dir_001"
-        act_home_dir = abkCommon.get_home_dir()
+        act_home_dir = abk_common.get_home_dir()
         self.assertEqual(exp_home_dir, act_home_dir, "ERROR: unexpected home dir returned")
 
 
@@ -90,7 +91,7 @@ loggers:
         values = Values()
         values.verbose = False
         values.log_into_file = False
-        self.clo = CommandLineOptions(options=values)
+        self.clo = abk_common.CommandLineOptions(options=values)
         return super().setUp()
 
     def test_CommandLineOptions__setup_logger_throws_given_yaml_config_file_does_not_exist(self) -> None:
@@ -117,13 +118,6 @@ loggers:
         mock_file.assert_called_with("valid.yaml", "r")
         mock_dictConfig.assert_called_once()
         self.assertTrue(isinstance(self.clo._logger, logging.Logger))
-
-    def test_CommandLineOptions_handle_options_throws_when_incorrect_number_of_args(self) -> None:
-        with mock.patch("optparse.OptionParser.parse_args") as mock_parse_args:
-            with self.assertRaises(ValueError) as mock_arg_check:
-                mock_parse_args.return_value = ({"verbose": True, "log_into_file": False, "config_log_file": "./valid.yaml"}, ["IncorrectNotEmpty"])
-                self.clo.handle_options()
-            self.assertEqual(str(mock_arg_check.exception), f"1 is wrong number of args, should be 0")
 
     # def test_CommandLineOptions_handle_succeeds(self) -> None:
     #     with mock.patch('abkPackage.abkCommon.OptionParser.parse_args') as mock_parse_args:

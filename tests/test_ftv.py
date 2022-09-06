@@ -7,9 +7,14 @@ import sys
 import unittest
 from unittest.mock import patch
 
-from ftv import FTV
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../abk_bwp')))
+
+# local imports
+from abk_bwp.ftv import FTV
+
+
+
 
 TEST_FTV_CONFIG_DICT = {
     "ipAddress": "0.0.0.0",

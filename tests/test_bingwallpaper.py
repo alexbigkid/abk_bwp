@@ -7,14 +7,16 @@ from typing import Tuple
 import unittest
 from unittest.mock import mock_open, patch, call
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../config')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../abk_bwp')))
 
 # Third party imports
 from parameterized import parameterized
 
 # Own modules imports
-import bingwallpaper
 from config import bwp_config
+import bingwallpaper
+
 
 
 class TestAbkCommon(unittest.TestCase):

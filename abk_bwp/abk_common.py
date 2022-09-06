@@ -13,7 +13,7 @@ from optparse import OptionParser, Values
 import yaml
 
 # Local application imports
-from _version import __version__
+from __license__ import __version__
 from colorama import Fore, Style
 
 logger = logging.getLogger(__name__)
@@ -43,14 +43,13 @@ def function_trace(original_function):
     Args:
         original_function (_type_): function above which the decorater is defined
     """
-
     def function_wrapper(*args, **kwargs):
+        # print(f"{args=}, {kwargs=}")
         _logger = logging.getLogger(original_function.__name__)
         _logger.debug(f"{Fore.YELLOW}-> {original_function.__name__}{Style.RESET_ALL}")
         result = original_function(*args, **kwargs)
         _logger.debug(f"{Fore.YELLOW}<- {original_function.__name__}{Style.RESET_ALL}\n")
         return result
-
     return function_wrapper
 
 
@@ -202,13 +201,11 @@ class CommandLineOptions(object):
             "--config_log_file",
             action="store",
             dest="config_log_file",
-            default="./logging.yaml",
+            default="abk_bwp/logging.yaml",
             help="config file for logging",
         )
         (self.options, self._args) = parser.parse_args()
 
-        if len(self._args) != 0:
-            raise ValueError(f"{len(self._args)} is wrong number of args, should be 0")
         self._setup_logging()
         self._logger.info(f"{self.options=}")
         self._logger.info(f"{self._args=}")
@@ -217,6 +214,7 @@ class CommandLineOptions(object):
         self._logger.info(f"{__version__=}")
 
     def _setup_logging(self) -> None:
+        config_log_file = os.path.join(os.path.dirname(__file__), self.options.config_log_file)
         try:
             with open(self.options.config_log_file, "r") as stream:
                 config_yaml = yaml.load(stream, Loader=yaml.FullLoader)

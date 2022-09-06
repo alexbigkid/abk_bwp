@@ -12,32 +12,30 @@ formatters:
 handlers:
     consoleHandler:
         class: logging.StreamHandler
-        level: DEBUG
+        level: INFO
         formatter: abkFormatterShort
         stream: ext://sys.stdout
     fileHandler:
-        class: logging.handlers.RotatingFileHandler
-        level: DEBUG
+        class: logging.FileHandler
+        level: INFO
         formatter: abkFormatterLong
-        filename: exif_rename.log
-        maxBytes: 1024
-        backupCount: 10
+        filename: logs/bingwallpaper.log
 
 loggers:
     root:
-        level: DEBUG
+        level: INFO
         handlers: [consoleHandler]
     consoleLogger:
-        level: DEBUG
+        level: INFO
         handlers: [consoleHandler]
         qualname: consoleLogger
         propagate: no
     fileLogger:
-        level: DEBUG
+        level: INFO
         handlers: [fileHandler]
         qualname: fileLogger
         propagate: no
 
 root:
-    level: DEBUG
+    level: INFO
     handlers: [consoleHandler]

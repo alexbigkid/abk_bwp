@@ -4,7 +4,6 @@
 # Standard library imports
 import io
 import os
-import random
 import sys
 import json
 import subprocess
@@ -24,12 +23,12 @@ from xmlrpc.client import ResponseError
 import requests
 from optparse import Values
 from colorama import Fore, Style
-from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageChops
+from PIL import Image, ImageDraw, ImageFont
 # from ftv import FTV
 
 # Local application imports
-from abkPackage import abkCommon
-from config import CONSTANT_KW, DESKTOP_IMG_KW, FTV_KW, ROOT_KW, bwp_config
+import abk_common
+from local_modules import CONSTANT_KW, DESKTOP_IMG_KW, FTV_KW, ROOT_KW, bwp_config, get_text_overlay_font_name
 
 
 # -----------------------------------------------------------------------------
@@ -63,7 +62,8 @@ BWP_TITLE_TEXT_FONT_SIZE = 42
 BWP_TITLE_TEXT_POSITION_OFFSET = (100, 100)
 BWP_TITLE_TEXT_COLOR = (255, 255, 255)
 BWP_TITLE_GLOW_COLOR = (0,   0,   0)
-NWP_TITLE_OUTLINE_AMOUNT = 6
+BWP_TITLE_OUTLINE_AMOUNT = 6
+BWP_FONT_DIR = "../fonts"
 
 
 
@@ -88,9 +88,9 @@ def get_config_img_dir() -> str:
     Returns:
         str: full directory name where images will be saved
     """
-    user_home_dir = abkCommon.get_home_dir()
+    user_home_dir = abk_common.get_home_dir()
     img_dir = os.path.join(user_home_dir, bwp_config.get(ROOT_KW.IMAGE_DIR.value, BWP_DEFAULT_PIX_DIR))
-    abkCommon.ensure_dir(img_dir)
+    abk_common.ensure_dir(img_dir)
     return img_dir
 
 
@@ -226,14 +226,7 @@ def get_config_number_of_images_to_keep() -> int:
     return number_of_images_to_keep
 
 
-def get_text_overlay_font_name() -> str:
-    font_path = os.path.join(os.path.dirname(__file__), "fonts")
-    font_list_all = sorted(next(os.walk(font_path))[BWP_FILES])
-    font_list = [font for font in font_list_all if font.endswith("tf")]
-    if len(font_list) > 0:
-        random_num = random.randint(0,len(font_list)-1)
-        return os.path.join(font_path, font_list[random_num])
-    return ""
+
 
 
 # -----------------------------------------------------------------------------
@@ -273,7 +266,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
 
 
     @staticmethod
-    @abkCommon.function_trace
+    @abk_common.function_trace
     def convert_dir_structure_if_needed() -> None:
         root_image_dir = get_config_img_dir()
         # get sub directory names from the defined picture directory
@@ -295,7 +288,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
 
 
     @staticmethod
-    @abkCommon.function_trace
+    @abk_common.function_trace
     def _convert_to_ftv_dir_structure(root_image_dir: str, year_list: List[str]) -> None:
         """ Converts the bing image data directory structure (YYYY/mm/YYYY-mm-dd_us.jpg)
             to frame TV directory structure                  (mm/dd/YYYY-mm-dd_us.jpg)
@@ -338,7 +331,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
 
 
     @staticmethod
-    @abkCommon.function_trace
+    @abk_common.function_trace
     def _convert_to_date_dir_structure(root_image_dir: str, month_list: List[str]) -> None:
         """ Converts the bing image frame TV directory structure (mm/dd/YYYY-mm-dd_us.jpg)
             to data directory structure                          (YYYY/mm/YYYY-mm-dd_us.jpg)
@@ -379,14 +372,14 @@ class DownLoadServiceBase(metaclass=ABCMeta):
                 shutil.rmtree(full_month_dir, ignore_errors=True)
 
 
-    @abkCommon.function_trace
+    @abk_common.function_trace
     def _download_images(self, img_dl_data_list: List[ImageDownloadData]) -> None:
         for img_dl_data in img_dl_data_list:
             full_img_path = get_full_img_dir_from_file_name(img_dl_data.imageName)
             full_img_name = os.path.join(full_img_path, img_dl_data.imageName)
             self._logger.debug(f"{full_img_name=}")
             try:
-                abkCommon.ensure_dir(full_img_path)
+                abk_common.ensure_dir(full_img_path)
                 resp = requests.get(img_dl_data.imageUrl, stream=True)
                 if resp.status_code == 200:
                     with Image.open(io.BytesIO(resp.content)) as img:
@@ -407,7 +400,7 @@ class BingDownloadService(DownLoadServiceBase):
     def __init__(self, logger: logging.Logger) -> None:
         super().__init__(logger)
 
-    @abkCommon.function_trace
+    @abk_common.function_trace
     def download_new_images(self) -> None:
         """Downloads bing image and stores it in the defined directory"""
         DDI_RESP_FORMAT     = "format=js"
@@ -465,7 +458,7 @@ class PeapixDownloadService(DownLoadServiceBase):
         super().__init__(logger)
 
 
-    @abkCommon.function_trace
+    @abk_common.function_trace
     def download_new_images(self) -> None:
         """Downloads bing image and stores it in the defined directory"""
         dst_dir = get_config_img_dir()
@@ -483,7 +476,7 @@ class PeapixDownloadService(DownLoadServiceBase):
             raise ResponseError(f"ERROR: getting bing image return error code: {resp.status_code}. Cannot proceed.")
 
 
-    @abkCommon.function_trace
+    @abk_common.function_trace
     def _process_peapix_api_data(self, metadata_list: List[Dict[str, str]]) -> List[ImageDownloadData]:
         """Processes the received meta data from the peapix API and
            keeps only data about images which needs to be downloaded.
@@ -524,9 +517,9 @@ class PeapixDownloadService(DownLoadServiceBase):
 # -----------------------------------------------------------------------------
 class IOsDependentBase(metaclass=ABCMeta):
     """OS dependency base class"""
-    os_type: abkCommon.OsType
+    os_type: abk_common.OsType
 
-    @abkCommon.function_trace
+    @abk_common.function_trace
     def __init__(self, logger: logging.Logger = None) -> None:  # type: ignore
         """Super class init"""
         self._logger = logger or logging.getLogger(__name__)
@@ -543,13 +536,13 @@ class IOsDependentBase(metaclass=ABCMeta):
 class MacOSDependent(IOsDependentBase):
     """MacOS dependent code"""
 
-    @abkCommon.function_trace
+    @abk_common.function_trace
     def __init__(self, logger: logging.Logger) -> None:
-        self.os_type = abkCommon.OsType.MAC_OS
+        self.os_type = abk_common.OsType.MAC_OS
         super().__init__(logger)
 
 
-    @abkCommon.function_trace
+    @abk_common.function_trace
     def set_desktop_background(self, file_name: str) -> None:
         """Sets desktop image on Mac OS
         Args:
@@ -569,13 +562,13 @@ END"""
 class LinuxDependent(IOsDependentBase):
     """Linux dependent code"""
 
-    @abkCommon.function_trace
+    @abk_common.function_trace
     def __init__(self, logger: logging.Logger) -> None:
-        self.os_type = abkCommon.OsType.LINUX_OS
+        self.os_type = abk_common.OsType.LINUX_OS
         super().__init__(logger)
 
 
-    @abkCommon.function_trace
+    @abk_common.function_trace
     def set_desktop_background(self, file_name: str) -> None:
         """Sets desktop image on Linux
         Args:
@@ -590,13 +583,13 @@ class LinuxDependent(IOsDependentBase):
 class WindowsDependent(IOsDependentBase):
     """Windows dependent code"""
 
-    @abkCommon.function_trace
+    @abk_common.function_trace
     def __init__(self, logger: logging.Logger) -> None:
-        self.os_type = abkCommon.OsType.WINDOWS_OS
+        self.os_type = abk_common.OsType.WINDOWS_OS
         super().__init__(logger)
 
 
-    @abkCommon.function_trace
+    @abk_common.function_trace
     def set_desktop_background(self, file_name: str) -> None:
         """Sets desktop image on Windows
         Args:
@@ -628,7 +621,7 @@ class WindowsDependent(IOsDependentBase):
 class BingWallPaper(object):
     """BingWallPaper downloads images from bing.com and sets it as a wallpaper"""
 
-    @abkCommon.function_trace
+    @abk_common.function_trace
     def __init__(self,
                  logger: logging.Logger,
                  options: Values,
@@ -646,7 +639,7 @@ class BingWallPaper(object):
         self._dl_service.convert_dir_structure_if_needed()
 
 
-    @abkCommon.function_trace
+    @abk_common.function_trace
     def download_new_images(self) -> None:
         """Downloads bing image and stores it in the defined directory"""
         self._dl_service.download_new_images()
@@ -661,10 +654,10 @@ class BingWallPaper(object):
 
 
     @staticmethod
-    @abkCommon.function_trace
+    @abk_common.function_trace
     def process_manually_downloaded_images() -> None:
         img_root_dir = get_config_img_dir()
-        img_metadata = abkCommon.read_json_file(os.path.join(img_root_dir, BWP_META_DATA_FILE_NAME))
+        img_metadata = abk_common.read_json_file(os.path.join(img_root_dir, BWP_META_DATA_FILE_NAME))
         main_logger.debug(f"{json.dumps(img_metadata, indent=4)}")
         root_img_file_list = sorted(next(os.walk(img_root_dir))[BWP_FILES])
         scale_img_file_list = tuple([img for img in root_img_file_list if img.startswith(BWP_SCALE_FILE_PREFIX)])
@@ -676,7 +669,7 @@ class BingWallPaper(object):
             resized_img_path = get_full_img_dir_from_date(img_date)
             resized_img_name = "_".join([img_date_str, img_post_str])
             resized_full_img_name = os.path.join(resized_img_path, resized_img_name)
-            abkCommon.ensure_dir(resized_img_path)
+            abk_common.ensure_dir(resized_img_path)
             try:
                 with Image.open(scale_img_name) as img:
                     new_size = BingWallPaper._calculate_image_resizing(img.size)
@@ -695,7 +688,7 @@ class BingWallPaper(object):
 
 
     @staticmethod
-    @abkCommon.function_trace
+    @abk_common.function_trace
     def _calculate_image_resizing(img_size: Tuple[int, int]) -> Tuple[int, int]:
         WIDTH = 0
         HEIGHT = 1
@@ -708,7 +701,7 @@ class BingWallPaper(object):
             return BWP_RESIZE_MIN_IMG_SIZE
 
 
-    @abkCommon.function_trace
+    @abk_common.function_trace
     def update_current_background_image(self) -> None:
         config_img_dir = get_config_img_dir()
         today = datetime.date.today()
@@ -728,13 +721,13 @@ class BingWallPaper(object):
 
 
     @staticmethod
-    @abkCommon.function_trace
+    @abk_common.function_trace
     def _resize_background_image(src_img_name: str, dst_img_name : str, dst_img_size : Tuple[int, int]) -> bool:
         main_logger.debug(f"{src_img_name=}, {dst_img_name=}, {dst_img_size=}")
         try:
             dst_path = os.path.dirname(dst_img_name)
             main_logger.debug(f"{dst_path=}")
-            abkCommon.ensure_dir(dst_path)
+            abk_common.ensure_dir(dst_path)
             with Image.open(src_img_name) as src_img:
                 # check whether resize is needed
                 if dst_img_size == src_img.size or dst_img_size == (0, 0):
@@ -756,9 +749,9 @@ class BingWallPaper(object):
 
 
     @staticmethod
+    @abk_common.function_trace
     def add_outline_text(resized_img: Image.Image, title_txt: str) -> None:
         """Adds an outlined (Glow effect) text to the image
-
         Args:
             resized_img (Image.Image): image the text will be added to
             title_txt (str): text to add to the image
@@ -766,14 +759,14 @@ class BingWallPaper(object):
         WIDTH               = 0
         HEIGHT              = 1
         title_font          = ImageFont.truetype(get_text_overlay_font_name(), BWP_TITLE_TEXT_FONT_SIZE)
-        title_size          = title_font.getsize(title_txt)
+        _, _, title_width, title_height = title_font.getbbox(title_txt)
         resized_img_size    = resized_img.size
         # location to place text
-        x = resized_img_size[WIDTH]  - title_size[WIDTH]  - BWP_TITLE_TEXT_POSITION_OFFSET[WIDTH]
-        y = resized_img_size[HEIGHT] - title_size[HEIGHT] - BWP_TITLE_TEXT_POSITION_OFFSET[HEIGHT]
+        x = resized_img_size[WIDTH]  - title_width  - BWP_TITLE_TEXT_POSITION_OFFSET[WIDTH]
+        y = resized_img_size[HEIGHT] - title_height - BWP_TITLE_TEXT_POSITION_OFFSET[HEIGHT]
 
         draw = ImageDraw.Draw(resized_img)
-        for i in range(NWP_TITLE_OUTLINE_AMOUNT):
+        for i in range(BWP_TITLE_OUTLINE_AMOUNT):
             draw.text(xy=(x+i, y),   text=title_txt, font=title_font, fill=BWP_TITLE_GLOW_COLOR) # move text to the left
             draw.text(xy=(x-i, y),   text=title_txt, font=title_font, fill=BWP_TITLE_GLOW_COLOR) # move text to the right
             draw.text(xy=(x, y-i),   text=title_txt, font=title_font, fill=BWP_TITLE_GLOW_COLOR) # move text down
@@ -786,7 +779,7 @@ class BingWallPaper(object):
 
 
     @staticmethod
-    @abkCommon.function_trace
+    @abk_common.function_trace
     def trim_number_of_images() -> None:
         """Deletes some images if it reaches max number to keep
            The max number of images to retain an be defined in the config/bwp_config.toml file
@@ -804,22 +797,22 @@ class BingWallPaper(object):
             main_logger.debug(f"{img_to_trim_list=}")
             for img_to_delete in img_to_trim_list:
                 img_path = get_full_img_dir_from_file_name(img_to_delete)
-                abkCommon.delete_file(os.path.join(img_path, img_to_delete))
-                abkCommon.delete_dir(img_path)
+                abk_common.delete_file(os.path.join(img_path, img_to_delete))
+                abk_common.delete_dir(img_path)
                 img_parent_dir, _ = os.path.split(img_path)
-                abkCommon.delete_dir(img_parent_dir)
+                abk_common.delete_dir(img_parent_dir)
 
 
     @staticmethod
-    @abkCommon.function_trace
+    @abk_common.function_trace
     def prepare_ftv_images() -> None:
         config_img_dir = get_config_img_dir()
         ftv_dir = os.path.join(config_img_dir, BWP_FTV_IMAGES_TODAY_DIR)
-        abkCommon.ensure_dir(ftv_dir)
+        abk_common.ensure_dir(ftv_dir)
         ftv_files_to_delete = sorted(next(os.walk(ftv_dir))[BWP_FILES])
         main_logger.debug(f"prepare_ftv_images: {ftv_dir=}")
         main_logger.debug(f"prepare_ftv_images: {ftv_files_to_delete=}")
-        # delete_files_in_dir(dir_name=todays_ftv_dir, file_list=all_ftv_files)
+        delete_files_in_dir(dir_name=ftv_dir, file_list=ftv_files_to_delete)
 
         today = datetime.date.today()
         todays_dir = get_full_img_dir_from_date(today)
@@ -837,15 +830,15 @@ class BingWallPaper(object):
 # -----------------------------------------------------------------------------
 # Main
 # -----------------------------------------------------------------------------
-def main():
+def bingwallpaper():
     exit_code = 0
     try:
         # get the correct OS and instantiate OS dependent code
-        if _platform in abkCommon.OsPlatformType.PLATFORM_MAC.value:
+        if _platform in abk_common.OsPlatformType.PLATFORM_MAC.value:
             bwp_os_dependent = MacOSDependent(logger=main_logger)
-        elif _platform in abkCommon.OsPlatformType.PLATFORM_LINUX.value:
+        elif _platform in abk_common.OsPlatformType.PLATFORM_LINUX.value:
             bwp_os_dependent = LinuxDependent(logger=main_logger)
-        elif _platform in abkCommon.OsPlatformType.PLATFORM_WINDOWS.value:
+        elif _platform in abk_common.OsPlatformType.PLATFORM_WINDOWS.value:
             bwp_os_dependent = WindowsDependent(logger=main_logger)
         else:
             raise ValueError(f'ERROR: "{_platform}" is not supported')
@@ -886,7 +879,7 @@ def main():
 
 
 if __name__ == "__main__":
-    command_line_options = abkCommon.CommandLineOptions()
+    command_line_options = abk_common.CommandLineOptions()
     command_line_options.handle_options()
     main_logger = command_line_options._logger
-    main()
+    bingwallpaper()
