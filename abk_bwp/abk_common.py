@@ -229,4 +229,4 @@ class CommandLineOptions(object):
 
 
 if __name__ == "__main__":
-    raise Exception("This module should not be executed directly. Only for imports")
+    raise Exception(f"{__file__}: This module should not be executed directly. Only for imports")

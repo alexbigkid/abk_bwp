@@ -24,11 +24,11 @@ import requests
 from optparse import Values
 from colorama import Fore, Style
 from PIL import Image, ImageDraw, ImageFont
-# from ftv import FTV
 
 # Local application imports
-import abk_common
 from local_modules import CONSTANT_KW, DESKTOP_IMG_KW, FTV_KW, ROOT_KW, bwp_config, get_text_overlay_font_name
+import abk_common
+from ftv import FTV
 
 
 # -----------------------------------------------------------------------------
@@ -866,9 +866,9 @@ def bingwallpaper():
 
         if is_config_ftv_enabled():
             BingWallPaper.prepare_ftv_images()
-            # ftv = FTV(config_dict.get('ftv'))
-            # if ftv.is_art_mode_supported():
-            #     ftv.change_daily_images()
+            ftv = FTV(logger=main_logger)
+            if ftv.is_art_mode_supported():
+                ftv.change_daily_images()
 
     except Exception as exception:
         main_logger.error(f"{Fore.RED}ERROR: executing bingwallpaper")

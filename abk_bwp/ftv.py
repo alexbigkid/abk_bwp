@@ -1,54 +1,58 @@
-from email.policy import default
+# Standard lib imports
 import os
 import sys
 import logging
+from typing import Union
 
+
+# Third party imports
 from colorama import Fore, Style
-
-# sys.path.append('/Users/aberger/.pyenv/versions/bwp/lib/python3.10/site-packages/')
-
-import samsungtvws
-from samsungtvws import SamsungTVWS
+from samsungtvws.remote import SamsungTVWS
+# from samsungtvws.art import SamsungTVArt
 # from samsungtvws import SamsungTVArt
 
+# local imports
+from local_modules import FTV_KW, bwp_config
 
 
 class FTV(object):
-
+    _ftv = None
+    _port = None
+    _image_change_frequency = None
 
     @property
     def ftv(self) -> SamsungTVWS:
         if self._ftv == None:
             if not self._ip_address:
-                self.load_ftv_settings('ftv_settings.json')
+                self._load_ftv_settings()
             # self._ftv = SamsungTVWS(self._ftv_ip_address, port=self._port, token=self._api_token)
             self._ftv = SamsungTVWS(self._ip_address, token=self._api_token)
         return self._ftv
 
 
-    def __init__(self, config_dict:dict):
+    def __init__(self, logger: logging.Logger) -> None:
         # Increase debug level
-        self._ftv = None
-        self._ip_address = config_dict.get('ipAddress', None)
-        self._port = config_dict.get('port', None)
-        self._image_change_frequency = config_dict.get('imageChangeFrequency', 180)
-        self._set_image = config_dict.get('setImage', False)
+        self._logger = logger or logging.getLogger(__name__)
         logging.basicConfig(level=logging.INFO)
 
 
-    def get_environment_variable_value(self, env_variable: str) -> str:
+    @staticmethod
+    def _get_environment_variable_value(env_variable: str) -> str:
         """Get environment variable value from shell
         Args:
             env_variable (str): name of the environment variable to load
         Returns:
             str: the value of the variable
         """
-        return os.environ[env_variable] if env_variable in os.environ else ''
+        return os.environ[env_variable] if env_variable in os.environ else ""
 
-    def load_ftv_settings(self, file_name:str) -> None:
-        self._api_token = self.get_environment_variable_value('ABK_SH_API_TOKEN')
+
+    def _load_ftv_settings(self) -> None:
+        self._api_token = FTV._get_environment_variable_value("ABK_SH_API_TOKEN")
         print(f'\n ---- ABK: ABK_SH_API_TOKEN: {self._api_token}')
-        # self._api_token = f'{os.path.dirname(os.path.realpath(__file__))}{ABK_SH_API_TOKEN_FILE_NAME}'
+        self._ip_address = bwp_config.get(FTV_KW.FTV.value, {}).get(FTV_KW.IP_ADDRESS.value, "")
+        self._port = bwp_config.get(FTV_KW.FTV.value, {}).get(FTV_KW.PORT.value, 0)
+        self._image_change_frequency = bwp_config.get(FTV_KW.FTV.value, {}).get(FTV_KW.IMAGE_CHANGE_FREQUENCY.value, 0)
 
 
     def is_art_mode_supported(self) -> bool:
@@ -138,30 +142,8 @@ class FTV(object):
 
 
     def change_daily_images(self):
-        pass
-
-
-def main():
-    exit_code = 0
-    dafault_config = {
-        "ipAddress": "192.168.0.119",
-        "port": 8002,
-        "imageChangeFrequency": 300,
-        "setImage": True
-    }
-    try:
-        abk_ftv = FTV(dafault_config)
-        abk_ftv.is_art_mode_supported()
-        # abk_ftv.ftv.shortcuts().power()
-        # abk_ftv.list_art_on_tv()
-        abk_ftv.get_current_art_info()
-    except Exception as exception:
-        print(f"{Fore.RED}ERROR: executing abk ftv")
-        print(f"EXCEPTION: {exception}{Style.RESET_ALL}")
-        exit_code = 1
-    finally:
-        sys.exit(exit_code)
+        self._logger.debug("change_daily_images")
 
 
 if __name__ == '__main__':
-    main()
+    raise Exception(f"{__file__}: This module should not be executed directly. Only for imports")
