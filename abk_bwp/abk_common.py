@@ -44,7 +44,6 @@ def function_trace(original_function):
         original_function (_type_): function above which the decorater is defined
     """
     def function_wrapper(*args, **kwargs):
-        # print(f"{args=}, {kwargs=}")
         _logger = logging.getLogger(original_function.__name__)
         _logger.debug(f"{Fore.YELLOW}-> {original_function.__name__}{Style.RESET_ALL}")
         result = original_function(*args, **kwargs)

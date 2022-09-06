@@ -3,13 +3,9 @@
 BWP_HOME = abk_bwp
 
 main:
-	echo "[ python $(BWP_HOME)/main.py ]"
-	echo "------------------------------------------------------------------------------------"
 	python $(BWP_HOME)/main.py
 
 bwp:
-	echo "[ python $(BWP_HOME)/bingwallpaper.py ]"
-	echo "------------------------------------------------------------------------------------"
 	python $(BWP_HOME)/bingwallpaper.py
 
 bwp_log:
