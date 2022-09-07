@@ -7,10 +7,25 @@ main:
 	echo "------------------------------------------------------------------------------------"
 	python $(BWP_HOME)/main.py -c $(BWP_HOME)/logging.yaml -v
 
-main_ftv:
+main_ftv_enable:
+	echo "[ python $(BWP_HOME)/main.py -c $(BWP_HOME)/logging.yaml -v -f enable ]"
+	echo "------------------------------------------------------------------------------------"
+	python $(BWP_HOME)/main.py -c $(BWP_HOME)/logging.yaml -v -f enable
+
+main_ftv_disable:
 	echo "[ python $(BWP_HOME)/main.py -c $(BWP_HOME)/logging.yaml -v -f disable ]"
 	echo "------------------------------------------------------------------------------------"
 	python $(BWP_HOME)/main.py -c $(BWP_HOME)/logging.yaml -v -f disable
+
+main_desktop_enable:
+	echo "[ python $(BWP_HOME)/main.py -c $(BWP_HOME)/logging.yaml -v -d enable ]"
+	echo "------------------------------------------------------------------------------------"
+	python $(BWP_HOME)/main.py -c $(BWP_HOME)/logging.yaml -v -d enable
+
+main_desktop_disable:
+	echo "[ python $(BWP_HOME)/main.py -c $(BWP_HOME)/logging.yaml -v -d disable ]"
+	echo "------------------------------------------------------------------------------------"
+	python $(BWP_HOME)/main.py -c $(BWP_HOME)/logging.yaml -v -d disable
 
 bwp:
 	python $(BWP_HOME)/bingwallpaper.py

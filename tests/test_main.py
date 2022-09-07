@@ -1,7 +1,6 @@
 """Unit tests for bingwallpaper.py"""
 
 # Standard library imports
-import logging
 import os
 import sys
 from typing import Union
@@ -46,13 +45,13 @@ class TestMain(unittest.TestCase):
         ["enable",      False,          True],
         ["disable",     True,           False],
     ])
-    def test__handle_ftv_option__calls_update_toml_file(self, ftv_input: Union[str, None], ftv_enabled: bool, exp_ftv_enabled: bool) -> None:
+    def test__handle_ftv_option__calls_update_enable_field_in_toml_file(self, ftv_input: Union[str, None], ftv_enabled: bool, exp_ftv_enabled: bool) -> None:
         # logger = logging.getLogger('main.main_logger')
         # with patch.object(logger, 'debug') as mock_logger:
         with patch.dict(bwp_config, {"ftv": {"enabled": ftv_enabled}}) as mock_bwp_config:
-            with patch("main.update_toml_file") as  mock_update_toml_file:
+            with patch("main.update_enable_field_in_toml_file") as  mock_update_enable_field_in_toml_file:
                 main.handle_ftv_option(ftv_input)
-        mock_update_toml_file.assert_called_once_with(key_to_update=FTV_KW.FTV.value, value_to_update_to=exp_ftv_enabled)
+        mock_update_enable_field_in_toml_file.assert_called_once_with(key_to_update=FTV_KW.FTV.value, update_to=exp_ftv_enabled)
         self.assertTrue(ftv_enabled != exp_ftv_enabled)
 
 
@@ -67,11 +66,11 @@ class TestMain(unittest.TestCase):
         ["",            True,           True],
         ["",            False,          False],
     ])
-    def test__handle_ftv_option__does_not_calls_update_toml_file(self, ftv_input: Union[str, None], ftv_enabled: bool, exp_ftv_enabled: bool) -> None:
+    def test__handle_ftv_option__does_not_calls_update_enable_field_in_toml_file(self, ftv_input: Union[str, None], ftv_enabled: bool, exp_ftv_enabled: bool) -> None:
         with patch.dict(bwp_config, {"ftv": {"enabled": ftv_enabled}}) as mock_bwp_config:
-            with patch("main.update_toml_file") as  mock_update_toml_file:
+            with patch("main.update_enable_field_in_toml_file") as  mock_update_enable_field_in_toml_file:
                 main.handle_ftv_option(ftv_input)
-        mock_update_toml_file.assert_not_called()
+        mock_update_enable_field_in_toml_file.assert_not_called()
         self.assertTrue(ftv_enabled == exp_ftv_enabled)
 
 
@@ -80,11 +79,11 @@ class TestMain(unittest.TestCase):
         ["enable",      False,              True],
         ["disable",     True,               False],
     ])
-    def test__handle_desktop_auto_update_option__calls_update_toml_file(self, desktop_img_input: Union[str, None], desktop_img_enabled: bool, exp_desktop_img_enabled: bool) -> None:
+    def test__handle_desktop_auto_update_option__calls_update_enable_field_in_toml_file(self, desktop_img_input: Union[str, None], desktop_img_enabled: bool, exp_desktop_img_enabled: bool) -> None:
         with patch.dict(bwp_config, {"desktop_img": {"enabled": desktop_img_enabled}}) as mock_bwp_config:
-            with patch("main.update_toml_file") as  mock_update_toml_file:
+            with patch("main.update_enable_field_in_toml_file") as  mock_update_enable_field_in_toml_file:
                 main.handle_desktop_auto_update_option(desktop_img_input)
-        mock_update_toml_file.assert_called_once_with(key_to_update=DESKTOP_IMG_KW.DESKTOP_IMG.value, value_to_update_to=exp_desktop_img_enabled)
+        mock_update_enable_field_in_toml_file.assert_called_once_with(key_to_update=DESKTOP_IMG_KW.DESKTOP_IMG.value, update_to=exp_desktop_img_enabled)
         self.assertTrue(desktop_img_enabled != exp_desktop_img_enabled)
 
 
@@ -99,11 +98,11 @@ class TestMain(unittest.TestCase):
         ["",            True,           True],
         ["",            False,          False],
     ])
-    def test__handle_desktop_auto_update_option__does_not_calls_update_toml_file(self, desktop_img_input: Union[str, None], desktop_img_enabled: bool, exp_desktop_img_enabled: bool) -> None:
+    def test__handle_desktop_auto_update_option__does_not_calls_update_enable_field_in_toml_file(self, desktop_img_input: Union[str, None], desktop_img_enabled: bool, exp_desktop_img_enabled: bool) -> None:
         with patch.dict(bwp_config, {"desktop_img": {"enabled": desktop_img_enabled}}) as mock_bwp_config:
-            with patch("main.update_toml_file") as  mock_update_toml_file:
+            with patch("main.update_enable_field_in_toml_file") as  mock_update_enable_field_in_toml_file:
                 main.handle_desktop_auto_update_option(desktop_img_input)
-        mock_update_toml_file.assert_not_called()
+        mock_update_enable_field_in_toml_file.assert_not_called()
         self.assertTrue(desktop_img_enabled == exp_desktop_img_enabled)
 
 
