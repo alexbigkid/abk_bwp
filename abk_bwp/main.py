@@ -34,30 +34,29 @@ def update_toml_file(key_to_update: str, value_to_update_to: bool) -> None:
 
 
 @function_trace
-def handle_desktop_auto_update_option(desktop_auto_update_option: Union[str, None]) -> None:
-    main_logger.debug(f"{desktop_auto_update_option=}")
-    if desktop_auto_update_option is None:
+def handle_desktop_auto_update_option(enable_option: Union[str, None]) -> None:
+    if enable_option is None:
         return
-    elif desktop_auto_update_option == BWP_ENABLE:
+    if (enable := enable_option == BWP_ENABLE) or enable_option == BWP_DISABLE:
         is_enabled = get_config_enabled_setting(str(DESKTOP_IMG_KW.DESKTOP_IMG.value))
-        if is_enabled == False:
-            update_toml_file(key_to_update=DESKTOP_IMG_KW.DESKTOP_IMG.value, value_to_update_to=True)
-        # TODO: run installation
-    elif desktop_auto_update_option == BWP_DISABLE:
-        is_enabled = get_config_enabled_setting(str(DESKTOP_IMG_KW.DESKTOP_IMG.value))
-        if is_enabled == True:
-            update_toml_file(key_to_update=DESKTOP_IMG_KW.DESKTOP_IMG.value, value_to_update_to=False)
-        # TODO: run deinstallation
+        if is_enabled != enable:
+            update_toml_file(key_to_update=DESKTOP_IMG_KW.DESKTOP_IMG.value, value_to_update_to=enable)
+            if enable:
+                # TODO: run installation
+                pass
+            else:
+                # TODO: run deinstallation
+                pass
 
 
 @function_trace
-def handle_ftv_option(ftv_enable_option: Union[str, None]) -> None:
-    if ftv_enable_option is None:
+def handle_ftv_option(enable_option: Union[str, None]) -> None:
+    if enable_option is None:
         return
-    if (ftv_enable := ftv_enable_option == BWP_ENABLE) or ftv_enable_option == BWP_DISABLE:
+    if (enable := enable_option == BWP_ENABLE) or enable_option == BWP_DISABLE:
         is_enabled = get_config_enabled_setting(str(FTV_KW.FTV.value))
-        if is_enabled != ftv_enable:
-            update_toml_file(key_to_update=FTV_KW.FTV.value, value_to_update_to=ftv_enable)
+        if is_enabled != enable:
+            update_toml_file(key_to_update=FTV_KW.FTV.value, value_to_update_to=enable)
 
 
 def main():
