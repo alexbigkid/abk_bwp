@@ -11,7 +11,9 @@
     3. schedule the job permanent job running at 8am or when logged in
 """
 
+# Standard lib imports
 import os
+import sys
 import logging
 import logging.config
 import subprocess
@@ -20,13 +22,17 @@ from datetime import time, datetime
 from sys import platform as _platform
 from typing import Tuple
 
-from abk_bwp.abk_common import OsPlatformType, OsType, function_trace
-# from abkPackage import abkCommon
+# Third party imports
+from colorama import Fore, Style
+
+# local imports
+from abk_common import OsPlatformType, OsType, function_trace
+import abk_common
+
 
 
 class IInstallBase(metaclass=ABCMeta):
     """Abstract class (mostly)"""
-
     os_type: OsType = None  # type: ignore
 
     @function_trace
@@ -36,50 +42,37 @@ class IInstallBase(metaclass=ABCMeta):
         self._logger.info(f"({__class__.__name__}) Initializing {self.os_type} installation environment ...")
 
 
-    @function_trace
-    def install_python_packages(self) -> None:
-        # TODO: 1. check whether pyenv is installed
-        #   TODO: 1.1. if pyenv is installed, check what versions of python are installed
-        #   TODO: 1.2. select the latest python 3 version
-        #   TODO: 1.3. check pyenv-virtualenv is installed
-        #       TODO: 1.3.1. if pyenv-virtualenv is installed create a new bingwallpaper ve if not available yet
-        #       TODO: 1.3.2. set the local virtual env to be bingwallpaper
-        #       TODO: 1.3.3. install all needed python packages into ve
-        #   TODO: 1.4. if ve is not installed, install packages into the latest installed python version
-        # TODO: 2. if pyenv is not installed, install packages into the whatever version is active (worst case)
-        # TODO: 3. create shell script to change to abk bingwall paper project and execute the download within the directory
-        # TODO: 4. use that script to create plist
-        # TODO: 5. don't forget to unwind the shole logic in the uninstall script!
-        # check pyenv is installed.
-        pyenv_check = subprocess.run(["command", "-v", "pyenv"])
-        python_check = subprocess.run(["python", "--version"])
-        self._logger.debug(f"install_python_packages: {python_check=}")
-        if pyenv_check != "":
-            self._logger.debug(f"install_python_packages: {pyenv_check=}")
-    # if [[ $(command -v brew) == "" ]]; then
-    #     LCL_RESULT=$FALSE
-    #     echo "WARNING: Hombrew is not installed, please install with:"
-    #     echo "/usr/bin/ruby -e \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)\""
-    # fi
+    # @function_trace
+    # def install_python_packages(self) -> None:
+    #     # TODO: 1. check whether pyenv is installed
+    #     #   TODO: 1.1. if pyenv is installed, check what versions of python are installed
+    #     #   TODO: 1.2. select the latest python 3 version
+    #     #   TODO: 1.3. check pyenv-virtualenv is installed
+    #     #       TODO: 1.3.1. if pyenv-virtualenv is installed create a new bingwallpaper ve if not available yet
+    #     #       TODO: 1.3.2. set the local virtual env to be bingwallpaper
+    #     #       TODO: 1.3.3. install all needed python packages into ve
+    #     #   TODO: 1.4. if ve is not installed, install packages into the latest installed python version
+    #     # TODO: 2. if pyenv is not installed, install packages into the whatever version is active (worst case)
+    #     # TODO: 3. create shell script to change to abk bingwall paper project and execute the download within the directory
+    #     # TODO: 4. use that script to create plist
+    #     # TODO: 5. don't forget to unwind the shole logic in the uninstall script!
+    #     # check pyenv is installed.
+    #     pyenv_check = subprocess.run(["command", "-v", "pyenv"])
+    #     python_check = subprocess.run(["python", "--version"])
+    #     self._logger.debug(f"install_python_packages: {python_check=}")
+    #     if pyenv_check != "":
+    #         self._logger.debug(f"install_python_packages: {pyenv_check=}")
+    # # if [[ $(command -v brew) == "" ]]; then
+    # #     LCL_RESULT=$FALSE
+    # #     echo "WARNING: Hombrew is not installed, please install with:"
+    # #     echo "/usr/bin/ruby -e \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)\""
+    # # fi
 
 
+    @abstractmethod
     def setup_installation(self) -> None:
         """Abstract method - should not be implemented. Interface purpose."""
-        from abk_bwp import abk_common
-        command_line_options = abk_common.CommandLineOptions()
-        command_line_options.handle_options()
-        main_logger = command_line_options._logger
-
-        if _platform in OsPlatformType.PLATFORM_MAC.value:
-            installation = InstallOnMacOS(logger=main_logger)
-        elif _platform in OsPlatformType.PLATFORM_LINUX.value:
-            installation = InstallOnLinux(logger=main_logger)
-        elif _platform in OsPlatformType.PLATFORM_WINDOWS.value:
-            installation = InstallOnWindows(logger=main_logger)
-        else:
-            raise ValueError(f'ERROR: "{_platform}" is not supported')
-
-
+        raise NotImplemented
 
 
 
@@ -121,12 +114,12 @@ class InstallOnMacOS(IInstallBase):
             str: name of the full path + name of the app python script
         """
         self._logger.debug(f"{file_name=}")
-        bin_dir = os.path.join(abkCommon.get_home_dir(), "bin")
-        abkCommon.ensure_dir(bin_dir)
-        curr_dir = abkCommon.get_parent_dir(__file__)
+        bin_dir = os.path.join(abk_common.get_home_dir(), "bin")
+        abk_common.ensure_dir(bin_dir)
+        curr_dir = abk_common.get_parent_dir(__file__)
         src = os.path.join(curr_dir, file_name)
         dst = os.path.join(bin_dir, file_name)
-        abkCommon.ensure_link_exists(src, dst)
+        abk_common.ensure_link_exists(src, dst)
         self._logger.debug(f"{src=}")
         return src
 
@@ -141,7 +134,7 @@ class InstallOnMacOS(IInstallBase):
             Tuple[str, str]: plist lable and plist file name
         """
         self._logger.debug(f"{time_to_exe.hour=}, {time_to_exe.minute=}, {script_name=}")
-        user_name = abkCommon.get_user_name()
+        user_name = abk_common.get_user_name()
         plist_label = f"com.{user_name}.{script_name}"
         plist_name = f"{plist_label}.plist"
         with open(plist_name, "w") as fh:
@@ -184,12 +177,12 @@ class InstallOnMacOS(IInstallBase):
         """
         self._logger.debug(f"{full_file_name=}")
         file_name = os.path.basename(full_file_name)
-        plist_install_dir = abkCommon.get_home_dir()
+        plist_install_dir = abk_common.get_home_dir()
         plist_install_dir = f"{plist_install_dir}/Library/LaunchAgents"
-        abkCommon.ensure_dir(plist_install_dir)
+        abk_common.ensure_dir(plist_install_dir)
         dst_file_name = os.path.join(plist_install_dir, file_name)
         self._logger.info(f"src= {full_file_name}, dst= {dst_file_name}")
-        abkCommon.ensure_link_exists(full_file_name, dst_file_name)
+        abk_common.ensure_link_exists(full_file_name, dst_file_name)
         self._logger.debug(f"{dst_file_name=}")
         return dst_file_name
 
@@ -276,11 +269,32 @@ class InstallOnWindows(IInstallBase):
 
 
 @function_trace
-def bwp_install():
-    installation.install_python_packages()
-    # installation.setup_installation()
-    # installation.setup_installation(bwp_config[ROOT_KW.TIME_TO_FETCH.value], bwp_config[ROOT_KW.APP_NAME.value])
+def bwp_install(install_logger: logging.Logger) -> None:
+    exit_code = 0
+    try:
+        if _platform in OsPlatformType.PLATFORM_MAC.value:
+            installation = InstallOnMacOS(logger=install_logger)
+        elif _platform in OsPlatformType.PLATFORM_LINUX.value:
+            installation = InstallOnLinux(logger=install_logger)
+        elif _platform in OsPlatformType.PLATFORM_WINDOWS.value:
+            installation = InstallOnWindows(logger=install_logger)
+        else:
+            raise ValueError(f'ERROR: "{_platform}" is not supported')
+
+        installation.setup_installation()
+        # installation.install_python_packages()
+        # installation.setup_installation()
+        # installation.setup_installation(bwp_config[ROOT_KW.TIME_TO_FETCH.value], bwp_config[ROOT_KW.APP_NAME.value])
+    except Exception as exception:
+        install_logger.error(f"{Fore.RED}ERROR: executing bingwallpaper")
+        install_logger.error(f"EXCEPTION: {exception}{Style.RESET_ALL}")
+        exit_code = 1
+    finally:
+        sys.exit(exit_code)
 
 
 if __name__ == "__main__":
-    bwp_install()
+    command_line_options = abk_common.CommandLineOptions()
+    command_line_options.handle_options()
+    install_logger = command_line_options._logger
+    bwp_install(install_logger)
