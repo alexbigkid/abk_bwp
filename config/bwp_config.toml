@@ -26,7 +26,6 @@ alt_dl_service = ["bing", "peapix"]
 alt_peapix_region = ["au", "ca", "cn", "de", "fr", "in", "jp", "es", "gb", "us"]
 alt_bing_region = ["en-AU", "en-CA", "zh-CN", "de-DE", "fr-FR", "hi-IN", "ja-JP", "es-ES", "en-GB", "en-US"]
 bing_url = "http://www.bing.com/HPImageArchive.aspx"
-# bing_url = "http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en-US"
 peapix_url = "https://peapix.com/bing/feed"
 
 [ftv]

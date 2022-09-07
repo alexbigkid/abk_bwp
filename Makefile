@@ -1,9 +1,16 @@
 .PHONY:	upgrade_setuptools install install_dev install_nth test test_v test_ff test_vff settings help
-.SILENT: main bwp bwp_log bwp_trace bwp_install bwp_uninstall coverage clean
+.SILENT: main bwp bwp_log bwp_trace bwp_install bwp_uninstall coverage clean main_ftv
 BWP_HOME = abk_bwp
 
 main:
-	python $(BWP_HOME)/main.py
+	echo "[ python $(BWP_HOME)/main.py -c $(BWP_HOME)/logging.yaml -v ]"
+	echo "------------------------------------------------------------------------------------"
+	python $(BWP_HOME)/main.py -c $(BWP_HOME)/logging.yaml -v
+
+main_ftv:
+	echo "[ python $(BWP_HOME)/main.py -c $(BWP_HOME)/logging.yaml -v -f disable ]"
+	echo "------------------------------------------------------------------------------------"
+	python $(BWP_HOME)/main.py -c $(BWP_HOME)/logging.yaml -v -f disable
 
 bwp:
 	python $(BWP_HOME)/bingwallpaper.py

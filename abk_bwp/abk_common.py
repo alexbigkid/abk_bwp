@@ -185,7 +185,7 @@ class CommandLineOptions(object):
             action="store_true",
             dest="verbose",
             default=False,
-            help="verbose execution",
+            help="verbose execution"
         )
         parser.add_option(
             "-l",
@@ -193,15 +193,32 @@ class CommandLineOptions(object):
             action="store_true",
             dest="log_into_file",
             default=False,
-            help="log into file bingwallpaper.log if True, otherwise log into console",
+            help="log into file bingwallpaper.log if True, otherwise log into console"
         )
         parser.add_option(
             "-c",
             "--config_log_file",
             action="store",
+            type="string",
             dest="config_log_file",
             default="abk_bwp/logging.yaml",
-            help="config file for logging",
+            help="config file for logging"
+        )
+        parser.add_option(
+            "-d",
+            "--desktop_auto_update",
+            dest="dau",
+            type="choice",
+            choices=["disable", "enable"],
+            help="[disable, enable] an auto update of the background image on desktop"
+        )
+        parser.add_option(
+            "-f",
+            "--frame_tv",
+            dest="ftv",
+            type="choice",
+            choices=["disable", "enable"],
+            help="[disable, enable] an auto update of the background image on desktop"
         )
         (self.options, self._args) = parser.parse_args()
 
