@@ -54,14 +54,10 @@ def handle_desktop_auto_update_option(desktop_auto_update_option: Union[str, Non
 def handle_ftv_option(ftv_enable_option: Union[str, None]) -> None:
     if ftv_enable_option is None:
         return
-    elif ftv_enable_option == BWP_ENABLE:
+    if (ftv_enable := ftv_enable_option == BWP_ENABLE) or ftv_enable_option == BWP_DISABLE:
         is_enabled = get_config_enabled_setting(str(FTV_KW.FTV.value))
-        if is_enabled == False:
-            update_toml_file(key_to_update=FTV_KW.FTV.value, value_to_update_to=True)
-    elif ftv_enable_option == BWP_DISABLE:
-        is_enabled = get_config_enabled_setting(str(FTV_KW.FTV.value))
-        if is_enabled == True:
-            update_toml_file(key_to_update=FTV_KW.FTV.value, value_to_update_to=False)
+        if is_enabled != ftv_enable:
+            update_toml_file(key_to_update=FTV_KW.FTV.value, value_to_update_to=ftv_enable)
 
 
 def main():
