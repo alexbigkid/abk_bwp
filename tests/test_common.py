@@ -1,4 +1,4 @@
-"""Unit tests for abkCommon.py"""
+"""Unit tests for abk_common.py"""
 
 # Standard library imports
 import logging

@@ -1,4 +1,4 @@
-"""Unit tests for bingwallpaper.py"""
+"""Unit tests for abk_bwp.py"""
 
 # Standard library imports
 from typing import Union
