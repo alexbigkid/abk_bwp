@@ -1,16 +1,8 @@
 # Install dependencies
--r requirements.txt
+-r requirements_test.txt
 
-# Install test dependencies
-coverage
-parameterized
-tomli_w
-#black               # code formatting
-#flake8              # linting, formatting, analysis
-#pytest              # pytest for unit testing
-#pytest-runner       # pytest runner
-#pytest-flake8       # pytest linting
-#pytest-black        # pytest formatting
-#pytest-cov          # pytest coverage
-#pytest-xdist        # pytest distribution
-#tox                 # multi python environment testing
+# Install nice-to-have dependencies
+pip-check
+pip-date
+pip-chill
+pipdeptree

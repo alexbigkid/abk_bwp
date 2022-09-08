@@ -1,31 +1,31 @@
 .PHONY:	upgrade_setuptools install install_dev install_nth test test_v test_ff test_vff settings help
-.SILENT: main bwp bwp_log bwp_trace bwp_install bwp_uninstall coverage clean main_ftv
+.SILENT: abk_bwp bwp bwp_log bwp_trace bwp_install bwp_uninstall coverage clean abk_bwp_ftv
 BWP_HOME = abk_bwp
 
-main:
-	echo "[ python $(BWP_HOME)/main.py -c $(BWP_HOME)/logging.yaml -v ]"
+abk_bwp:
+	echo "[ python $(BWP_HOME)/abk_bwp.py -c $(BWP_HOME)/logging.yaml -v ]"
 	echo "------------------------------------------------------------------------------------"
-	python $(BWP_HOME)/main.py -c $(BWP_HOME)/logging.yaml -v
+	python $(BWP_HOME)/abk_bwp.py -c $(BWP_HOME)/logging.yaml -v
 
-main_ftv_enable:
-	echo "[ python $(BWP_HOME)/main.py -c $(BWP_HOME)/logging.yaml -v -f enable ]"
+abk_bwp_ftv_enable:
+	echo "[ python $(BWP_HOME)/abk_bwp.py -c $(BWP_HOME)/logging.yaml -v -f enable ]"
 	echo "------------------------------------------------------------------------------------"
-	python $(BWP_HOME)/main.py -c $(BWP_HOME)/logging.yaml -v -f enable
+	python $(BWP_HOME)/abk_bwp.py -c $(BWP_HOME)/logging.yaml -v -f enable
 
-main_ftv_disable:
-	echo "[ python $(BWP_HOME)/main.py -c $(BWP_HOME)/logging.yaml -v -f disable ]"
+abk_bwp_ftv_disable:
+	echo "[ python $(BWP_HOME)/abk_bwp.py -c $(BWP_HOME)/logging.yaml -v -f disable ]"
 	echo "------------------------------------------------------------------------------------"
-	python $(BWP_HOME)/main.py -c $(BWP_HOME)/logging.yaml -v -f disable
+	python $(BWP_HOME)/abk_bwp.py -c $(BWP_HOME)/logging.yaml -v -f disable
 
-main_desktop_enable:
-	echo "[ python $(BWP_HOME)/main.py -c $(BWP_HOME)/logging.yaml -v -d enable ]"
+abk_bwp_desktop_enable:
+	echo "[ python $(BWP_HOME)/abk_bwp.py -c $(BWP_HOME)/logging.yaml -v -d enable ]"
 	echo "------------------------------------------------------------------------------------"
-	python $(BWP_HOME)/main.py -c $(BWP_HOME)/logging.yaml -v -d enable
+	python $(BWP_HOME)/abk_bwp.py -c $(BWP_HOME)/logging.yaml -v -d enable
 
-main_desktop_disable:
-	echo "[ python $(BWP_HOME)/main.py -c $(BWP_HOME)/logging.yaml -v -d disable ]"
+abk_bwp_desktop_disable:
+	echo "[ python $(BWP_HOME)/abk_bwp.py -c $(BWP_HOME)/logging.yaml -v -d disable ]"
 	echo "------------------------------------------------------------------------------------"
-	python $(BWP_HOME)/main.py -c $(BWP_HOME)/logging.yaml -v -d disable
+	python $(BWP_HOME)/abk_bwp.py -c $(BWP_HOME)/logging.yaml -v -d disable
 
 bwp:
 	python $(BWP_HOME)/bingwallpaper.py
@@ -56,11 +56,11 @@ upgrade_setuptools:
 install: upgrade_setuptools
 	pip install --requirement requirements.txt
 
+install_test: upgrade_setuptools
+	pip install --requirement requirements_test.txt
+
 install_dev: upgrade_setuptools
 	pip install --requirement requirements_dev.txt
-
-install_nth: upgrade_setuptools
-	pip install --requirement requirements_nth.txt
 
 test:
 	python -m unittest discover --start-directory tests
@@ -104,14 +104,14 @@ settings:
 help:
 	@echo "Targets:"
 	@echo "--------------------------------------------------------------------------------"
-	@echo "  bwp                - executes the main program"
-	@echo "  bwp_log            - executes the main program with logging into a file"
-	@echo "  bwp_trace          - executes the main program with traces in console"
-	@echo "  bwp_install        - executes the main install.py"
-	@echo "  bwp_uninstall      - executes the main uninstall.py"
+	@echo "  bwp                - executes the abk_bwp program"
+	@echo "  bwp_log            - executes the abk_bwp program with logging into a file"
+	@echo "  bwp_trace          - executes the abk_bwp program with traces in console"
+	@echo "  bwp_install        - executes the abk_bwp install.py"
+	@echo "  bwp_uninstall      - executes the abk_bwp uninstall.py"
 	@echo "  install            - installs required packages"
-	@echo "  install_dev        - installs required development packages"
-	@echo "  install_nth        - installs nice-to-have packages"
+	@echo "  install_dev        - installs required packages for development"
+	@echo "  install_test       - installs required packages for test"
 	@echo "  test               - runs test"
 	@echo "  test_v             - runs test with verbose messaging"
 	@echo "  test_ff            - runs test fast fail"

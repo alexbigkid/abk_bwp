@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-"""Main program for downloading and upscaling/downscaling bing images to use as wallpaper sized """
+"""Program for downloading and upscaling/downscaling bing images to use as wallpaper sized """
 
-# Standard library imports
+# Standard lib imports
 import io
 import os
 import sys
@@ -25,14 +25,16 @@ from optparse import Values
 from colorama import Fore, Style
 from PIL import Image, ImageDraw, ImageFont
 
-# Local application imports
-from local_modules import CONSTANT_KW, DESKTOP_IMG_KW, FTV_KW, ROOT_KW, bwp_config, get_text_overlay_font_name
+# Local imports
+from config import CONSTANT_KW, DESKTOP_IMG_KW, FTV_KW, ROOT_KW, bwp_config
+from fonts import get_text_overlay_font_name
 import abk_common
 from ftv import FTV
 
 
+
 # -----------------------------------------------------------------------------
-# LOcal Constants
+# Local Constants
 # -----------------------------------------------------------------------------
 BWP_DIRECTORIES = 1
 BWP_FILES = 2
@@ -181,12 +183,12 @@ def get_config_background_img_size() -> Tuple[int, int]:
 
 
 def delete_files_in_dir(dir_name: str, file_list: List[str]) -> None:
-    # main_logger.debug(f"In directory: {dir_name} deleting files: {file_list}")
+    # bwp_logger.debug(f"In directory: {dir_name} deleting files: {file_list}")
     for file_to_delete in file_list:
         try:
             os.remove(os.path.join(dir_name, file_to_delete))
         except Exception as exp:
-            # main_logger.error(f"ERROR: {exp=}, deleting file: {file_to_delete}")
+            # bwp_logger.error(f"ERROR: {exp=}, deleting file: {file_to_delete}")
             pass
 
 
@@ -297,7 +299,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
             year_list (List[str]): year list directory names
         """
         # FTV enabled conversion needed to use mm/dd directory format.
-        main_logger.debug(f"{root_image_dir=}, {year_list=}")
+        bwp_logger.debug(f"{root_image_dir=}, {year_list=}")
         region_list = bwp_config.get(CONSTANT_KW.CONSTANT.value, {}).get(CONSTANT_KW.ALT_PEAPIX_REGION.value, [])
         for year_dir in year_list:
             if len(year_dir) == BWP_DIGITS_IN_A_YEAR and year_dir.isdigit():
@@ -308,22 +310,22 @@ class DownLoadServiceBase(metaclass=ABCMeta):
                     if len(month_dir) == BWP_DIGITS_IN_A_MONTH and month_dir.isdigit() and int(month_dir) <= BWP_NUMBER_OF_MONTHS:
                         full_month_dir = os.path.join(full_year_dir, month_dir)
                         img_file_list = sorted(next(os.walk(full_month_dir))[BWP_FILES])
-                        # main_logger(f"\n---- ABK: {year_dir=}, {month_dir=}, {img_file_list=}")
+                        # bwp_logger(f"\n---- ABK: {year_dir=}, {month_dir=}, {img_file_list=}")
                         for img_file in img_file_list:
                             file_name, file_ext = os.path.splitext(img_file)
-                            # main_logger.debug(f"---- ABK: {file_name=}, {file_ext=}")
+                            # bwp_logger.debug(f"---- ABK: {file_name=}, {file_ext=}")
                             img_date_part, img_region_part = file_name.split("_")
                             if file_ext == BWP_IMG_FILE_EXT and img_region_part in region_list:
                                 try:
                                     img_date = datetime.datetime.strptime(img_date_part, "%Y-%m-%d").date()
-                                    # main_logger.debug(f"---- ABK: {img_date.year=}, {img_date.month=}, {img_date.day=}, {img_region_part=}")
+                                    # bwp_logger.debug(f"---- ABK: {img_date.year=}, {img_date.month=}, {img_date.day=}, {img_region_part=}")
                                     # looks like a legit file name -> move it the the new location mm/dd/YYYY-mm-dd_us.jpg
                                     img_src = os.path.join(full_month_dir, img_file)
                                     img_dst = os.path.join(root_image_dir, f"{img_date.month:02d}", f"{img_date.day:02d}", img_file)
-                                    # main_logger.debug(f"---- ABK: moving [{img_src}] -> [{img_dst}]")
+                                    # bwp_logger.debug(f"---- ABK: moving [{img_src}] -> [{img_dst}]")
                                     os.renames(img_src, img_dst)
                                 except Exception as exp:
-                                    main_logger.error(f"{Fore.RED}ERROR: moving [{img_src=}] to [{img_dst=}] with EXCEPTION: {exp=}. INVESTIGATE!{Style.RESET_ALL}")     # type: ignore
+                                    bwp_logger.error(f"{Fore.RED}ERROR: moving [{img_src=}] to [{img_dst=}] with EXCEPTION: {exp=}. INVESTIGATE!{Style.RESET_ALL}")     # type: ignore
                                     # we don't want to move on here. since there is something wrong, we just re-throw end exit.
                                     raise
                 # if no errors and move was successful delete the old directory structure
@@ -339,7 +341,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
             root_image_dir (str): directory where images are stored
             month_list (List[str]): month list directory names
         """
-        main_logger.debug(f"{root_image_dir=}, {month_list=}")
+        bwp_logger.debug(f"{root_image_dir=}, {month_list=}")
         region_list = bwp_config.get(CONSTANT_KW.CONSTANT.value, {}).get(CONSTANT_KW.ALT_PEAPIX_REGION.value, [])
         for month_dir in month_list:
             if len(month_dir) == BWP_DIGITS_IN_A_MONTH and month_dir.isdigit() and int(month_dir) <= BWP_NUMBER_OF_MONTHS:
@@ -350,22 +352,22 @@ class DownLoadServiceBase(metaclass=ABCMeta):
                     if len(day_dir) == BWP_DIGITS_IN_A_DAY and day_dir.isdigit():
                         full_day_dir = os.path.join(full_month_dir, day_dir)
                         img_file_list = sorted(next(os.walk(full_day_dir))[BWP_FILES])
-                        # main_logger.debug(f"\n---- ABK: {month_dir=}, {day_dir=}, {img_file_list=}")
+                        # bwp_logger.debug(f"\n---- ABK: {month_dir=}, {day_dir=}, {img_file_list=}")
                         for img_file in img_file_list:
                             file_name, file_ext = os.path.splitext(img_file)
-                            # main_logger.debug(f"---- ABK: {file_name=}, {file_ext=}")
+                            # bwp_logger.debug(f"---- ABK: {file_name=}, {file_ext=}")
                             img_date_part, img_region_part = file_name.split("_")
                             if file_ext == BWP_IMG_FILE_EXT and img_region_part in region_list:
                                 try:
                                     img_date = datetime.datetime.strptime(img_date_part, "%Y-%m-%d").date()
-                                    # main_logger.debug(f"---- ABK: {img_date.year=}, {img_date.month=}, {img_date.day=}, {img_region_part=}")
+                                    # bwp_logger.debug(f"---- ABK: {img_date.year=}, {img_date.month=}, {img_date.day=}, {img_region_part=}")
                                     # looks like a legit file name -> move it the the new location YYYY/mm/YYYY-mm-dd_us.jpg
                                     img_src = os.path.join(full_day_dir, img_file)
                                     img_dst = os.path.join(root_image_dir, f"{img_date.year:04d}", f"{img_date.month:02d}", img_file)
-                                    # main_logger.debug(f"---- ABK: moving [{img_src}] -> [{img_dst}]")
+                                    # bwp_logger.debug(f"---- ABK: moving [{img_src}] -> [{img_dst}]")
                                     os.renames(img_src, img_dst)
                                 except Exception as exp:
-                                    main_logger.error(f"{Fore.RED}ERROR: moving [{img_src=}] to [{img_dst=}] with EXCEPTION: {exp=}. INVESTIGATE!{Style.RESET_ALL}")     # type: ignore
+                                    bwp_logger.error(f"{Fore.RED}ERROR: moving [{img_src=}] to [{img_dst=}] with EXCEPTION: {exp=}. INVESTIGATE!{Style.RESET_ALL}")     # type: ignore
                                     # we don't want to move on here. since there is something wrong, we just re-throw end exit.
                                     raise
                 # if no errors and move was successful delete the old directory structure
@@ -467,7 +469,7 @@ class PeapixDownloadService(DownLoadServiceBase):
         get_metadata_url = "?".join([bwp_config.get(CONSTANT_KW.CONSTANT.value, {}).get(CONSTANT_KW.PEAPIX_URL.value, ""), country_part_url])
         self._logger.debug(f"Getting Image info from: {get_metadata_url=}")
 
-        # this might throw, but we have a try/catch in the main, so no extra handling here needed.
+        # this might throw, but we have a try/catch in the bwp, so no extra handling here needed.
         resp = requests.get(get_metadata_url)
         if resp.status_code == 200: # good case
             dl_img_data = self._process_peapix_api_data(resp.json())
@@ -658,10 +660,10 @@ class BingWallPaper(object):
     def process_manually_downloaded_images() -> None:
         img_root_dir = get_config_img_dir()
         img_metadata = abk_common.read_json_file(os.path.join(img_root_dir, BWP_META_DATA_FILE_NAME))
-        main_logger.debug(f"{json.dumps(img_metadata, indent=4)}")
+        bwp_logger.debug(f"{json.dumps(img_metadata, indent=4)}")
         root_img_file_list = sorted(next(os.walk(img_root_dir))[BWP_FILES])
         scale_img_file_list = tuple([img for img in root_img_file_list if img.startswith(BWP_SCALE_FILE_PREFIX)])
-        main_logger.debug(f"{scale_img_file_list=}")
+        bwp_logger.debug(f"{scale_img_file_list=}")
         for img_file in scale_img_file_list:
             scale_img_name = os.path.join(img_root_dir, img_file)
             _, img_date_str, img_post_str = img_file.split("_")
@@ -673,18 +675,18 @@ class BingWallPaper(object):
             try:
                 with Image.open(scale_img_name) as img:
                     new_size = BingWallPaper._calculate_image_resizing(img.size)
-                    main_logger.debug(f"[{resized_full_img_name}]: {img.size=}, {new_size=}")
+                    bwp_logger.debug(f"[{resized_full_img_name}]: {img.size=}, {new_size=}")
                     resized_img = img if img.size == new_size else img.resize(new_size, Image.Resampling.LANCZOS)
                     if (img_title := img_metadata.get(resized_img_name, None)):
                         exif_data = resized_img.getexif()
                         exif_data.setdefault(BWP_EXIF_IMAGE_DESCRIPTION_FIELD, img_title)
-                        main_logger.debug(f"process_manually_downloaded_images: {img_title=}")
+                        bwp_logger.debug(f"process_manually_downloaded_images: {img_title=}")
                         resized_img.save(resized_full_img_name, exif=exif_data, optimize=True, quality=get_config_store_jpg_quality())
                     else:
                         resized_img.save(resized_full_img_name, optimize=True, quality=get_config_store_jpg_quality())
                 os.remove(scale_img_name)
             except OSError as exp:
-                main_logger.error(f"ERROR: {exp=}, resizing file: {scale_img_name}")
+                bwp_logger.error(f"ERROR: {exp=}, resizing file: {scale_img_name}")
 
 
     @staticmethod
@@ -723,10 +725,10 @@ class BingWallPaper(object):
     @staticmethod
     @abk_common.function_trace
     def _resize_background_image(src_img_name: str, dst_img_name : str, dst_img_size : Tuple[int, int]) -> bool:
-        main_logger.debug(f"{src_img_name=}, {dst_img_name=}, {dst_img_size=}")
+        bwp_logger.debug(f"{src_img_name=}, {dst_img_name=}, {dst_img_size=}")
         try:
             dst_path = os.path.dirname(dst_img_name)
-            main_logger.debug(f"{dst_path=}")
+            bwp_logger.debug(f"{dst_path=}")
             abk_common.ensure_dir(dst_path)
             with Image.open(src_img_name) as src_img:
                 # check whether resize is needed
@@ -739,11 +741,11 @@ class BingWallPaper(object):
                 if (exif_data := src_img.getexif()) is not None:
                     if (title_txt := exif_data.get(BWP_EXIF_IMAGE_DESCRIPTION_FIELD, None)) is not None:
                         # title available so draw title over image
-                        main_logger.debug(f"_resize_background_image: adding overlay text: {title_txt=}")
+                        bwp_logger.debug(f"_resize_background_image: adding overlay text: {title_txt=}")
                         BingWallPaper.add_outline_text(resized_img, title_txt)
                 resized_img.save(dst_img_name, optimize=True, quality=get_config_desktop_jpg_quality())
         except Exception as exp:
-            main_logger.error(f"ERROR:_resize_background_image: {exp=}, resizing file: {src_img_name=} to {dst_img_name=} with {dst_img_size=}")
+            bwp_logger.error(f"ERROR:_resize_background_image: {exp=}, resizing file: {src_img_name=} to {dst_img_name=} with {dst_img_size=}")
             return False
         return True
 
@@ -788,13 +790,13 @@ class BingWallPaper(object):
         img_dir = get_config_img_dir()
         background_img_file_list = get_all_background_img_names(img_dir)
         max_img_num = get_config_number_of_images_to_keep()
-        main_logger.debug(f"{img_dir=}, {len(background_img_file_list)=}, {max_img_num=}")
-        main_logger.debug(f"{background_img_file_list=}")
+        bwp_logger.debug(f"{img_dir=}, {len(background_img_file_list)=}, {max_img_num=}")
+        bwp_logger.debug(f"{background_img_file_list=}")
 
         # do we need to trim number of images collected?
         if (number_to_trim := len(background_img_file_list) - max_img_num) > 0:
             img_to_trim_list = background_img_file_list[0:number_to_trim]
-            main_logger.debug(f"{img_to_trim_list=}")
+            bwp_logger.debug(f"{img_to_trim_list=}")
             for img_to_delete in img_to_trim_list:
                 img_path = get_full_img_dir_from_file_name(img_to_delete)
                 abk_common.delete_file(os.path.join(img_path, img_to_delete))
@@ -810,15 +812,15 @@ class BingWallPaper(object):
         ftv_dir = os.path.join(config_img_dir, BWP_FTV_IMAGES_TODAY_DIR)
         abk_common.ensure_dir(ftv_dir)
         ftv_files_to_delete = sorted(next(os.walk(ftv_dir))[BWP_FILES])
-        main_logger.debug(f"prepare_ftv_images: {ftv_dir=}")
-        main_logger.debug(f"prepare_ftv_images: {ftv_files_to_delete=}")
+        bwp_logger.debug(f"prepare_ftv_images: {ftv_dir=}")
+        bwp_logger.debug(f"prepare_ftv_images: {ftv_files_to_delete=}")
         delete_files_in_dir(dir_name=ftv_dir, file_list=ftv_files_to_delete)
 
         today = datetime.date.today()
         todays_dir = get_full_img_dir_from_date(today)
         to_copy_file_list = sorted(next(os.walk(todays_dir))[BWP_FILES])
-        main_logger.debug(f"prepare_ftv_images: {todays_dir=}")
-        main_logger.debug(f"prepare_ftv_images: {to_copy_file_list=}")
+        bwp_logger.debug(f"prepare_ftv_images: {todays_dir=}")
+        bwp_logger.debug(f"prepare_ftv_images: {to_copy_file_list=}")
 
         for img in to_copy_file_list:
             src_img_file_name = os.path.join(todays_dir, img)
@@ -828,7 +830,7 @@ class BingWallPaper(object):
 
 
 # -----------------------------------------------------------------------------
-# Main
+# bwp
 # -----------------------------------------------------------------------------
 def bingwallpaper(bwp_logger:  logging.Logger):
     exit_code = 0
@@ -881,5 +883,5 @@ def bingwallpaper(bwp_logger:  logging.Logger):
 if __name__ == "__main__":
     command_line_options = abk_common.CommandLineOptions()
     command_line_options.handle_options()
-    main_logger = command_line_options._logger
-    bingwallpaper(main_logger)
+    bwp_logger = command_line_options._logger
+    bingwallpaper(bwp_logger)

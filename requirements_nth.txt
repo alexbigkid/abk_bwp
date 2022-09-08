@@ -1,8 +1,0 @@
-# Install dependencies
--r requirements_dev.txt
-
-# Install nice-to-have dependencies
-pip-check
-pip-date
-pip-chill
-pipdeptree

@@ -4,22 +4,18 @@
 from logging import Logger
 import logging
 import os
-import sys
 # from unittest import TestCase, mock
 import unittest
 from unittest.mock import patch
 
-
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../abk_bwp')))
-
 # local imports
-from ftv import FTV
+from context import ftv
+
+
 
 class TestFTV(unittest.TestCase):
-
-
     def setUp(self):
-        self._ftv = FTV(logger=logging.Logger(__name__))
+        self._ftv = ftv.FTV(logger=logging.Logger(__name__))
 
     # -------------------------------------------------------------------------
     # Tests for get_environment_variable_value_

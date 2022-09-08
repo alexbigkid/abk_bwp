@@ -24,16 +24,16 @@ from typing import Tuple
 from colorama import Fore, Style
 
 # Local imports
-from local_modules import ROOT_KW, bwp_config
-from abk_common import OsPlatformType, OsType, function_trace
+from config import ROOT_KW, bwp_config
 import abk_common
+
 
 
 class IUninstallBase(metaclass=ABCMeta):
     """Abstract class (mostly)"""
-    os_type: OsType = None  # type: ignore
+    os_type: abk_common.OsType = None  # type: ignore
 
-    @function_trace
+    @abk_common.function_trace
     def __init__(self, logger: logging.Logger = None) -> None:  # type: ignore
         """Super class init"""
         self._logger = logger or logging.getLogger(__name__)
@@ -55,13 +55,13 @@ class IUninstallBase(metaclass=ABCMeta):
 class UninstallOnMacOS(IUninstallBase):
     """Concrete Uninstallation on MacOS"""
 
-    @function_trace
+    @abk_common.function_trace
     def __init__(self, logger: logging.Logger = None) -> None:  # type: ignore
-        self.os_type = OsType.MAC_OS
+        self.os_type = abk_common.OsType.MAC_OS
         super().__init__(logger)
 
 
-    @function_trace
+    @abk_common.function_trace
     def teardown_installation(self, app_name: str) -> None:
         """Cleans up installation of the bing wall paper downloader on MacOS
         Args:
@@ -91,7 +91,7 @@ class UninstallOnMacOS(IUninstallBase):
         self._delete_plist_file(plist_full_name)
 
 
-    @function_trace
+    @abk_common.function_trace
     def cleanup_image_dir(self, image_dir: str) -> None:
         """Cleans up image directory, deletes all downloaded images
         Args:
@@ -101,7 +101,7 @@ class UninstallOnMacOS(IUninstallBase):
         self._delete_image_dir(image_full_path)
 
 
-    @function_trace
+    @abk_common.function_trace
     def _unlink_python_script(self, file_name: str) -> str:
         """Deletes link in the $HOME/bin directory
         Args:
@@ -119,7 +119,7 @@ class UninstallOnMacOS(IUninstallBase):
         return src
 
 
-    @function_trace
+    @abk_common.function_trace
     def _delete_image_dir(self, images_dir: str) -> None:
         """deletes image directory and all downloaded images
         Args:
@@ -133,7 +133,7 @@ class UninstallOnMacOS(IUninstallBase):
                 self._logger.error(f"deleting image directory {images_dir} failed")
 
 
-    @function_trace
+    @abk_common.function_trace
     def _get_plist_names(self, script_name: str) -> Tuple[str, str]:
         """Gets plist names. Plist lable and plist file name
         Args:
@@ -149,7 +149,7 @@ class UninstallOnMacOS(IUninstallBase):
         return (plist_lable, plist_file_name)
 
 
-    @function_trace
+    @abk_common.function_trace
     def _stop_and_unload_bingwallpaper_job(self, plist_name: str, plist_lable: str) -> None:
         """Stops and unloads bing wallpaper jobs
         Args:
@@ -172,7 +172,7 @@ class UninstallOnMacOS(IUninstallBase):
             self._logger.error(f"ERROR: returned: {e.returncode}")
 
 
-    @function_trace
+    @abk_common.function_trace
     def _delete_plist_file(self, script_name: str) -> None:
         """Deletes plist file
         Args:
@@ -193,13 +193,13 @@ class UninstallOnMacOS(IUninstallBase):
 class UninstallOnLinux(IUninstallBase):
     """Concrete Uninstallation on Linux"""
 
-    @function_trace
+    @abk_common.function_trace
     def __init__(self, logger: logging.Logger = None) -> None:  # type: ignore
         self.os_type = abk_common.OsType.LINUX_OS
         super().__init__(logger)
 
 
-    @function_trace
+    @abk_common.function_trace
     def teardown_installation(self, app_name: str) -> None:
         """Cleans up installation of the bing wall paper downloader on Linux
         Args:
@@ -209,7 +209,7 @@ class UninstallOnLinux(IUninstallBase):
         self._logger.info(f"{self.os_type.value} uninstallation is not supported yet")
 
 
-    @function_trace
+    @abk_common.function_trace
     def cleanup_image_dir(self, image_dir: str) -> None:
         self._logger.debug(f"{image_dir=}")
         self._logger.info(f"{self.os_type.value} cleanup_image_dir is not supported yet")
@@ -219,13 +219,13 @@ class UninstallOnLinux(IUninstallBase):
 class UninstallOnWindows(IUninstallBase):
     """Concrete Uninstallation on Windows"""
 
-    @function_trace
+    @abk_common.function_trace
     def __init__(self, logger: logging.Logger = None) -> None:  # type: ignore
         self.os_type = abk_common.OsType.WINDOWS_OS
         super().__init__(logger)
 
 
-    @function_trace
+    @abk_common.function_trace
     def teardown_installation(self, app_name: str) -> None:
         """Cleans up installation of the bing wall paper downloader on Windows
         Args:
@@ -235,22 +235,22 @@ class UninstallOnWindows(IUninstallBase):
         self._logger.info(f"{self.os_type.value} uninstallation is not supported yet")
 
 
-    @function_trace
+    @abk_common.function_trace
     def cleanup_image_dir(self, image_dir: str) -> None:
         self._logger.debug(f"{image_dir=}")
         self._logger.info(f"{self.os_type.value} cleanup_image_dir is not supported yet")
 
 
 
-@function_trace
+@abk_common.function_trace
 def bwp_uninstall(uninstall_logger: logging.Logger) -> None:
     exit_code = 0
     try:
-        if _platform in OsPlatformType.PLATFORM_MAC.value:
+        if _platform in abk_common.OsPlatformType.PLATFORM_MAC.value:
             uninstallation = UninstallOnMacOS(logger=uninstall_logger)
-        elif _platform in OsPlatformType.PLATFORM_LINUX.value:
+        elif _platform in abk_common.OsPlatformType.PLATFORM_LINUX.value:
             uninstallation = UninstallOnLinux(logger=uninstall_logger)
-        elif _platform in OsPlatformType.PLATFORM_WINDOWS.value:
+        elif _platform in abk_common.OsPlatformType.PLATFORM_WINDOWS.value:
             uninstallation = UninstallOnWindows(logger=uninstall_logger)
         else:
             raise ValueError(f'ERROR: "{_platform}" is not supported')

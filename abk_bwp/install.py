@@ -26,23 +26,23 @@ from typing import Tuple
 from colorama import Fore, Style
 
 # local imports
-from abk_common import OsPlatformType, OsType, function_trace
+from config import bwp_config, ROOT_KW
 import abk_common
 
 
 
 class IInstallBase(metaclass=ABCMeta):
     """Abstract class (mostly)"""
-    os_type: OsType = None  # type: ignore
+    os_type: abk_common.OsType = None  # type: ignore
 
-    @function_trace
+    @abk_common.function_trace
     def __init__(self, logger: logging.Logger = None) -> None:  # type: ignore
         """Super class init"""
         self._logger = logger or logging.getLogger(__name__)
         self._logger.info(f"({__class__.__name__}) Initializing {self.os_type} installation environment ...")
 
 
-    # @function_trace
+    # @abk_common.function_trace
     # def install_python_packages(self) -> None:
     #     # TODO: 1. check whether pyenv is installed
     #     #   TODO: 1.1. if pyenv is installed, check what versions of python are installed
@@ -79,16 +79,15 @@ class IInstallBase(metaclass=ABCMeta):
 class InstallOnMacOS(IInstallBase):
     """Concrete class for installation on MacOS"""
 
-    @function_trace
+    @abk_common.function_trace
     def __init__(self, logger: logging.Logger) -> None:
-        self.os_type = OsType.MAC_OS
+        self.os_type = abk_common.OsType.MAC_OS
         super().__init__(logger)
 
 
-    @function_trace
+    @abk_common.function_trace
     def setup_installation(self) -> None:
         """Setup instalaltion on MacOS"""
-        from local_modules import ROOT_KW, bwp_config
         time_to_exe: time = bwp_config.get(ROOT_KW.TIME_TO_FETCH.value, datetime.strptime("09:00:00", "%H%M:%S").time())
         app_name = bwp_config.get(ROOT_KW.APP_NAME.value, "bingwallpaper.py")
 
@@ -105,7 +104,7 @@ class InstallOnMacOS(IInstallBase):
         self._load_and_start_bingwallpaper_job(dst_plist_name, plist_lable)
 
 
-    @function_trace
+    @abk_common.function_trace
     def _link_python_script(self, file_name: str) -> str:
         """Creates a link of the python app script in the $HOME/bin directory
         Args:
@@ -124,7 +123,7 @@ class InstallOnMacOS(IInstallBase):
         return src
 
 
-    @function_trace
+    @abk_common.function_trace
     def _create_plist_file(self, time_to_exe: time, script_name: str) -> Tuple[str, str]:
         """Creates plist file with info for MacOS to trigger scheduled job.
         Args:
@@ -167,7 +166,7 @@ class InstallOnMacOS(IInstallBase):
         return (plist_label, plist_name)
 
 
-    @function_trace
+    @abk_common.function_trace
     def _create_plist_link(self, full_file_name: str) -> str:
         """Creates link in the $HOME/Library/LaunchAgent to the real locacion of the app script
         Args:
@@ -187,7 +186,7 @@ class InstallOnMacOS(IInstallBase):
         return dst_file_name
 
 
-    @function_trace
+    @abk_common.function_trace
     def _stop_and_unload_bingwallpaper_job(self, plist_name: str, plist_lable: str) -> None:
         """Stops and unloads bing wall paper job.
            Executes until the end. Can also exit with first error occuring.
@@ -212,7 +211,7 @@ class InstallOnMacOS(IInstallBase):
             self._logger.info(f"error: {e.returncode=}. It is expected though, since not all commands will execute successfully.")
 
 
-    @function_trace
+    @abk_common.function_trace
     def _load_and_start_bingwallpaper_job(self, plist_name: str, plist_lable: str) -> None:
         """Loads and starts the scheduled job
         Args:
@@ -241,11 +240,11 @@ class InstallOnLinux(IInstallBase):
     """Concrete class for installation on Linux"""
 
     def __init__(self, logger: logging.Logger) -> None:
-        self.os_type = OsType.LINUX_OS
+        self.os_type = abk_common.OsType.LINUX_OS
         super().__init__(logger)
 
 
-    @function_trace
+    @abk_common.function_trace
     def setup_installation(self) -> None:
         """Setup instalaltion on Linux"""
         self._logger.info(f"{self.os_type.value} installation is not supported yet")
@@ -256,11 +255,11 @@ class InstallOnWindows(IInstallBase):
     """Concrete class for installation on Windows"""
 
     def __init__(self, logger: logging.Logger) -> None:
-        self.os_type = OsType.WINDOWS_OS
+        self.os_type = abk_common.OsType.WINDOWS_OS
         super().__init__(logger)
 
 
-    @function_trace
+    @abk_common.function_trace
     def setup_installation(self) -> None:
         """Setup instalaltion on Windows"""
         # self._logger.debug(f"{time_to_exe.hour=}, {time_to_exe.minute=}, {app_name=}")
@@ -268,15 +267,15 @@ class InstallOnWindows(IInstallBase):
 
 
 
-@function_trace
+@abk_common.function_trace
 def bwp_install(install_logger: logging.Logger) -> None:
     exit_code = 0
     try:
-        if _platform in OsPlatformType.PLATFORM_MAC.value:
+        if _platform in abk_common.OsPlatformType.PLATFORM_MAC.value:
             installation = InstallOnMacOS(logger=install_logger)
-        elif _platform in OsPlatformType.PLATFORM_LINUX.value:
+        elif _platform in abk_common.OsPlatformType.PLATFORM_LINUX.value:
             installation = InstallOnLinux(logger=install_logger)
-        elif _platform in OsPlatformType.PLATFORM_WINDOWS.value:
+        elif _platform in abk_common.OsPlatformType.PLATFORM_WINDOWS.value:
             installation = InstallOnWindows(logger=install_logger)
         else:
             raise ValueError(f'ERROR: "{_platform}" is not supported')

@@ -1,20 +1,21 @@
 # Standard library imports
+import os
+import json
+import yaml
+import timeit
 import errno
 import getpass
-import json
 import logging
 import logging.config
-import os
-import timeit
 from enum import Enum
-from optparse import OptionParser, Values
 
 # Third party imports
-import yaml
+from optparse import OptionParser, Values
+from colorama import Fore, Style
 
 # Local application imports
-from __license__ import __version__
-from colorama import Fore, Style
+import __license__
+
 
 logger = logging.getLogger(__name__)
 
@@ -151,9 +152,9 @@ def read_json_file(json_file_name: str) -> dict:
 
 
 class PerformanceTimer(object):
-    def __init__(self, timer_name: str, logger: logging.Logger):
+    def __init__(self, timer_name: str, pt_logger: logging.Logger):
         self._timer_name = timer_name
-        self._logger = logger
+        self._logger = pt_logger or logging.getLogger(__name__)
 
     def __enter__(self):
         self.start = timeit.default_timer()
@@ -177,7 +178,7 @@ class CommandLineOptions(object):
     def handle_options(self) -> None:
         """Handles user specified options and arguments"""
         usage_string = "usage: %prog [options]"
-        version_string = f"%prog version: {Fore.GREEN}{__version__}{Style.RESET_ALL}"
+        version_string = f"%prog version: {Fore.GREEN}{__license__.__version__}{Style.RESET_ALL}"
         parser = OptionParser(usage=usage_string, version=version_string)
         parser.add_option(
             "-v",
@@ -227,7 +228,7 @@ class CommandLineOptions(object):
         self._logger.info(f"{self._args=}")
         self._logger.info(f"{self.options.verbose=}")
         self._logger.info(f"{self.options.log_into_file=}")
-        self._logger.info(f"{__version__=}")
+        self._logger.info(f"{__license__.__version__=}")
 
     def _setup_logging(self) -> None:
         config_log_file = os.path.join(os.path.dirname(__file__), self.options.config_log_file)

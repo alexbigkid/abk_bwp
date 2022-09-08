@@ -1,26 +1,21 @@
 """Unit tests for abkCommon.py"""
 
 # Standard library imports
-import getpass
-from io import StringIO
 import logging
 import os
 import sys
-import json
 import unittest
 from unittest import mock
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../abk_bwp")))
-
 # Third party imports
 from optparse import Values
-from parameterized import parameterized
 
 # Local imports
-import abk_common
+from context import abk_common
 
 
 GENERAL_EXCEPTION_MSG = "General Exception Raised"
+
 
 
 @unittest.skipIf(sys.platform.startswith("win"), "should not run on Windows")

@@ -1,21 +1,16 @@
 """Unit tests for bingwallpaper.py"""
 
 # Standard library imports
-import os
-import sys
 from typing import Tuple
 import unittest
 from unittest.mock import mock_open, patch, call
-
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../abk_bwp')))
 
 # Third party imports
 from parameterized import parameterized
 
 # Own modules imports
-from config import bwp_config
-import bingwallpaper
+from context import config
+from context import bingwallpaper
 
 
 
@@ -47,7 +42,7 @@ class TestAbkCommon(unittest.TestCase):
     ])
     def test__get_img_region__given_an_invalid_setting_returns_default_region(self, img_region:str, img_dl_service:str) -> None:
         exp_region = "us"
-        with patch.dict(bwp_config, {"region": img_region, "dl_service": img_dl_service}) as mock_bwp_config:
+        with patch.dict(config.bwp_config, {"region": img_region, "dl_service": img_dl_service}) as mock_bwp_config:
             act_region = bingwallpaper.get_config_img_region()
         self.assertEqual(act_region, exp_region)
 
@@ -75,7 +70,7 @@ class TestAbkCommon(unittest.TestCase):
         ["us",          "bing"  ],
     ])
     def test__get_img_region__given_a_valid_setting_returns_defined_region(self, img_region:str, img_dl_service:str) -> None:
-        with patch.dict(bwp_config, {"region": img_region, "dl_service": img_dl_service}):
+        with patch.dict(config.bwp_config, {"region": img_region, "dl_service": img_dl_service}):
             act_region = bingwallpaper.get_config_img_region()
         self.assertEqual(act_region, img_region)
 
@@ -96,7 +91,7 @@ class TestAbkCommon(unittest.TestCase):
         ["notValid",    "notValidService",  "en-US"],
     ])
     def test__get_img_region__given_a_valid_setting_returns_defined_bing_region(self, img_region:str, img_dl_service:str, exp_bing_region:str) -> None:
-        with patch.dict(bwp_config, {"region": img_region, "dl_service": img_dl_service}):
+        with patch.dict(config.bwp_config, {"region": img_region, "dl_service": img_dl_service}):
             act_bing_region = bingwallpaper.get_config_bing_img_region()
         self.assertEqual(act_bing_region, exp_bing_region)
 
@@ -114,7 +109,7 @@ class TestAbkCommon(unittest.TestCase):
         [898,           100],
     ])
     def test__get_resize_jpeg_quality__returns_normalized_resize_jpeg_quality(self, read_jpeg_quality:int, exp_jpeg_quality) -> None:
-        with patch.dict(bwp_config, {"store_jpg_quality": read_jpeg_quality}):
+        with patch.dict(config.bwp_config, {"store_jpg_quality": read_jpeg_quality}):
             act_jpeg_quality = bingwallpaper.get_config_store_jpg_quality()
         self.assertEqual(act_jpeg_quality, exp_jpeg_quality)
 
@@ -133,7 +128,7 @@ class TestAbkCommon(unittest.TestCase):
         [640,           489,            (3840,  2160)],
     ])
     def test__get_config_background_img_size__corrects_to_correct_size(self, cnf_width:int, cnf_height:int, exp_size:Tuple[int, int]) -> None:
-        with patch.dict(bwp_config, {"desktop_img": {"width": cnf_width, "height": cnf_height}}):
+        with patch.dict(config.bwp_config, {"desktop_img": {"width": cnf_width, "height": cnf_height}}):
             act_size = bingwallpaper.get_config_background_img_size()
         self.assertEqual(act_size, exp_size)
 
