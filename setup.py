@@ -42,7 +42,7 @@ setup(
         "PyYAML",
         "requests",
         "samsungtvws[async,encrypted]",
-        "tomli>=1.1.0; python_version<'3.11'"
+        "tomli>=1.1.0; python_version<'3.11'",
         "tomlkit",
         "urllib3[secure]"
     ],
