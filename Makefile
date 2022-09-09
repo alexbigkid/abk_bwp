@@ -83,8 +83,24 @@ test_1:
 clean:
 	@echo "deleting log files:"
 	@echo "___________________"
-	ls -la *.log*
-	rm *.log*
+	@if [ -d logs ]; then ls -la logs; fi;
+	@if [ -d logs ]; then rm -rf logs; fi;
+	@echo
+	@echo "deleting dist files:"
+	@echo "___________________"
+	@if [ -d dist ]; then ls -la dist; fi;
+	@if [ -d dist ]; then rm -rf dist; fi;
+	@echo
+	@echo "deleting egg-info files:"
+	@echo "___________________"
+	@if [ -d *.egg-info ]; then ls -la *.egg-info; fi
+	@if [ -d *.egg-info ]; then rm -rf *.egg-info; fi
+	@echo
+	@echo "deleting __pycache__ directories:"
+	@echo "___________________"
+	find . -name "__pycache__" -type d -prune
+	rm -rf  $(find . -name "__pycache__" -type d -prune)
+
 
 # ----------------------------
 # those rules should be universal
