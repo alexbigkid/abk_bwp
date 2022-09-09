@@ -2,7 +2,7 @@
 .SILENT: abk_bwp bwp bwp_log bwp_trace bwp_install bwp_uninstall coverage clean abk_bwp_ftv
 BWP_HOME = abk_bwp
 
-abk_bwp:
+abkbwp:
 	echo "[ python $(BWP_HOME)/abk_bwp.py -c $(BWP_HOME)/logging.yaml -v ]"
 	echo "------------------------------------------------------------------------------------"
 	python $(BWP_HOME)/abk_bwp.py -c $(BWP_HOME)/logging.yaml -v
@@ -86,8 +86,8 @@ build:
 clean:
 	@echo "deleting log files:"
 	@echo "___________________"
-	@if [ -d logs ]; then ls -la logs; fi;
-	@if [ -d logs ]; then rm -rf logs; fi;
+	@if [ -d logs ]; then ls -la logs/*; fi;
+	@if [ -d logs ]; then rm -rf logs/*; fi;
 	@echo
 	@echo "deleting dist files:"
 	@echo "___________________"
@@ -114,7 +114,7 @@ clean:
 # those rules should be universal
 # ----------------------------
 coverage:
-	coverage run --source $(BWP_HOME) --omit ./config/*,./tests/*,./fonts,./samsung-tv-ws-api/*  -m unittest discover --start-directory tests
+	coverage run --source $(BWP_HOME) --omit ./config/*,./tests/*,./abk_bwp/fonts,./samsung-tv-ws-api/*  -m unittest discover --start-directory tests
 	@echo
 	coverage report
 	coverage xml
