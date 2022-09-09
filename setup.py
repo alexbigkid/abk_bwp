@@ -34,7 +34,7 @@ setup(
     python_requires=">=3.7, <4",
     keywords="Bing images, Desktop images, MacOS, Samsung Frame TV",
     # package_dir={"": "abk_bwp"},
-    packages=["config", "fonts", "abk_bwp"],
+    packages=["abk_bwp"],
     install_requires=[
         "colorama",
         "optparse-pretty",
