@@ -80,6 +80,9 @@ test_vff:
 test_1:
 	python -m unittest "tests.$(filter-out $@,$(MAKECMDGOALS))"
 
+build:
+	python setup.py bdist
+
 clean:
 	@echo "deleting log files:"
 	@echo "___________________"
