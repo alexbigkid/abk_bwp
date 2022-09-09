@@ -91,6 +91,11 @@ clean:
 	@if [ -d dist ]; then ls -la dist; fi;
 	@if [ -d dist ]; then rm -rf dist; fi;
 	@echo
+	@echo "deleting build files:"
+	@echo "___________________"
+	@if [ -d build ]; then ls -la build; fi;
+	@if [ -d build ]; then rm -rf build; fi;
+	@echo
 	@echo "deleting egg-info files:"
 	@echo "___________________"
 	@if [ -d *.egg-info ]; then ls -la *.egg-info; fi
