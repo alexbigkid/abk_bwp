@@ -2,38 +2,62 @@
 Downloads daily images from bing.com and sets them as background
 
 
-### Manually:
-If you like to set desktop background manually,
-just execute 'python bingwallpaper.py' in your terminal.
+## Configuring the app
+Please see the file bwp_config.toml file. There are some setting you might want to change.
+Like the image size, which should ideally correspond to the size of your display.
+In the config file you will find also detailed explanation, what exactly each config item is for.
 
 
-### Install:
-To schedule the download of the bing image daily,
-execute 'python install.py' in your terminal.
+## Installing python dependencies:
+### Installing with pyenv + virtual environment (Recommended)
+If you are like me and don't want to mix your python packages, you want to create python virtual environment before installing dependencies.
+I use pyenv tool for that. Here are the steps on MacOS:
+1. install brew. Google for it if you don't have it already
+2. brew install pyenv - will install pyenv tool
+3. brew install pyenv-virtualenv - installs virtualenv pyenv version
+4. pyenv versions - will show you currently installed python versions and virtual envs on your system
+5. pyenv install --list - will show you all available python versions you could install.
+6. pyenv install 3.8.9 - installs python 3.8.9 version
+7. pyenv virtualenv 3.8.9 bwp - creates virtual environment [bing wall paper] with python 3.8.9
+8. cd <your_project_dir> - change into your project directory e.g.: cd abk_bwp
+9. pyenv local bwp - setting the current directory to use [bwp] virtual environment
+10. make install - will install all needed python dependency packages into [bwp] virtual environment.
+11. make bwp - will download bing image and add title to the image
 
 
-### Uninstall:
-To delete the schedule of the download of the bing image,
-execute 'python uninstall.py' in your terminal.
+### Installing without pyenv or python virtual environmet. Note the app does not run with python 2.7
+If it is too many steps for you and just want to get it working "quick and dirty".
+Warning: there might be some python packages, which might collide with already installed packages.
+1. cd abk_bwp - change to the project directory
+2. make install - to install python dependency packages in default location
+3. make bwp - will download bing image and add title to the image
 
 
-### Config:
-config/bwp_config.toml - is file for configuration.
+### Makefile rules
+There are some Makefile rules, which are created for your convinience. For more help with rules type: make help
+Here are some described in the table
 
-| config field                 | description                                                                            |
-| :--------------------------- | :------------------------------------------------------------------------------------- |
-| time_to_fetch                | time to download the bing wall paper image (every day). format is important: hh:mm:ss  |
-| app_name                     | python script name to execute for downlaoding the bing images                          |
-| image_dir                    | directory where images will be saved usually $HOME/Pictures/BingWallpapers             |
-| number_of_images to_keep     | once this number is reached the oldest picture will be deleted                         |
-| set_desk_top_image           | if true, script will try to set the image as wall paper, otherwise it just stores them |
-| retain_images                | if true images will be kept, when uninstalling bingwallpaper environment               |
-| region                       | region from which bing images will be downloaded                                       |
-| constant.alternative_regions | available valid regions                                                                |
-| ftv.set_image                | if true, app will try to set images for today on frame TV                              |
-| ftv.ip_address               | frame TV ip address                                                                    |
-| ftv.port                     | frame TV port                                                                          |
-| ftv.image_change_frequency   | how often image should be changed, this is time in seconds                             |
+| makefile rule      | description                                                                                  |
+| :----------------- | :------------------------------------------------------------------------------------------- |
+| make bwp           | executes the abk_bwp program, which dowloads Bing images and creates a desktop image         |
+| make bwp_log       | executes the abk_bwp program, with tracing to the console and log file                       |
+| make bwp_trace     | executes the abk_bwp program, with tracing to the console                                    |
+| make bwp_install   | WIP: executes the abk_bwp program, but also enables auto download feature MacOS only for now |
+| make bwp_uninstall | WIP: executes the abk_bwp program, but also disables auto download feature                   |
+| make install       | installs all required python packages for the app                                            |
+| make install_test  | installs all required python packages for app and additional packages to run the unit test   |
+| make install_dev   | installs all required python packages for app and additional for test and development        |
+| make test          | runs unit tests                                                                              |
+| make test_v        | runs unit tests with verbosity enabled                                                       |
+| make test_ff       | runs unit tests and fails fast on the first broken test                                      |
+| make test_vff      | runs unit tests fails fast on the first broken test with verbosity enabled                   |
+| make test_1 <test> | runs one specific unit test                                                                  |
+| make coverage      | runs unit tests with coverage                                                                |
+| make coverage      | runs unit tests with coverage                                                                |
+| make clean         | cleans some auto generated build files                                                       |
+| :----------------- | :-----------------------------------------------------------------------------------------   |
+| make settings      | displays some Makefile settings                                                              |
+| make help          | displays Makefile help                                                                       |
 
 
 ### Python tracing:
@@ -61,7 +85,7 @@ The project contains com.abk.bingwallpaper_debug.py.plist file, which can be use
    rm com.abk.bingwallpaper_debug.py.plist in: ~/Labrary/LaunchAgents
 
 
-#### tested running on:
+#### App runs on:
 - [x] MacOS Monterey (local machine) / Python 3.10.6
 - [ ] Linux Ubuntu 20.04  / Python 3.8.9
 - [ ] Windows 10 / Python 3.8.9
