@@ -114,7 +114,7 @@ clean:
 # those rules should be universal
 # ----------------------------
 coverage:
-	coverage run --source $(BWP_HOME) --omit ./config/*,./tests/*,./abk_bwp/fonts,./samsung-tv-ws-api/*  -m unittest discover --start-directory tests
+	coverage run --source $(BWP_HOME) --omit ./tests/*,./abk_bwp/config/*,./abk_bwp/fonts,./samsung-tv-ws-api/*  -m unittest discover --start-directory tests
 	@echo
 	coverage report
 	coverage xml

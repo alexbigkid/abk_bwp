@@ -3,9 +3,9 @@ Downloads daily images from bing.com and sets them as background
 
 
 ## Configuring the app
-Please see the file bwp_config.toml file. There are some setting you might want to change.
+Please see the file abk_bwp/config/bwp_config.toml file. There are some setting you might want to change.
 Like the image size, which should ideally correspond to the size of your display.
-In the config file you will find also detailed explanation, what exactly each config item is for.
+In the config file you will find also detailed explanation, what exactly each configuration item is for.
 
 
 ## Installing python dependencies:

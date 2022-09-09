@@ -783,7 +783,7 @@ class BingWallPaper(object):
     @abk_common.function_trace
     def trim_number_of_images() -> None:
         """Deletes some images if it reaches max number to keep
-           The max number of images to retain an be defined in the config/bwp_config.toml file
+           The max number of images to retain to be defined in the abk_bwp/config/bwp_config.toml file
            config parameter number_of_images_to_keep
         """
         img_dir = get_config_img_dir()

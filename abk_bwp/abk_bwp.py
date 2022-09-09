@@ -18,7 +18,7 @@ BWP_ENABLE = "enable"
 BWP_DISABLE = "disable"
 BWP_DESKTOP_AUTO_UPDATE_OPTION = "dau"
 BWP_FTV_OPTION = "ftv"
-BWP_CONFIG_RELATIVE_PATH = "../config/bwp_config.toml"
+BWP_CONFIG_RELATIVE_PATH = "config/bwp_config.toml"
 
 
 @abk_common.function_trace
@@ -42,10 +42,10 @@ def update_enable_field_in_toml_file(key_to_update: str, update_to: bool) -> Non
     abk_bwp_logger.debug(f"{key_to_update=}: {update_to=}")
     config_toml_file_name = os.path.join(os.path.dirname(__file__), BWP_CONFIG_RELATIVE_PATH)
     with open(config_toml_file_name, mode="rt", encoding="utf-8") as read_fh:
-        config = tomlkit.load(read_fh)
-        config[key_to_update]["enabled"] = update_to  # type: ignore
+        config_data = tomlkit.load(read_fh)
+        config_data[key_to_update]["enabled"] = update_to  # type: ignore
     with open(config_toml_file_name, mode="wt", encoding="utf-8") as write_fh:
-        tomlkit.dump(config, write_fh)
+        tomlkit.dump(config_data, write_fh)
 
 
 @abk_common.function_trace
