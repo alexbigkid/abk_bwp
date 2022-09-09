@@ -231,7 +231,6 @@ class CommandLineOptions(object):
         self._logger.info(f"{__license__.__version__=}")
 
     def _setup_logging(self) -> None:
-        config_log_file = os.path.join(os.path.dirname(__file__), self.options.config_log_file)
         try:
             with open(self.options.config_log_file, "r") as stream:
                 config_yaml = yaml.load(stream, Loader=yaml.FullLoader)
