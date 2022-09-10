@@ -58,8 +58,8 @@ setup(
         "urllib3[secure]"
     ],
     extras_require={  # Optional
-        "dev": ["pip-check", "pip-date", "pip-chill", "pipdeptree"],
-        "test": ["coverage", "parameterized", "tomli_w"],
+        "dev": ["build", "setuptools", "twine", "wheel", "pip-check", "pip-date", "pip-chill", "pipdeptree"],
+        "test": ["coverage", "parameterized", "tox" ],
     },
     zip_safe=False
 )
