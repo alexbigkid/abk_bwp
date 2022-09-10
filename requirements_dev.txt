@@ -1,7 +1,11 @@
 # Install dependencies
 -r requirements_test.txt
 
-# Install nice-to-have dependencies
+# Install development dependencies
+setuptools
+wheel
+build
+twine
 pip-check
 pip-date
 pip-chill

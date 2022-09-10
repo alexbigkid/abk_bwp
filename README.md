@@ -1,5 +1,5 @@
-# Bing Wallpaper (currently MacOS only) ![Tests](https://github.com/alexbigkid/bingWallPaper/actions/workflows/pipeline.yml/badge.svg)
-Downloads daily images from bing.com and sets them as background
+# Bing Wallpaper (currently MacOS only) ![Tests](https://github.com/alexbigkid/abk_bwp/actions/workflows/pipeline.yml/badge.svg)
+Downloads daily Bing images and sets them as desktop wallpaper
 
 
 ## Configuring the app
@@ -55,7 +55,6 @@ Here are some described in the table
 | make coverage      | runs unit tests with coverage                                                                |
 | make coverage      | runs unit tests with coverage                                                                |
 | make clean         | cleans some auto generated build files                                                       |
-| :----------------- | :-----------------------------------------------------------------------------------------   |
 | make settings      | displays some Makefile settings                                                              |
 | make help          | displays Makefile help                                                                       |
 
