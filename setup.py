@@ -29,7 +29,6 @@ setup(
         # that you indicate you support Python 3. These classifiers are *not*
         # checked by 'pip install'. See instead 'python_requires' below.
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
@@ -37,7 +36,7 @@ setup(
         "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3 :: Only"
     ],
-    python_requires=">=3.7, <4",
+    python_requires=">=3.8, <4",
     keywords="Bing Wallpaper images, Desktop images",
     # package_dir={"": "abk_bwp"},
     # packages=["abk_bwp"],
