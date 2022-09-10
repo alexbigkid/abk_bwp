@@ -2,6 +2,9 @@
 .SILENT: abk_bwp bwp bwp_log bwp_trace bwp_install bwp_uninstall coverage clean abk_bwp_ftv
 BWP_HOME = abk_bwp
 
+# -----------------------------------------------------------------------------
+# BingWallPaper Makefile rules
+# -----------------------------------------------------------------------------
 abkbwp:
 	echo "[ python $(BWP_HOME)/abk_bwp.py -c $(BWP_HOME)/logging.yaml -v ]"
 	echo "------------------------------------------------------------------------------------"
@@ -50,8 +53,12 @@ bwp_uninstall:
 	echo "------------------------------------------------------------------------------------"
 	python $(BWP_HOME)/uninstall.py -v
 
+
+# -----------------------------------------------------------------------------
+# Dependency installation Makefile rules
+# -----------------------------------------------------------------------------
 upgrade_setuptools:
-	pip install --upgrade setuptools
+	pip install --upgrade pip setuptools wheel
 
 install: upgrade_setuptools
 	pip install --requirement requirements.txt
@@ -62,6 +69,10 @@ install_test: upgrade_setuptools
 install_dev: upgrade_setuptools
 	pip install --requirement requirements_dev.txt
 
+
+# -----------------------------------------------------------------------------
+# Running tests Makefile rules
+# -----------------------------------------------------------------------------
 test:
 	python -m unittest discover --start-directory tests
 
@@ -80,14 +91,50 @@ test_vff:
 test_1:
 	python -m unittest "tests.$(filter-out $@,$(MAKECMDGOALS))"
 
-build:
-	python setup.py bdist
+coverage:
+	coverage run --source $(BWP_HOME) --omit ./tests/*,./abk_bwp/config/*,./abk_bwp/fonts,./samsung-tv-ws-api/*  -m unittest discover --start-directory tests
+	@echo
+	coverage report
+	coverage xml
 
+
+# -----------------------------------------------------------------------------
+# Package bulding and deploying Makefile rules
+# -----------------------------------------------------------------------------
+sdist: upgrade_setuptools
+	@echo "[ python setup.py sdist ]"
+	@echo "------------------------------------------------------------------------------------"
+	python setup.py sdist
+
+build: upgrade_setuptools
+	@echo "[ python -m build ]"
+	@echo "------------------------------------------------------------------------------------"
+	python -m build
+
+wheel: upgrade_setuptools
+	@echo "[ python -m build ]"
+	@echo "------------------------------------------------------------------------------------"
+	python -m build --wheel
+
+testpypi: wheel
+	@echo "[ twine upload -r testpypi dist/*]"
+	@echo "------------------------------------------------------------------------------------"
+	twine upload -r testpypi dist/*
+
+pypi: wheel
+	@echo "[ twine upload -r pypi dist/* ]"
+	@echo "------------------------------------------------------------------------------------"
+	twine upload -r pypi dist/*
+
+
+# -----------------------------------------------------------------------------
+# Clean up Makefile rules
+# -----------------------------------------------------------------------------
 clean:
 	@echo "deleting log files:"
 	@echo "___________________"
-	@if [ -d logs ]; then ls -la logs/*; fi;
-	@if [ -d logs ]; then rm -rf logs/*; fi;
+	@if [ -f logs/* ]; then ls -la logs/*; fi;
+	@if [ -f logs/* ]; then rm -rf logs/*; fi;
 	@echo
 	@echo "deleting dist files:"
 	@echo "___________________"
@@ -110,15 +157,9 @@ clean:
 	rm -rf  $(find . -name "__pycache__" -type d -prune)
 
 
-# ----------------------------
-# those rules should be universal
-# ----------------------------
-coverage:
-	coverage run --source $(BWP_HOME) --omit ./tests/*,./abk_bwp/config/*,./abk_bwp/fonts,./samsung-tv-ws-api/*  -m unittest discover --start-directory tests
-	@echo
-	coverage report
-	coverage xml
-
+# -----------------------------------------------------------------------------
+# Display info Makefile rules
+# -----------------------------------------------------------------------------
 settings:
 	@echo "HOME             = ${HOME}"
 	@echo "PWD              = ${PWD}"
