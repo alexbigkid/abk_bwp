@@ -204,7 +204,7 @@ class CommandLineOptions(object):
             action="store",
             type="string",
             dest="config_log_file",
-            default="abk_bwp/logging.yaml",
+            default="logging.yaml",
             help="config file for logging"
         )
         parser.add_option(

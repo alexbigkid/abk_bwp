@@ -102,6 +102,7 @@ class InstallOnMacOS(IInstallBase):
         self._logger.debug(f"{time_to_exe.hour = }, {time_to_exe.minute = }, {time_to_exe.second = }")
         current_path = os.path.dirname(__file__)
         plist_lable = self._create_plist_file(time_to_exe, self.shell_file_name)
+        # plist_lable = self._create_plist_file(time_to_exe, "bingwallpaper.py")
         plist_full_name = os.path.join(current_path, f"{plist_lable}.plist")
         dst_plist_name = self._create_plist_link(plist_full_name)
         self._stop_and_unload_bingwallpaper_job(dst_plist_name, plist_lable)
@@ -133,9 +134,11 @@ class InstallOnMacOS(IInstallBase):
                 '<dict>\n',
                 '    <key>Label</key>\n',
                f'    <string>{plist_label}</string>\n',
+                '    <key>WorkingDirectory</key>\n',
+               f'    <string>{current_path}</string>\n',
                 '    <key>ProgramArguments</key>\n',
                 '    <array>\n',
-                '        <string>python3</string>\n',
+                '        <string>bash</string>\n',
                f'        <string>{full_script_name}</string>\n',
                 '    </array>\n',
                 '    <key>RunAtLoad</key>\n',
@@ -147,6 +150,12 @@ class InstallOnMacOS(IInstallBase):
                 '        <key>Minute</key>\n',
                f'        <integer>{time_to_exe.minute}</integer>\n',
                 '    </dict>\n',
+                # '    <!--\n'
+                '    <key>StandardErrorPath</key>\n',
+               f'    <string>/tmp/{plist_label}.stderr</string>\n',
+                '    <key>StandardOutPath</key>\n',
+               f'    <string>/tmp/{plist_label}.stdout</string>\n',
+                # '    -->\n'
                 '</dict>\n',
                 '</plist>\n',
             ]

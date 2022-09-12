@@ -1,57 +1,39 @@
 .PHONY:	upgrade_setuptools install install_dev install_nth test test_v test_ff test_vff settings help
-.SILENT: abkbwp bwp bwp_log bwp_trace bwp_install bwp_uninstall coverage clean abk_bwp_ftv abk_bwp_ftv_enable abk_bwp_ftv_disable abk_bwp_desktop_enable abk_bwp_desktop_disable
+.SILENT: clean
 BWP_HOME = abk_bwp
 
 # -----------------------------------------------------------------------------
 # BingWallPaper Makefile rules
 # -----------------------------------------------------------------------------
 abkbwp:
-	echo "[ python $(BWP_HOME)/abk_bwp.py -c $(BWP_HOME)/logging.yaml -v ]"
-	echo "------------------------------------------------------------------------------------"
-	python $(BWP_HOME)/abk_bwp.py -c $(BWP_HOME)/logging.yaml -v
+	cd $(BWP_HOME) && python abk_bwp.py -c logging.yaml -v
 
 abk_bwp_ftv_enable:
-	echo "[ python $(BWP_HOME)/abk_bwp.py -c $(BWP_HOME)/logging.yaml -v -f enable ]"
-	echo "------------------------------------------------------------------------------------"
-	python $(BWP_HOME)/abk_bwp.py -c $(BWP_HOME)/logging.yaml -v -f enable
+	cd $(BWP_HOME) && python abk_bwp.py -c logging.yaml -v -f enable
 
 abk_bwp_ftv_disable:
-	echo "[ python $(BWP_HOME)/abk_bwp.py -c $(BWP_HOME)/logging.yaml -v -f disable ]"
-	echo "------------------------------------------------------------------------------------"
-	python $(BWP_HOME)/abk_bwp.py -c $(BWP_HOME)/logging.yaml -v -f disable
+	cd $(BWP_HOME) && python abk_bwp.py -c logging.yaml -v -f disable
 
 abk_bwp_desktop_enable:
-	echo "[ python $(BWP_HOME)/abk_bwp.py -c $(BWP_HOME)/logging.yaml -v -d enable ]"
-	echo "------------------------------------------------------------------------------------"
-	python $(BWP_HOME)/abk_bwp.py -c $(BWP_HOME)/logging.yaml -v -d enable
+	cd $(BWP_HOME) && python abk_bwp.py -c logging.yaml -v -d enable
 
 abk_bwp_desktop_disable:
-	echo "[ python $(BWP_HOME)/abk_bwp.py -c $(BWP_HOME)/logging.yaml -v -d disable ]"
-	echo "------------------------------------------------------------------------------------"
-	python $(BWP_HOME)/abk_bwp.py -c $(BWP_HOME)/logging.yaml -v -d disable
+	cd $(BWP_HOME) && python abk_bwp.py -c logging.yaml -v -d disable
 
 bwp:
-	python $(BWP_HOME)/bingwallpaper.py
+	cd $(BWP_HOME) && python bingwallpaper.py
 
 bwp_log:
-	echo "[ python $(BWP_HOME)/bingwallpaper.py -c $(BWP_HOME)/logging.yaml -l bingwallpaper.log -v ]"
-	echo "------------------------------------------------------------------------------------"
-	python $(BWP_HOME)/bingwallpaper.py -c $(BWP_HOME)/logging.yaml -l bingwallpaper.log -v
+	cd $(BWP_HOME) && python bingwallpaper.py -c logging.yaml -l bingwallpaper.log -v
 
 bwp_trace:
-	echo "[ python $(BWP_HOME)/bingwallpaper.py -c $(BWP_HOME)/logging.yaml -v ]"
-	echo "------------------------------------------------------------------------------------"
-	python $(BWP_HOME)/bingwallpaper.py -c $(BWP_HOME)/logging.yaml -v
+	cd $(BWP_HOME) && python bingwallpaper.py -c logging.yaml -v
 
 bwp_install:
-	echo "[ python $(BWP_HOME)/install.py -v ]"
-	echo "------------------------------------------------------------------------------------"
-	python $(BWP_HOME)/install.py -v
+	cd $(BWP_HOME) && python install.py -v
 
 bwp_uninstall:
-	echo "[ python $(BWP_HOME)/uninstall.py -v ]"
-	echo "------------------------------------------------------------------------------------"
-	python $(BWP_HOME)/uninstall.py -v
+	cd $(BWP_HOME) && python uninstall.py -v
 
 
 # -----------------------------------------------------------------------------

@@ -78,6 +78,7 @@ class UninstallOnMacOS(IUninstallBase):
         curr_dir = abk_common.get_current_dir(__file__)
         self._logger.info(f"{curr_dir=}")
         app_file_full_name = os.path.join(curr_dir, self.shell_file_name)
+        # app_file_full_name = os.path.join(curr_dir, "bingwallpaper.py")
         self._logger.info(f"{app_file_full_name=}")
         # get plist data
         script_name = os.path.basename(app_file_full_name)

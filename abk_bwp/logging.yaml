@@ -12,30 +12,30 @@ formatters:
 handlers:
     consoleHandler:
         class: logging.StreamHandler
-        level: INFO
+        level: DEBUG
         formatter: abkFormatterShort
         stream: ext://sys.stdout
     fileHandler:
         class: logging.FileHandler
-        level: INFO
+        level: DEBUG
         formatter: abkFormatterLong
-        filename: logs/bingwallpaper.log
+        filename: ../logs/bingwallpaper.log
 
 loggers:
     root:
-        level: INFO
+        level: DEBUG
         handlers: [consoleHandler]
     consoleLogger:
-        level: INFO
+        level: DEBUG
         handlers: [consoleHandler]
         qualname: consoleLogger
         propagate: no
     fileLogger:
-        level: INFO
+        level: DEBUG
         handlers: [fileHandler]
         qualname: fileLogger
         propagate: no
 
 root:
-    level: INFO
+    level: DEBUG
     handlers: [consoleHandler]
