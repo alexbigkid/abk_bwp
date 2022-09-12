@@ -17,7 +17,6 @@ with bwp_file_name.open(mode='rb') as file_handler:
 class ROOT_KW(Enum):
     TIME_TO_FETCH = "time_to_fetch"
     IMAGE_DIR = "image_dir"
-    BACKGROUND_IMG_PREFIX = "background_img_prefix"
     STORE_JPG_QUALITY = "store_jpg_quality"
     NUMBER_OF_IMAGES_TO_KEEP = "number_of_images_to_keep"
     SET_DESKTOP_IMAGE = "set_desktop_image"

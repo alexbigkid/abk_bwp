@@ -67,7 +67,6 @@ BWP_TITLE_GLOW_COLOR = (0,   0,   0)
 BWP_TITLE_OUTLINE_AMOUNT = 6
 
 
-
 # -----------------------------------------------------------------------------
 # Supported Image Sizes
 # -----------------------------------------------------------------------------
@@ -159,15 +158,6 @@ def get_config_desktop_jpg_quality() -> int:
 def get_config_ftv_jpg_quality() -> int:
     jpg_quality:int =bwp_config.get(FTV_KW.FTV.value, {}).get(FTV_KW.JPG_QUALITY.value, BWP_RESIZE_JPG_QUALITY_MIN)
     return normalize_jpg_quality(jpg_quality)
-
-
-@lru_cache(maxsize=1)
-def get_config_background_img_prefix() -> str:
-    """Gets full name for the current_backgraound image name
-    Returns:
-        str: background_image name
-    """
-    return bwp_config.get(ROOT_KW.BACKGROUND_IMG_PREFIX.value, BWP_DEFAULT_BACKGROUND_IMG_PREFIX)
 
 
 @lru_cache(maxsize=1)
@@ -708,13 +698,12 @@ class BingWallPaper(object):
         todays_img_name = f"{today.year:04d}-{today.month:02d}-{today.day:02d}_{get_config_img_region()}{BWP_IMG_FILE_EXT}"
         src_img = os.path.join(today_img_path, todays_img_name)
         if os.path.exists(src_img):
-            dst_img_prefix = get_config_background_img_prefix()
             dst_img_size = get_config_background_img_size()
-            dst_file_name = f"{dst_img_prefix}_{todays_img_name}"
+            dst_file_name = f"{BWP_DEFAULT_BACKGROUND_IMG_PREFIX}_{todays_img_name}"
             dst_img_full_name = os.path.join(config_img_dir, dst_file_name)
             if BingWallPaper._resize_background_image(src_img, dst_img_full_name, dst_img_size):
                 bwp_file_list = sorted(next(os.walk(config_img_dir))[BWP_FILES])
-                old_background_img_list = [f for f in bwp_file_list if f.startswith(dst_img_prefix) and f != dst_file_name]
+                old_background_img_list = [f for f in bwp_file_list if f.startswith(BWP_DEFAULT_BACKGROUND_IMG_PREFIX) and f != dst_file_name]
                 delete_files_in_dir(config_img_dir, old_background_img_list)
                 self.set_desktop_background(dst_img_full_name)
 
