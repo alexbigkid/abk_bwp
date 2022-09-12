@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # if you set the time too early in the day, the API might not have the image yet.
 # -----------------------------------------------------------------------------
-time_to_fetch = 19:31:08
+time_to_fetch = 12:08:09
 
 # -----------------------------------------------------------------------------
 # directory where in users home directory images will be stored

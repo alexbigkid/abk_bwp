@@ -150,12 +150,12 @@ class InstallOnMacOS(IInstallBase):
                 '        <key>Minute</key>\n',
                f'        <integer>{time_to_exe.minute}</integer>\n',
                 '    </dict>\n',
-                # '    <!--\n'
+                '    <!--\n'
                 '    <key>StandardErrorPath</key>\n',
                f'    <string>/tmp/{plist_label}.stderr</string>\n',
                 '    <key>StandardOutPath</key>\n',
                f'    <string>/tmp/{plist_label}.stdout</string>\n',
-                # '    -->\n'
+                '    -->\n'
                 '</dict>\n',
                 '</plist>\n',
             ]
