@@ -5,19 +5,16 @@ BWP_HOME = abk_bwp
 # -----------------------------------------------------------------------------
 # BingWallPaper Makefile rules
 # -----------------------------------------------------------------------------
-abkbwp:
-	cd $(BWP_HOME) && python abk_bwp.py -c logging.yaml -v
-
-abk_bwp_ftv_enable:
+bwp_ftv_enable:
 	cd $(BWP_HOME) && python abk_bwp.py -c logging.yaml -v -f enable
 
-abk_bwp_ftv_disable:
+bwp_ftv_disable:
 	cd $(BWP_HOME) && python abk_bwp.py -c logging.yaml -v -f disable
 
-abk_bwp_desktop_enable:
+bwp_desktop_enable:
 	cd $(BWP_HOME) && python abk_bwp.py -c logging.yaml -v -d enable
 
-abk_bwp_desktop_disable:
+bwp_desktop_disable:
 	cd $(BWP_HOME) && python abk_bwp.py -c logging.yaml -v -d disable
 
 bwp:
@@ -28,12 +25,6 @@ bwp_log:
 
 bwp_trace:
 	cd $(BWP_HOME) && python bingwallpaper.py -c logging.yaml -v
-
-bwp_install:
-	cd $(BWP_HOME) && python install.py -v
-
-bwp_uninstall:
-	cd $(BWP_HOME) && python uninstall.py -v
 
 
 # -----------------------------------------------------------------------------
@@ -154,17 +145,20 @@ help:
 	@echo "  bwp                - executes the abk_bwp program"
 	@echo "  bwp_log            - executes the abk_bwp program with logging into a file"
 	@echo "  bwp_trace          - executes the abk_bwp program with traces in console"
-	@echo "  bwp_install        - executes the abk_bwp install.py"
-	@echo "  bwp_uninstall      - executes the abk_bwp uninstall.py"
+	@echo "  bwp_desktop_enable - executes the abk_bwp program, enables auto download (time configured in bwp_config.toml)"
+	@echo "  bwp_desktop_disable- executes the abk_bwp program, disables auto download (time configured in bwp_config.toml)"
+	@echo "  bwp_ftv_enable     - WIP: executes the abk_bwp program, enables Samsung frame TV support (Not working yet)"
+	@echo "  bwp_ftv_disable    - WIP: executes the abk_bwp program, disables Samsung frame TV support (Not working yet)"
 	@echo "  install            - installs required packages"
-	@echo "  install_dev        - installs required packages for development"
 	@echo "  install_test       - installs required packages for test"
+	@echo "  install_dev        - installs required packages for development"
 	@echo "  test               - runs test"
 	@echo "  test_v             - runs test with verbose messaging"
 	@echo "  test_ff            - runs test fast fail"
 	@echo "  test_vff           - runs test fast fail with verbose messaging"
 	@echo "  test_1 <file.class.test> - runs a single test"
 	@echo "  coverage           - runs test, produces coverage and displays it"
+	@echo "  clean              - cleans some auto generated build files"
 	@echo "--------------------------------------------------------------------------------"
 	@echo "  settings           - outputs current settings"
 	@echo "  help               - outputs this info"

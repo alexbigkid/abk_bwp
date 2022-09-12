@@ -37,26 +37,28 @@ Warning: there might be some python packages, which might collide with already i
 There are some Makefile rules, which are created for your convinience. For more help with rules type: make help
 Here are some described in the table
 
-| makefile rule      | description                                                                                  |
-| :----------------- | :------------------------------------------------------------------------------------------- |
-| make bwp           | executes the abk_bwp program, which dowloads Bing images and creates a desktop image         |
-| make bwp_log       | executes the abk_bwp program, with tracing to the console and log file                       |
-| make bwp_trace     | executes the abk_bwp program, with tracing to the console                                    |
-| make bwp_install   | WIP: executes the abk_bwp program, but also enables auto download feature MacOS only for now |
-| make bwp_uninstall | WIP: executes the abk_bwp program, but also disables auto download feature                   |
-| make install       | installs all required python packages for the app                                            |
-| make install_test  | installs all required python packages for app and additional packages to run the unit test   |
-| make install_dev   | installs all required python packages for app and additional for test and development        |
-| make test          | runs unit tests                                                                              |
-| make test_v        | runs unit tests with verbosity enabled                                                       |
-| make test_ff       | runs unit tests and fails fast on the first broken test                                      |
-| make test_vff      | runs unit tests fails fast on the first broken test with verbosity enabled                   |
-| make test_1 <test> | runs one specific unit test                                                                  |
-| make coverage      | runs unit tests with coverage                                                                |
-| make coverage      | runs unit tests with coverage                                                                |
-| make clean         | cleans some auto generated build files                                                       |
-| make settings      | displays some Makefile settings                                                              |
-| make help          | displays Makefile help                                                                       |
+| makefile rule            | description                                                                                |
+| :----------------------- | :----------------------------------------------------------------------------------------- |
+| make bwp                 | executes the abk_bwp program, which dowloads Bing images and creates a desktop image       |
+| make bwp_log             | executes the abk_bwp program, with tracing to the console and log file                     |
+| make bwp_trace           | executes the abk_bwp program, with tracing to the console                                  |
+| make bwp_desktop_enable  | executes the abk_bwp program, enables auto download (time configured in bwp_config.toml)   |
+| make bwp_desktop_disable | executes the abk_bwp program, disables auto download (time configured in bwp_config.toml)  |
+| make bwp_ftv_enable      | WIP: executes the abk_bwp program, enables Samsung frame TV support (Not working yet)      |
+| make bwp_ftv_disable     | WIP: executes the abk_bwp program, disables Samsung frame TV support (Not working yet)     |
+| make install             | installs all required python packages for the app                                          |
+| make install_test        | installs all required python packages for app and additional packages to run the unit test |
+| make install_dev         | installs all required python packages for app and additional for test and development      |
+| make test                | runs unit tests                                                                            |
+| make test_v              | runs unit tests with verbosity enabled                                                     |
+| make test_ff             | runs unit tests and fails fast on the first broken test                                    |
+| make test_vff            | runs unit tests fails fast on the first broken test with verbosity enabled                 |
+| make test_1 <test>       | runs one specific unit test                                                                |
+| make coverage            | runs unit tests with coverage                                                              |
+| make coverage            | runs unit tests with coverage                                                              |
+| make clean               | cleans some auto generated build files                                                     |
+| make settings            | displays some Makefile settings                                                            |
+| make help                | displays Makefile help                                                                     |
 
 
 ### Python tracing:
@@ -91,6 +93,6 @@ The project contains com.abk.bingwallpaper_debug.sh.plist file, which can be use
 
 
 #### Pipeline Unit Tests ran on:
-- [x] Linux latest / Python 3.8.x
-- [x] MacOS latest / Python 3.8.x
-- [x] Windows latest / Python 3.8.x
+- [x] Linux latest / Python 3.8.x, 3.9.x, 3.10.x
+- [x] MacOS latest / Python 3.8.x, 3.9.x, 3.10.x
+- [x] Windows latest / Python 3.8.x, 3.9.x, 3.10.x
