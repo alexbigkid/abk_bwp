@@ -65,23 +65,23 @@ logging.yaml file by changing levels from CRITICAL to DEBUG
 
 
 #### Scheduler / plist tracing / Troubleshooting
-The project contains com.abk.bingwallpaper_debug.py.plist file, which can be used to debug scheduler problems.
-1. Copy com.abk.bingwallpaper_debug.py.plist to ~/Library/LaunchAgents/ directory.
+The project contains com.abk.bingwallpaper_debug.sh.plist file, which can be used to debug scheduler problems.
+1. Copy com.abk.bingwallpaper_debug.sh.plist to ~/Library/LaunchAgents/ directory.
 2. change to directory: cd ~/Labrary/LaunchAgents
-3. load the scheduler with: launchctl load -w com.abk.bingwallpaper_debug.py.plist
-4. start the job with: launchctl start com.abk.bingwallpaper_debug.py
-5. check the job run: launchctl list | grep com.abk.bingwallpaper_debug.py
+3. load the scheduler with: launchctl load -w com.abk.bingwallpaper_debug.sh.plist
+4. start the job with: launchctl start com.abk.bingwallpaper_debug.sh
+5. check the job run: launchctl list | grep com.abk.bingwallpaper_debug.sh
    if it return 0 the job ran successfully
 6. the traces will be available in
-   /tmp/com.abk.bingwallpaper_debug.py.stderr
+   /tmp/com.abk.bingwallpaper_debug.sh.stderr
    and
-   /tmp/com.abk.bingwallpaper_debug.py.stdout
+   /tmp/com.abk.bingwallpaper_debug.sh.stdout
 7. after troubleshooting don't forget to disable the job for the debug scheduler
 8. execute following
-   launchctl stop com.abk.bingwallpaper_debug.py
-   launchctl unload -w com.abk.bingwallpaper_debug.py.plist
+   launchctl stop com.abk.bingwallpaper_debug.sh
+   launchctl unload -w com.abk.bingwallpaper_debug.sh.plist
 9. delete the debug file from ~/Labrary/LaunchAgents
-   rm com.abk.bingwallpaper_debug.py.plist in: ~/Labrary/LaunchAgents
+   rm com.abk.bingwallpaper_debug.sh.plist in: ~/Labrary/LaunchAgents
 
 
 #### App runs on:
