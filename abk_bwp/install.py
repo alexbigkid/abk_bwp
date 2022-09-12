@@ -18,22 +18,31 @@ import logging
 import logging.config
 import subprocess
 from abc import ABCMeta, abstractmethod
-from datetime import time, datetime
+from datetime import datetime, time
 from sys import platform as _platform
-from typing import Tuple
+from typing import Union
 
 # Third party imports
 from colorama import Fore, Style
 
 # local imports
-from config import bwp_config, ROOT_KW
+from config import ROOT_KW, bwp_config
 import abk_common
-
 
 
 class IInstallBase(metaclass=ABCMeta):
     """Abstract class (mostly)"""
     os_type: abk_common.OsType = None  # type: ignore
+    _shell_file_name: str = None  # type: ignore
+
+
+    @property
+    def shell_file_name(self) -> str:
+        if self._shell_file_name == None:
+            extention = ("sh", "ps1")[self.os_type == abk_common.OsType.WINDOWS_OS]
+            self._shell_file_name = f"{abk_common.BWP_APP_NAME}.{extention}"
+        return self._shell_file_name
+
 
     @abk_common.function_trace
     def __init__(self, logger: logging.Logger = None) -> None:  # type: ignore
@@ -88,43 +97,19 @@ class InstallOnMacOS(IInstallBase):
     @abk_common.function_trace
     def setup_installation(self) -> None:
         """Setup instalaltion on MacOS"""
-        time_to_exe: time = bwp_config.get(ROOT_KW.TIME_TO_FETCH.value, datetime.strptime("09:00:00", "%H%M:%S").time())
-        app_name = bwp_config.get(ROOT_KW.APP_NAME.value, "bingwallpaper.py")
+        time_to_exe: time = bwp_config.get(ROOT_KW.TIME_TO_FETCH.value, datetime.strptime("12:00:00", "%H:%M:%S").time())
 
-        self._logger.debug(f"{time_to_exe.hour=}, {time_to_exe.minute=}, {app_name=}")
-        full_name = self._link_python_script(app_name)
-        script_name = os.path.basename(full_name)
-        script_path = os.path.dirname(full_name)
-        self._logger.debug(f"{script_path=}, {script_name=}")
-        (plist_lable, plist_name) = self._create_plist_file(time_to_exe, script_name)
-        plist_full_name = os.path.join(script_path, plist_name)
-        self._logger.debug(f"{plist_full_name=}")
+        self._logger.debug(f"{time_to_exe.hour = }, {time_to_exe.minute = }, {time_to_exe.second = }")
+        current_path = os.path.dirname(__file__)
+        plist_lable = self._create_plist_file(time_to_exe, self.shell_file_name)
+        plist_full_name = os.path.join(current_path, f"{plist_lable}.plist")
         dst_plist_name = self._create_plist_link(plist_full_name)
         self._stop_and_unload_bingwallpaper_job(dst_plist_name, plist_lable)
         self._load_and_start_bingwallpaper_job(dst_plist_name, plist_lable)
 
 
     @abk_common.function_trace
-    def _link_python_script(self, file_name: str) -> str:
-        """Creates a link of the python app script in the $HOME/bin directory
-        Args:
-            file_name (str): file name to create link to
-        Returns:
-            str: name of the full path + name of the app python script
-        """
-        self._logger.debug(f"{file_name=}")
-        bin_dir = os.path.join(abk_common.get_home_dir(), "bin")
-        abk_common.ensure_dir(bin_dir)
-        curr_dir = abk_common.get_parent_dir(__file__)
-        src = os.path.join(curr_dir, file_name)
-        dst = os.path.join(bin_dir, file_name)
-        abk_common.ensure_link_exists(src, dst)
-        self._logger.debug(f"{src=}")
-        return src
-
-
-    @abk_common.function_trace
-    def _create_plist_file(self, time_to_exe: time, script_name: str) -> Tuple[str, str]:
+    def _create_plist_file(self, time_to_exe: time, script_name: str) -> str:
         """Creates plist file with info for MacOS to trigger scheduled job.
         Args:
             time_to_exe (time): time to execute the download of the bing image
@@ -134,9 +119,13 @@ class InstallOnMacOS(IInstallBase):
         """
         self._logger.debug(f"{time_to_exe.hour=}, {time_to_exe.minute=}, {script_name=}")
         user_name = abk_common.get_user_name()
+        current_path = os.path.dirname(__file__)
+        full_script_name = os.path.join(current_path, script_name)
+        self._logger.debug(f"{script_name = }")
         plist_label = f"com.{user_name}.{script_name}"
-        plist_name = f"{plist_label}.plist"
-        with open(plist_name, "w") as fh:
+        self._logger.debug(f"{plist_label = }")
+        full_plist_file_name = os.path.join(current_path, f"{plist_label}.plist")
+        with open(full_plist_file_name, "w") as fh:
             lines_to_write = [
                 '<?xml version="1.0" encoding="UTF-8"?>\n',
                 '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n',
@@ -147,7 +136,7 @@ class InstallOnMacOS(IInstallBase):
                 '    <key>ProgramArguments</key>\n',
                 '    <array>\n',
                 '        <string>python3</string>\n',
-               f'        <string>/Users/{user_name}/abkBin/{script_name}</string>\n',
+               f'        <string>{full_script_name}</string>\n',
                 '    </array>\n',
                 '    <key>RunAtLoad</key>\n',
                 '    <true/>\n',
@@ -162,8 +151,8 @@ class InstallOnMacOS(IInstallBase):
                 '</plist>\n',
             ]
             fh.writelines(lines_to_write)
-        self._logger.debug(f"{plist_label=}, {plist_name=}")
-        return (plist_label, plist_name)
+        self._logger.debug(f"{plist_label=}")
+        return plist_label
 
 
     @abk_common.function_trace
@@ -268,15 +257,16 @@ class InstallOnWindows(IInstallBase):
 
 
 @abk_common.function_trace
-def bwp_install(install_logger: logging.Logger) -> None:
+def bwp_install(install_logger: Union[logging.Logger, None] = None) -> None:
     exit_code = 0
+    _logger = install_logger or logging.getLogger(__name__)
     try:
         if _platform in abk_common.OsPlatformType.PLATFORM_MAC.value:
-            installation = InstallOnMacOS(logger=install_logger)
+            installation = InstallOnMacOS(logger=_logger)
         elif _platform in abk_common.OsPlatformType.PLATFORM_LINUX.value:
-            installation = InstallOnLinux(logger=install_logger)
+            installation = InstallOnLinux(logger=_logger)
         elif _platform in abk_common.OsPlatformType.PLATFORM_WINDOWS.value:
-            installation = InstallOnWindows(logger=install_logger)
+            installation = InstallOnWindows(logger=_logger)
         else:
             raise ValueError(f'ERROR: "{_platform}" is not supported')
 
@@ -285,8 +275,8 @@ def bwp_install(install_logger: logging.Logger) -> None:
         # installation.setup_installation()
         # installation.setup_installation(bwp_config[ROOT_KW.TIME_TO_FETCH.value], bwp_config[ROOT_KW.APP_NAME.value])
     except Exception as exception:
-        install_logger.error(f"{Fore.RED}ERROR: executing bingwallpaper")
-        install_logger.error(f"EXCEPTION: {exception}{Style.RESET_ALL}")
+        _logger.error(f"{Fore.RED}ERROR: executing bingwallpaper")
+        _logger.error(f"EXCEPTION: {exception}{Style.RESET_ALL}")
         exit_code = 1
     finally:
         sys.exit(exit_code)

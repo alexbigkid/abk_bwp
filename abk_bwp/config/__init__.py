@@ -16,7 +16,6 @@ with bwp_file_name.open(mode='rb') as file_handler:
 
 class ROOT_KW(Enum):
     TIME_TO_FETCH = "time_to_fetch"
-    APP_NAME = "app_name"
     IMAGE_DIR = "image_dir"
     BACKGROUND_IMG_PREFIX = "background_img_prefix"
     STORE_JPG_QUALITY = "store_jpg_quality"

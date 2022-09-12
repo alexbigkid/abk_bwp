@@ -3,11 +3,11 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.abk.bingwallpaper_debug.py</string>
+    <string>com.abk.bingwallpaper_debug.sh</string>
     <key>ProgramArguments</key>
     <array>
         <string>python3</string>
-        <string>/Users/abk/abkBin/bingwallpaper.py</string>
+        <string>/Users/abk/dev/git/abk_bwp/abk_bwp/bingwallpaper.sh</string>
         <string>-l</string>
         <string>DEBUG</string>
     </array>
@@ -16,14 +16,14 @@
     <key>StartCalendarInterval</key>
     <dict>
         <key>Hour</key>
-        <integer>8</integer>
+        <integer>19</integer>
         <key>Minute</key>
-        <integer>0</integer>
+        <integer>45</integer>
     </dict>
     <key>StandardErrorPath</key>
-    <string>/tmp/com.abk.bingwallpaper_debug.py.stderr</string>
+    <string>/tmp/com.abk.bingwallpaper_debug.sh.stderr</string>
     <key>StandardOutPath</key>
-    <string>/tmp/com.abk.bingwallpaper_debug.py.stdout</string>
+    <string>/tmp/com.abk.bingwallpaper_debug.sh.stdout</string>
     <key>WorkingDirectory</key>
     <string>/tmp/</string>
 </dict>

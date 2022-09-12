@@ -18,7 +18,7 @@ import subprocess
 from abc import ABCMeta, abstractmethod
 from sys import platform as _platform
 import sys
-from typing import Tuple
+from typing import Tuple, Union
 
 # Third party imports
 from colorama import Fore, Style
@@ -32,6 +32,15 @@ import abk_common
 class IUninstallBase(metaclass=ABCMeta):
     """Abstract class (mostly)"""
     os_type: abk_common.OsType = None  # type: ignore
+    _shell_file_name: str = None  # type: ignore
+
+    @property
+    def shell_file_name(self) -> str:
+        if self._shell_file_name == None:
+            extention = ("sh", "ps1")[self.os_type == abk_common.OsType.WINDOWS_OS]
+            self._shell_file_name = f"{abk_common.BWP_APP_NAME}.{extention}"
+        return self._shell_file_name
+
 
     @abk_common.function_trace
     def __init__(self, logger: logging.Logger = None) -> None:  # type: ignore
@@ -41,7 +50,7 @@ class IUninstallBase(metaclass=ABCMeta):
 
 
     @abstractmethod
-    def teardown_installation(self, app_name: str) -> None:
+    def teardown_installation(self) -> None:
         """Abstract method - should not be implemented. Interface purpose."""
         raise NotImplemented
 
@@ -50,6 +59,7 @@ class IUninstallBase(metaclass=ABCMeta):
     def cleanup_image_dir(self, image_dir: str) -> None:
         """Abstract method - should not be implemented. Interface purpose."""
         raise NotImplemented
+
 
 
 class UninstallOnMacOS(IUninstallBase):
@@ -62,18 +72,12 @@ class UninstallOnMacOS(IUninstallBase):
 
 
     @abk_common.function_trace
-    def teardown_installation(self, app_name: str) -> None:
-        """Cleans up installation of the bing wall paper downloader on MacOS
-        Args:
-            app_name (str): application name
-        """
-        self._logger.debug(f"{app_name=}")
-        # remove the link from $HOME/bin directory
-        self._unlink_python_script(app_name)
-        # get app_name full name with path
+    def teardown_installation(self) -> None:
+        """Cleans up installation of the bing wall paper downloader on MacOS"""
+        self._logger.debug(f"{self.shell_file_name=}")
         curr_dir = abk_common.get_current_dir(__file__)
         self._logger.info(f"{curr_dir=}")
-        app_file_full_name = os.path.join(curr_dir, app_name)
+        app_file_full_name = os.path.join(curr_dir, self.shell_file_name)
         self._logger.info(f"{app_file_full_name=}")
         # get plist data
         script_name = os.path.basename(app_file_full_name)
@@ -102,24 +106,6 @@ class UninstallOnMacOS(IUninstallBase):
 
 
     @abk_common.function_trace
-    def _unlink_python_script(self, file_name: str) -> str:
-        """Deletes link in the $HOME/bin directory
-        Args:
-            file_name (str): file name of the link
-        Returns:
-            str: full name of the source of the link
-        """
-        self._logger.debug(f"{file_name=}")
-        bin_dir = os.path.join(abk_common.get_home_dir(), "bin")
-        curr_dir = abk_common.get_current_dir(__file__)
-        src = os.path.join(curr_dir, file_name)
-        py_bin_link = os.path.join(bin_dir, file_name)
-        abk_common.remove_link(py_bin_link)
-        abk_common.delete_dir(bin_dir)
-        return src
-
-
-    @abk_common.function_trace
     def _delete_image_dir(self, images_dir: str) -> None:
         """deletes image directory and all downloaded images
         Args:
@@ -133,6 +119,7 @@ class UninstallOnMacOS(IUninstallBase):
                 self._logger.error(f"deleting image directory {images_dir} failed")
 
 
+    # TODO: remove tuple
     @abk_common.function_trace
     def _get_plist_names(self, script_name: str) -> Tuple[str, str]:
         """Gets plist names. Plist lable and plist file name
@@ -200,12 +187,9 @@ class UninstallOnLinux(IUninstallBase):
 
 
     @abk_common.function_trace
-    def teardown_installation(self, app_name: str) -> None:
-        """Cleans up installation of the bing wall paper downloader on Linux
-        Args:
-            app_name (str): application name
-        """
-        self._logger.debug(f"{app_name=}")
+    def teardown_installation(self) -> None:
+        """Cleans up installation of the bing wall paper downloader on Linux"""
+        self._logger.debug(f"{self.shell_file_name=}")
         self._logger.info(f"{self.os_type.value} uninstallation is not supported yet")
 
 
@@ -226,12 +210,9 @@ class UninstallOnWindows(IUninstallBase):
 
 
     @abk_common.function_trace
-    def teardown_installation(self, app_name: str) -> None:
-        """Cleans up installation of the bing wall paper downloader on Windows
-        Args:
-            app_name (str): application name
-        """
-        self._logger.debug(f"{app_name=}")
+    def teardown_installation(self) -> None:
+        """Cleans up installation of the bing wall paper downloader on Windows"""
+        self._logger.debug(f"{self.shell_file_name=}")
         self._logger.info(f"{self.os_type.value} uninstallation is not supported yet")
 
 
@@ -243,24 +224,25 @@ class UninstallOnWindows(IUninstallBase):
 
 
 @abk_common.function_trace
-def bwp_uninstall(uninstall_logger: logging.Logger) -> None:
+def bwp_uninstall(uninstall_logger: Union[logging.Logger, None] = None) -> None:
     exit_code = 0
+    _logger = uninstall_logger or logging.getLogger(__name__)
     try:
         if _platform in abk_common.OsPlatformType.PLATFORM_MAC.value:
-            uninstallation = UninstallOnMacOS(logger=uninstall_logger)
+            uninstallation = UninstallOnMacOS(logger=_logger)
         elif _platform in abk_common.OsPlatformType.PLATFORM_LINUX.value:
-            uninstallation = UninstallOnLinux(logger=uninstall_logger)
+            uninstallation = UninstallOnLinux(logger=_logger)
         elif _platform in abk_common.OsPlatformType.PLATFORM_WINDOWS.value:
-            uninstallation = UninstallOnWindows(logger=uninstall_logger)
+            uninstallation = UninstallOnWindows(logger=_logger)
         else:
             raise ValueError(f'ERROR: "{_platform}" is not supported')
 
         if bwp_config.get(ROOT_KW.RETAIN_IMAGES.value, False) == False:
             uninstallation.cleanup_image_dir(bwp_config[ROOT_KW.IMAGE_DIR.value])
-        uninstallation.teardown_installation(bwp_config[ROOT_KW.APP_NAME.value])
+        uninstallation.teardown_installation()
     except Exception as exception:
-        uninstall_logger.error(f"{Fore.RED}ERROR: executing bingwallpaper")
-        uninstall_logger.error(f"EXCEPTION: {exception}{Style.RESET_ALL}")
+        _logger.error(f"{Fore.RED}ERROR: executing bingwallpaper")
+        _logger.error(f"EXCEPTION: {exception}{Style.RESET_ALL}")
         exit_code = 1
     finally:
         sys.exit(exit_code)

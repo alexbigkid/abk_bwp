@@ -1,5 +1,5 @@
 .PHONY:	upgrade_setuptools install install_dev install_nth test test_v test_ff test_vff settings help
-.SILENT: abk_bwp bwp bwp_log bwp_trace bwp_install bwp_uninstall coverage clean abk_bwp_ftv
+.SILENT: abkbwp bwp bwp_log bwp_trace bwp_install bwp_uninstall coverage clean abk_bwp_ftv abk_bwp_ftv_enable abk_bwp_ftv_disable abk_bwp_desktop_enable abk_bwp_desktop_disable
 BWP_HOME = abk_bwp
 
 # -----------------------------------------------------------------------------

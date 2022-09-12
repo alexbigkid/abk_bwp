@@ -17,12 +17,14 @@ from colorama import Fore, Style
 import __license__
 
 
+BWP_MAIN_FILE_NAME = "abk_bwp.py"
+BWP_APP_NAME = "bingwallpaper"
+
 logger = logging.getLogger(__name__)
 
 
 class OsType(Enum):
     """OsType string representation"""
-
     MAC_OS = "MacOS"
     LINUX_OS = "Linux"
     WINDOWS_OS = "Windows"
@@ -238,11 +240,15 @@ class CommandLineOptions(object):
                 logger_type = (LoggerType.CONSOLE_LOGGER.value, LoggerType.FILE_LOGGER.value)[self.options.log_into_file]
                 self._logger = logging.getLogger(logger_type)
                 self._logger.disabled = self.options.verbose == False
+                self._logger.debug(f"{logger_type=}")
         except ValueError as ve:
             raise ValueError(f"{self.options.config_log_file} is not a valid yaml format")
         except IOError:
             raise IOError(f"{self.options.config_log_file} does not exist.")
-        self._logger.debug(f"{logger_type=}")
+        except Exception as exp:
+            # print(f"ERROR: {exp=}, disabling logging")
+            self._logger = logging.getLogger(__name__)
+            self._logger.disabled = True
 
 
 if __name__ == "__main__":

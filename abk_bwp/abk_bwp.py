@@ -3,6 +3,7 @@
 # Standard lib imports
 import os
 import sys
+import logging
 from typing import Union
 
 # Third party imports
@@ -12,6 +13,8 @@ from colorama import Fore, Style
 # Local imports
 from config import DESKTOP_IMG_KW, FTV_KW, bwp_config
 import abk_common
+import install
+import uninstall
 
 
 BWP_ENABLE = "enable"
@@ -19,6 +22,10 @@ BWP_DISABLE = "disable"
 BWP_DESKTOP_AUTO_UPDATE_OPTION = "dau"
 BWP_FTV_OPTION = "ftv"
 BWP_CONFIG_RELATIVE_PATH = "config/bwp_config.toml"
+
+
+abk_bwp_logger = logging.getLogger(__name__)
+abk_bwp_logger.disabled = True
 
 
 @abk_common.function_trace
@@ -61,12 +68,9 @@ def handle_desktop_auto_update_option(enable_option: Union[str, None]) -> None:
         if is_enabled != enable:
             update_enable_field_in_toml_file(key_to_update=DESKTOP_IMG_KW.DESKTOP_IMG.value, update_to=enable)
             if enable:
-                # TODO: run installation
-                pass
+                install.bwp_install()
             else:
-                # TODO: run deinstallation
-                pass
-
+                uninstall.bwp_uninstall()
 
 @abk_common.function_trace
 def handle_ftv_option(enable_option: Union[str, None]) -> None:
