@@ -95,7 +95,7 @@ bing_url = "http://www.bing.com/HPImageArchive.aspx"
 # -----------------------------------------------------------------------------
 # if true, images for each day will be produced and pushed to Samsung Frame TV. This is still WIP, though!
 # -----------------------------------------------------------------------------
-enabled = true
+enabled = false
 
 # -----------------------------------------------------------------------------
 # 70-100. JPEG quality used when resizing to Samsung Frame TV size (3810x2160).
