@@ -72,6 +72,7 @@ def handle_desktop_auto_update_option(enable_option: Union[str, None]) -> None:
             else:
                 uninstall.bwp_uninstall()
 
+
 @abk_common.function_trace
 def handle_ftv_option(enable_option: Union[str, None]) -> None:
     """Handles request to enable/disable generating and updating images on Frame TV
