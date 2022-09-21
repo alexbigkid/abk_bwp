@@ -2,6 +2,29 @@
 Downloads daily Bing images and sets them as desktop wallpaper
 
 
+## Disclaimer
+Please do not download or use any image that violates its copyright terms.
+
+
+## Installation
+Recommended option:
+```html
+git clone https://github.com/alexbigkid/abk_bwp
+cd abk_bwp
+```
+or
+```html
+pip install abk_bwp
+```
+
+
+## Usage
+```html
+make install
+make bwp
+```
+
+
 ## Configuring the app
 Please see the file abk_bwp/config/bwp_config.toml file. There are some setting you might want to change.
 Like the image size, which should ideally correspond to the size of your display.
