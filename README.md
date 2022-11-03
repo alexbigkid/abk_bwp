@@ -40,8 +40,8 @@ I use pyenv tool for that. Here are the steps on MacOS:
 3. brew install pyenv-virtualenv - installs virtualenv pyenv version
 4. pyenv versions - will show you currently installed python versions and virtual envs on your system
 5. pyenv install --list - will show you all available python versions you could install.
-6. pyenv install 3.8.9 - installs python 3.8.9 version
-7. pyenv virtualenv 3.8.9 bwp - creates virtual environment [bing wall paper] with python 3.8.9
+6. pyenv install 3.11.0 - installs python 3.8.9 version
+7. pyenv virtualenv 3.11.0 bwp - creates virtual environment [bing wall paper] with python 3.11.0
 8. cd <your_project_dir> - change into your project directory e.g.: cd abk_bwp
 9. pyenv local bwp - setting the current directory to use [bwp] virtual environment
 10. make install - will install all needed python dependency packages into [bwp] virtual environment.
@@ -60,28 +60,27 @@ Warning: there might be some python packages, which might collide with already i
 There are some Makefile rules, which are created for your convinience. For more help with rules type: make help
 Here are some described in the table
 
-| makefile rule            | description                                                                                |
-| :----------------------- | :----------------------------------------------------------------------------------------- |
-| make bwp                 | executes the abk_bwp program, which dowloads Bing images and creates a desktop image       |
-| make bwp_log             | executes the abk_bwp program, with tracing to the console and log file                     |
-| make bwp_trace           | executes the abk_bwp program, with tracing to the console                                  |
-| make bwp_desktop_enable  | executes the abk_bwp program, enables auto download (time configured in bwp_config.toml)   |
-| make bwp_desktop_disable | executes the abk_bwp program, disables auto download (time configured in bwp_config.toml)  |
-| make bwp_ftv_enable      | WIP: executes the abk_bwp program, enables Samsung frame TV support (Not working yet)      |
-| make bwp_ftv_disable     | WIP: executes the abk_bwp program, disables Samsung frame TV support (Not working yet)     |
-| make install             | installs all required python packages for the app                                          |
-| make install_test        | installs all required python packages for app and additional packages to run the unit test |
-| make install_dev         | installs all required python packages for app and additional for test and development      |
-| make test                | runs unit tests                                                                            |
-| make test_v              | runs unit tests with verbosity enabled                                                     |
-| make test_ff             | runs unit tests and fails fast on the first broken test                                    |
-| make test_vff            | runs unit tests fails fast on the first broken test with verbosity enabled                 |
-| make test_1 <test>       | runs one specific unit test                                                                |
-| make coverage            | runs unit tests with coverage                                                              |
-| make coverage            | runs unit tests with coverage                                                              |
-| make clean               | cleans some auto generated build files                                                     |
-| make settings            | displays some Makefile settings                                                            |
-| make help                | displays Makefile help                                                                     |
+| makefile rule            | description                                                                               |
+| :----------------------- | :---------------------------------------------------------------------------------------- |
+| bwp                      | executes the abk_bwp program, which dowloads Bing images and creates a desktop image      |
+| bwp_log                  | executes the abk_bwp program with logging into a file                                     |
+| bwp_trace                | executes the abk_bwp program with traces in console                                       |
+| bwp_desktop_enable       | executes the abk_bwp program, enables auto download (time configured in bwp_config.toml)  |
+| bwp_desktop_disable      | executes the abk_bwp program, disables auto download (time configured in bwp_config.toml) |
+| bwp_ftv_enable           | WIP: executes the abk_bwp program, enables Samsung frame TV support (Not working yet)     |
+| bwp_ftv_disable          | WIP: executes the abk_bwp program, disables Samsung frame TV support (Not working yet)    |
+| install                  | installs required packages                                                                |
+| install_test             | installs required packages for test                                                       |
+| install_dev              | installs required packages for development                                                |
+| test                     | runs test                                                                                 |
+| test_v                   | runs test with verbose messaging                                                          |
+| test_ff                  | runs test fast fail                                                                       |
+| test_vff                 | runs test fast fail with verbose messaging                                                |
+| test_1 <file.class.test> | runs a single test                                                                        |
+| coverage                 | runs test, produces coverage and displays it                                              |
+| clean                    | cleans some auto generated build files                                                    |
+| settings                 | outputs current settings                                                                  |
+| help                     | outputs this info                                                                         |
 
 
 ### Python tracing:
@@ -110,12 +109,12 @@ The project contains com.abk.bingwallpaper_debug.sh.plist file, which can be use
 
 
 #### App runs on:
-- [x] MacOS Monterey (local machine) / Python 3.10.6
+- [x] MacOS Ventura (local machine) / Python 3.11.0
 - [ ] Linux Ubuntu 20.04  / Python 3.8.9
 - [ ] Windows 10 / Python 3.8.9
 
 
 #### Pipeline Unit Tests ran on:
-- [x] Linux latest / Python 3.8.x, 3.9.x, 3.10.x
-- [x] MacOS latest / Python 3.8.x, 3.9.x, 3.10.x
-- [x] Windows latest / Python 3.8.x, 3.9.x, 3.10.x
+- [x] Linux latest / Python 3.8.x, 3.9.x, 3.10.x, 3.11.x
+- [x] MacOS latest / Python 3.8.x, 3.9.x, 3.10.x, 3.11.x
+- [x] Windows latest / Python 3.8.x, 3.9.x, 3.10.x, 3.11.x
