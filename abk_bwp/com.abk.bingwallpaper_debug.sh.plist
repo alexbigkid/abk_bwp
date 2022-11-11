@@ -6,7 +6,7 @@
     <string>com.abk.bingwallpaper_debug.sh</string>
     <key>ProgramArguments</key>
     <array>
-        <string>python3</string>
+        <string>python</string>
         <string>/Users/abk/dev/git/abk_bwp/abk_bwp/bingwallpaper.sh</string>
         <string>-l</string>
         <string>DEBUG</string>

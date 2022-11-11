@@ -18,6 +18,7 @@ PrintUsageAndExitWithCode() {
 find_pyenv_tool() {
 
     local LCL_DIRS_TO_CHECK_FOR_PYENV=(
+        "/opt/homebrew/bin"
         "/usr/local/bin"
         "$HOME/.pyenv/bin"
         "$HOME/bin"
