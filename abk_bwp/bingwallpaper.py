@@ -866,6 +866,7 @@ def bingwallpaper(bwp_logger:  logging.Logger):
         sys.exit(exit_code)
 
 
+
 if __name__ == "__main__":
     command_line_options = abk_common.CommandLineOptions()
     command_line_options.handle_options()
