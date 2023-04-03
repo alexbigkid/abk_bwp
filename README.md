@@ -1,6 +1,8 @@
 # Bing Wallpaper (currently MacOS only) ![Tests](https://github.com/alexbigkid/abk_bwp/actions/workflows/pipeline.yml/badge.svg)
 Downloads daily Bing images and sets them as desktop wallpaper
 
+[TOC]
+
 
 ## Disclaimer
 Please do not download or use any image that violates its copyright terms.
