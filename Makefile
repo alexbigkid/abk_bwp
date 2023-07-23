@@ -31,7 +31,7 @@ bwp_trace:
 # Dependency installation Makefile rules
 # -----------------------------------------------------------------------------
 upgrade_setuptools:
-	pip install --upgrade pip setuptools wheel
+	pip install --upgrade setuptools wheel
 
 install: upgrade_setuptools
 	pip install --requirement requirements.txt
