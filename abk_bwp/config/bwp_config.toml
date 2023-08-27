@@ -72,7 +72,7 @@ alt_dl_service = ["bing", "peapix"]
 # -----------------------------------------------------------------------------
 # alternative regions for peapix service. Metadata will be also used from that region and added to the image.
 # -----------------------------------------------------------------------------
-alt_peapix_region = ["au", "ca", "cn", "de", "fr", "in", "jp", "es", "gb", "us"]
+alt_peapix_region = ["au", "br", "ca", "cn", "de", "fr", "in", "it", "jp", "es", "gb", "us"]
 # -----------------------------------------------------------------------------
 # Peapix API service URL
 # -----------------------------------------------------------------------------
