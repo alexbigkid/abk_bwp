@@ -224,7 +224,7 @@ def get_config_number_of_images_to_keep() -> int:
 @dataclass
 class ImageDownloadData():
     imageDate: datetime.date
-    title: str
+    title: bytes
     imageUrl: str
     imagePath: str
     imageName: str
@@ -488,7 +488,7 @@ class PeapixDownloadService(DownLoadServiceBase):
                 if os.path.exists(img_to_check) == False:
                     return_list.append(ImageDownloadData(
                         imageDate=img_date,
-                        title=img_data.get("title", ""),
+                        title=img_data.get("title", "").encode('utf-8'),
                         imageUrl=img_data.get("imageUrl", ""),
                         imagePath=get_full_img_dir_from_date(img_date),
                         imageName=f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}"
@@ -725,11 +725,13 @@ class BingWallPaper(object):
                 # resized_img = src_img if src_img.size == dst_img_size else src_img.resize(dst_img_size, Image.Resampling.LANCZOS)
                 # check if image title available and it can be written as overlay
                 if (exif_data := src_img.getexif()) is not None:
-                    if (title_txt := exif_data.get(BWP_EXIF_IMAGE_DESCRIPTION_FIELD, None)) is not None:
-                        # title available so draw title over image
-                        bwp_logger.debug(f"_resize_background_image: adding overlay text: {title_txt=}")
+                    if (title_value := exif_data.get(BWP_EXIF_IMAGE_DESCRIPTION_FIELD, None)) is not None:
+                        # title_bytes = title_value.encode('latin-1').split(b'\x00', 1)[0]
+                        title_bytes = title_value.encode('ISO-8859-1').split(b'\x00', 1)[0]
+                        title_txt = title_bytes.decode('utf-8', errors='ignore')
+                        bwp_logger.debug(f"_resize_background_image: {title_txt = }")
                         BingWallPaper.add_outline_text(resized_img, title_txt)
-                resized_img.save(dst_img_name, optimize=True, quality=get_config_desktop_jpg_quality())
+                        resized_img.save(dst_img_name, optimize=True, quality=get_config_desktop_jpg_quality())
         except Exception as exp:
             bwp_logger.error(f"ERROR:_resize_background_image: {exp=}, resizing file: {src_img_name=} to {dst_img_name=} with {dst_img_size=}")
             return False
