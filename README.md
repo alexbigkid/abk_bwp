@@ -50,7 +50,7 @@ I use pyenv tool for that. Here are the steps on MacOS:
 11. make bwp - will download bing image and add title to the image
 
 
-### Installing without pyenv or python virtual environmet. Note the app does not run with python 2.7
+### Installing without pyenv or python virtual environmet. Note: the app does not run with python 2.7
 If it is too many steps for you and just want to get it working "quick and dirty".
 Warning: there might be some python packages, which might collide with already installed packages.
 1. cd abk_bwp - change to the project directory
