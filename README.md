@@ -111,9 +111,9 @@ The project contains com.abk.bingwallpaper_debug.sh.plist file, which can be use
 
 
 #### App runs on:
-- [x] MacOS Ventura (local machine) / Python 3.11.0
-- [ ] Linux Ubuntu 20.04  / Python 3.8.9
-- [ ] Windows 10 / Python 3.8.9
+- [x] MacOS Ventura (local machine) / Python 3.11.5
+- [ ] Linux Ubuntu 20.04  / Python 3.11.5
+- [ ] Windows 10 / Python 3.11.5
 
 
 #### Pipeline Unit Tests ran on:
