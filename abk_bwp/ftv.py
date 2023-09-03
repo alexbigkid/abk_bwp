@@ -1,39 +1,93 @@
+"""Main function or entry module for the ABK BingWallPaper (abk_bwp) package"""
+
 # Standard lib imports
+from enum import Enum
 import os
 import logging
-
+import pathlib
+from typing import NamedTuple
+import wakeonlan
+try:                            # for python 3.11 and up
+    import tomllib              # type: ignore
+except ModuleNotFoundError:     # for 3.7 <= python < 3.11
+    import tomli as tomllib     # type: ignore
 
 # Third party imports
-from samsungtvws.remote import SamsungTVWS
+from samsungtvws import SamsungTVWS
+# from samsungtvws.remote import SamsungTVWS
 # from samsungtvws.art import SamsungTVArt
 # from samsungtvws import SamsungTVArt
 
 # local imports
-from config import FTV_KW, bwp_config
 import abk_common
 
 
+class FTVData(NamedTuple):
+    """FTV - Frame TV properties"""
+    api_token: str
+    img_rate: int
+    ip_addr: str
+    mac_addr: str
+    port: int
+
+
+class FTVSetting(NamedTuple):
+    """FTV - Frame TV setting"""
+    ftv: SamsungTVWS
+    img_rate: int
+    mac_addr: str
+
+
+class FTV_DATA_KW(Enum):
+    """FTV - Frame TV data keywords"""
+    API_TOKEN = "api_token"
+    IP_ADDR = "ip_addr"
+    IMG_RATE = "img_rate"
+    MAC_ADDR = "mac_addr"
+    PORT = "port"
+
+
+class FTVSupportedFileType(Enum):
+    """FTV - Frame TV supported file types"""
+    JPEG = "JPEG"
+    PNG = "PNG"
+
+
+class FTVApps(Enum):
+    """FTV - Frame TV supported apps"""
+    Spotify = '3201606009684'
+
+
+class FTVImageMatte(Enum):
+    """FTV - Frame TV supported image matte"""
+    MODERN_APRICOT = 'modern_apricot'
+
+
+class FTVImageFilters(Enum):
+    """FTV - Frame TV supported image filters"""
+    INK = 'ink'
+
 
 class FTV(object):
-
-    @property
-    def ftv(self) -> SamsungTVWS:
-        if self._ftv is None:
-            if self._ip_address == "":
-                self._load_ftv_settings()
-            self._ftv = SamsungTVWS(host=self._ip_address, port=self._port, token=self._api_token)
-        return self._ftv
+    """FTV - Frame TV class"""
 
     @abk_common.function_trace
-    def __init__(self, logger: logging.Logger) -> None:
-        # Increase debug level
+    def __init__(self, logger: logging.Logger, ftv_data_file: str) -> None:
         self._logger = logger or logging.getLogger(__name__)
-        self._ftv = None
-        self._api_token: str = ""
-        self._ip_address: str = ""
-        self._port: int = 0
-        self._image_change_frequency: int = 0
         # logging.basicConfig(level=logging.INFO)
+        self._ftv_data_file = ftv_data_file
+        self._ftv_settings: dict[str, FTVSetting] | None = None
+
+
+    @property
+    def ftvs(self) -> dict[str, FTVSetting]:
+        """ftvs getter
+        Returns:
+            dict[str, FTVs]: dictionary of Frame TV settings
+        """
+        if self._ftv_settings is None:
+            self._ftv_settings = self._load_ftv_settings()
+        return self._ftv_settings
 
 
     @staticmethod
@@ -48,116 +102,351 @@ class FTV(object):
         return os.environ[env_variable] if env_variable in os.environ else ""
 
 
+    @staticmethod
     @abk_common.function_trace
-    def _load_ftv_settings(self) -> None:
-        self._api_token = FTV._get_environment_variable_value("ABK_SH_API_TOKEN")
-        # self._logger.debug(f"{self._api_token=}")
-        self._ip_address = bwp_config.get(FTV_KW.FTV.value, {}).get(FTV_KW.IP_ADDRESS.value, "")
-        self._logger.debug(f"{self._ip_address=}")
-        self._port = bwp_config.get(FTV_KW.FTV.value, {}).get(FTV_KW.PORT.value, 0)
-        self._logger.debug(f"{self._port=}")
-        self._image_change_frequency = bwp_config.get(FTV_KW.FTV.value, {}).get(FTV_KW.IMAGE_CHANGE_FREQUENCY.value, 0)
-        self._logger.debug(f"{self._image_change_frequency=}")
-
-
-    @abk_common.function_trace
-    def is_art_mode_supported(self) -> bool:
-        # Is art mode supported?
-        # info = self.ftv.art().supported()
-        # logging.info(info)
-        return True
-
-
-    @abk_common.function_trace
-    def list_art_on_tv(self) -> None:
-        # List the art available on the device
-        info = self.ftv.art().available()
-        logging.info(info)
+    def _get_api_token(api_token: str) -> str:
+        """Get API token from text, shell env variable or file
+        Args:
+            api_token (str): text, env variable or file name of the API token
+        Returns:
+            str: api token
+        """
+        if api_token == "":
+            return ""
+        # try to get api_token from environment variable
+        api_token_str = os.environ.get(api_token, None)
+        if api_token_str is None:
+            api_token_file = pathlib.Path(__file__).parent / api_token
+            if os.path.isfile(api_token_file):
+                with open(api_token, "r") as file_handler:
+                    api_token_str = file_handler.read().strip()
+        if api_token_str is None:
+            api_token_str = api_token
+        return api_token_str
 
 
     @abk_common.function_trace
-    def get_current_art_info(self) -> None:
-        # Retrieve information about the currently selected art
-        info = self.ftv.art().get_current()
-        logging.info(info)
+    def _load_ftv_settings(self) -> dict[str, FTVSetting]:
+        """Load Frame TV settings from file"""
+        ftv_settings = {}
+        try:
+            ftv_config_name = pathlib.Path(__file__).parent / 'config' / self._ftv_data_file
+            with ftv_config_name.open(mode='rb') as file_handler:
+                ftv_config = tomllib.load(file_handler)
+            ftv_data = ftv_config.get("ftv_data", {})
+            for ftv_name, ftv_data_dict in ftv_data.items():
+                api_token = ftv_data_dict[FTV_DATA_KW.API_TOKEN.value]
+                self._logger.debug(f"{ftv_name = }, {api_token = }")
+                img_rate = ftv_data_dict[FTV_DATA_KW.IMG_RATE.value]
+                self._logger.debug(f"{ftv_name = }, {img_rate = }")
+                ip_addr = ftv_data_dict[FTV_DATA_KW.IP_ADDR.value]
+                self._logger.debug(f"{ftv_name = }, {ip_addr = }")
+                mac_addr = ftv_data_dict[FTV_DATA_KW.MAC_ADDR.value]
+                self._logger.debug(f"{ftv_name = }, {mac_addr = }")
+                port = ftv_data_dict[FTV_DATA_KW.PORT.value]
+                self._logger.debug(f"{ftv_name = }, {port = }")
+
+                api_token_str = self._get_api_token(api_token)
+                self._logger.debug(f"{ftv_name = }, {api_token_str = }")
+                ftv = SamsungTVWS(host=ip_addr, port=port, token=api_token_str)
+                ftv_settings[ftv_name] = FTVSetting(ftv=ftv, img_rate=img_rate, mac_addr=mac_addr)
+        except Exception as exc:
+            self._logger.error(f"Error loading Frame TV settings {exc} from file: {self._ftv_data_file}")
+            raise exc
+        return ftv_settings
 
 
     @abk_common.function_trace
-    def get_current_art_image(self, file_name:str):
-        # Retrieve a thumbnail for a specific piece of art. Returns a JPEG.
-        thumbnail = self.ftv.art().get_thumbnail(file_name)
+    def wake_up_tv(self, tv_name: str) -> None:
+        """Wake up Frame TV
+        Args:
+            tv_name (str): name of the Frame TV
+        """
+        ftv_setting = self.ftvs.get(tv_name, None)
+        if ftv_setting:
+            wakeonlan.send_magic_packet(ftv_setting.mac_addr)
+
+
+    @abk_common.function_trace
+    def toggle_power(self, tv_name: str) -> None:
+        """Toggle power on Frame TV
+        Args:
+            tv_name (str): name of the Frame TV
+        """
+        ftv_setting = self.ftvs.get(tv_name, None)
+        if ftv_setting:
+            ftv_setting.ftv.shortcuts().power()
+
+
+    @abk_common.function_trace
+    def browse_to_url(self, tv_name: str, url: str) -> None:
+        """Browse to URL on Frame TV
+        Args:
+            tv_name (str): name of the Frame TV
+            url (str): URL to browse to
+        """
+        ftv_setting = self.ftvs.get(tv_name, None)
+        if ftv_setting:
+            ftv_setting.ftv.open_browser(url)
+
+
+    @abk_common.function_trace
+    def list_installed_apps(self, tv_name: str) -> list:
+        """List installed apps on Frame TV
+        Args:
+            tv_name (str): name of the Frame TV
+        """
+        app_list = []
+        ftv_setting = self.ftvs.get(tv_name, None)
+        if ftv_setting:
+            app_list = ftv_setting.ftv.app_list()
+        self._logger.info(f'[{tv_name}]: {app_list = }')
+        return app_list
+
+
+    @abk_common.function_trace
+    def open_app(self, tv_name: str, app_name: FTVApps) -> None:
+        """Opens app on Frame TV
+        Args:
+            tv_name (str): name of the Frame TV
+            app_name (FTVApps): name of the app to open, should be supported
+        """
+        ftv_setting = self.ftvs.get(tv_name, None)
+        if ftv_setting:
+            ftv_setting.ftv.run_app(app_name.value)
+
+
+    @abk_common.function_trace
+    def get_app_status(self, tv_name: str, app_name: FTVApps):
+        """Gets app status on Frame TV
+        Args:
+            tv_name (str): name of the Frame TV
+            app_name (FTVApps): name of the app to get status for
+        """
+        app_status = ""
+        ftv_setting = self.ftvs.get(tv_name, None)
+        if ftv_setting:
+            app_status = ftv_setting.ftv.rest_app_status(app_name.value)
+        self._logger.info(f'[{tv_name}]: {app_status = }')
+
+
+    @abk_common.function_trace
+    def close_app(self, tv_name: str, app_name: FTVApps) -> None:
+        """Closes app on Frame TV
+        Args:
+            tv_name (str): name of the Frame TV
+            app_name (FTVApps): name of the app to close, should be supported
+        """
+        ftv_setting = self.ftvs.get(tv_name, None)
+        if ftv_setting:
+            ftv_setting.ftv.rest_app_close(app_name.value)
+
+
+    @abk_common.function_trace
+    def install_app(self, tv_name: str, app_name: FTVApps) -> None:
+        """Closes app on Frame TV
+        Args:
+            tv_name (str): name of the Frame TV
+            app_name (FTVApps): name of the app to install, should be supported
+        """
+        ftv_setting = self.ftvs.get(tv_name, None)
+        if ftv_setting:
+            ftv_setting.ftv.rest_app_install(app_name.value)
+
+
+    @abk_common.function_trace
+    def get_device_info(self, tv_name: str) -> None:
+        """Gets device info for Frame TV
+        Args:
+            tv_name (str): name of the Frame TV
+        """
+        device_info = ""
+        ftv_setting = self.ftvs.get(tv_name, None)
+        if ftv_setting:
+            device_info = ftv_setting.ftv.rest_device_info()
+        self._logger.info(f'[{tv_name}]: {device_info = }')
+
+
+    @abk_common.function_trace
+    def is_art_mode_supported(self, tv_name: str) -> bool:
+        """ Returns True if TV supports art mode
+        Args:
+            tv_name (str): name of the Frame TV
+        Returns:
+            bool: True if TV supports art mode, false otherwise
+        """
+        art_supported = False
+        ftv_setting = self.ftvs.get(tv_name, None)
+        if ftv_setting:
+            art_supported = ftv_setting.ftv.art().supported()
+        self._logger.info(f'[{tv_name}]: {art_supported = }')
+        return art_supported
+
+
+    @abk_common.function_trace
+    def get_current_art(self, tv_name: str) -> str:
+        """ Returns the current art
+        Args:
+            tv_name (str): name of the Frame TV
+        Returns:
+            str: the current art
+        """
+        current_art = ""
+        ftv_setting = self.ftvs.get(tv_name, None)
+        if ftv_setting:
+            current_art = ftv_setting.ftv.art().get_current()
+        self._logger.info(f'[{tv_name}]: {current_art = }')
+        return current_art
+
+
+
+    @abk_common.function_trace
+    def list_art_on_tv(self, tv_name: str) -> list:
+        """Lists art available on FrameTV
+        Args:
+            tv_name (str): name of the Frame TV
+        Returns:
+            list: list of available art
+        """
+        art_list = []
+        ftv_setting = self.ftvs.get(tv_name, None)
+        if ftv_setting:
+            art_list = ftv_setting.ftv.art().available()
+        self._logger.info(f'[{tv_name}]: {art_list = }')
+        return art_list
+
+
+    @abk_common.function_trace
+    def get_current_art_image(self, tv_name: str):
+        """Gets current image thumbnail
+        Args:
+            tv_name (str): name of the Frame TV
+        Returns:
+            list: jpeg file
+        """
+        thumbnail = None
+        ftv_setting = self.ftvs.get(tv_name, None)
+        if ftv_setting:
+            current_art = ftv_setting.ftv.art().get_current()
+            thumbnail = ftv_setting.ftv.art().get_thumbnail(current_art)
+        # self._logger.info(f'[{tv_name}]: {thumbnail = }')
         return thumbnail
 
 
     @abk_common.function_trace
-    def set_current_art_image(self, file_name) -> None:
-        # Set a piece of art
-        self.ftv.art().select_image(file_name)
+    def set_current_art_image(self, tv_name: str, file_name: str, show_now: bool = False) -> None:
+        """Sets current art image
+        Args:
+            tv_name (str): name of the Frame TV
+            file_name (str): name of the image file to set
+            show_now (bool): if True show immediately, otherwise delayed
+        """
+        ftv_setting = self.ftvs.get(tv_name, None)
+        if ftv_setting:
+            ftv_setting.ftv.art().select_image(file_name, show=show_now)
 
 
     @abk_common.function_trace
-    def set_current_art_image_delayed(self, file_name) -> None:
-        # Set a piece of art, but don't immediately show it if not in art mode
-        self.ftv.art().select_image(file_name, show=False)
+    def is_tv_in_art_mode(self, tv_name: str) -> bool:
+        """Determine whether the TV is currently in art mode
+        Args:
+            tv_name (str): name of the Frame TV
+        """
+        is_art_mode = False
+        ftv_setting = self.ftvs.get(tv_name, None)
+        if ftv_setting:
+            is_art_mode = ftv_setting.ftv.art().get_artmode()
+        self._logger.debug(f'[{tv_name}]: {is_art_mode = }')
+        return is_art_mode
 
 
     @abk_common.function_trace
-    def is_tv_in_art_mode(self) -> bool:
-        # Determine whether the TV is currently in art mode
-        info = self.ftv.art().get_artmode()
-        logging.info(info)
-        return False
+    def activate_art_mode(self, tv_name: str, art_mode_on: bool = False) -> None:
+        """Switch art mode on or off
+        Args:
+            tv_name (str): name of the Frame TV
+            art_mode_on (bool): True to activate, False to deactivate. Default is False.
+        """
+        ftv_setting = self.ftvs.get(tv_name, None)
+        if ftv_setting:
+            ftv_setting.ftv.art().set_artmode(art_mode_on)
 
 
     @abk_common.function_trace
-    def activate_art_mode(self, art_mode_on:bool=False) -> None:
-        # Switch art mode on or off
-        self.ftv.art().set_artmode(art_mode_on)
+    def upload_image_to_tv(self, tv_name: str, file_name: str, file_type = FTVSupportedFileType.JPEG, filter: FTVImageMatte|None = None) -> None:
+        """Uploads file to Frame TV
+        Args:
+            tv_name (str): name of the Frame TV
+            file_name (str): name of the image file to upload to TV
+            file_type (FTVSupportedFileType, optional): JPEG or PNG. Defaults to FTVSupportedFileType.JPEG
+            filter (FTVImageMatte, optional): Image filter. Defaults to None.
+        """
+        ftv_setting = self.ftvs.get(tv_name, None)
+        if ftv_setting:
+            with open(file_name, "rb") as fh:
+                data = fh.read()
+                if file_type == FTVSupportedFileType.JPEG:
+                    if filter:
+                        ftv_setting.ftv.art().upload(data, file_type=FTVSupportedFileType.JPEG.value, matte=filter.value)
+                    else:
+                        ftv_setting.ftv.art().upload(data, file_type=FTVSupportedFileType.JPEG.value)
+                else:
+                    if filter:
+                        ftv_setting.ftv.art().upload(data, matte=filter.value)
+                    else:
+                        ftv_setting.ftv.art().upload(data)
 
 
     @abk_common.function_trace
-    def upload_image_to_tv(self, file_name:str) -> None:
-        # Upload a picture
-        file = open(file_name, 'rb')
-        data = file.read()
-        self.ftv.art().upload(data)
+    def delete_image_from_tv(self, tv_name: str, file_name:str) -> None:
+        """Deletes uploaded file from Frame TV
+        Args:
+            tv_name (str): name of the Frame TV
+            file_name (str): name of the image file to delete from TV
+        """
+        ftv_setting = self.ftvs.get(tv_name, None)
+        if ftv_setting:
+            ftv_setting.ftv.art().delete(file_name)
 
 
     @abk_common.function_trace
-    def upload_jpeg_to_tv(self, data:bytes) -> None:
-        # If uploading a JPEG
-        self.ftv.art().upload(data, file_type='JPEG')
+    def delete_image_list_from_tv(self, tv_name: str, image_list:list) -> None:
+        """Delete multiple uploaded files from Frame TV
+        Args:
+            tv_name (str): name of the Frame TV
+            file_name (str): name of the image file to delete from TV
+        """
+        ftv_setting = self.ftvs.get(tv_name, None)
+        if ftv_setting:
+            ftv_setting.ftv.art().delete_list(image_list)
 
 
     @abk_common.function_trace
-    def upload_jpeg_with_filter(self, data:bytes, filter_name:str='modern_apricot') -> None:
-        # To set the matte to modern and apricot color
-        self.ftv.art().upload(data, matte=filter_name)
+    def list_available_filters(self, tv_name: str) -> list:
+        """List available photo filters on Frame TV
+        Args:
+            tv_name (str): name of the Frame TV
+        Return: list of available filters
+        """
+        available_filter_list = []
+        ftv_setting = self.ftvs.get(tv_name, None)
+        if ftv_setting:
+            available_filter_list = ftv_setting.ftv.art().get_photo_filter_list()
+        self._logger.debug(f'[{tv_name}]: {available_filter_list = }')
+        return available_filter_list
 
 
     @abk_common.function_trace
-    def delete_image_from_tv(self, file_name:str) -> None:
-        # Delete an uploaded item
-        self.ftv.art().delete(file_name)
-
-
-    @abk_common.function_trace
-    def delete_image_list_from_tv(self, image_list:list) -> None:
-        # Delete multiple uploaded items
-        self.ftv.art().delete_list(image_list)
-
-
-    def list_available_filters(self) -> list:
-        # List available photo filters
-        info = self.ftv.art().get_photo_filter_list()
-        logging.info(info)
-        return []
-
-
-    @abk_common.function_trace
-    def apply_filter_to_art(self, file_name:str, filter_name:str='ink') -> None:
-        # Apply a filter to a specific piece of art
-        self.ftv.art().set_photo_filter(file_name, filter_name)
+    def apply_filter_to_art(self, tv_name: str, file_name:str, filter_name: FTVImageFilters) -> None:
+        """Apply a filter to a specific piece of art on Frame TV
+        Args:
+            tv_name (str): name of the Frame TV
+            file_name (str): name of the image file to apply filter to
+            filter_name (FTVImageFilters): filter to apply to the image file. See FTVImageFilters for available filters.
+        """
+        ftv_setting = self.ftvs.get(tv_name, None)
+        if ftv_setting:
+            ftv_setting.ftv.art().set_photo_filter(file_name, filter_name.value)
 
 
     @abk_common.function_trace
