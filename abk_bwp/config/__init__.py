@@ -47,6 +47,4 @@ class FTV_KW(Enum):
     FTV = "ftv"
     ENABLED = "enabled"
     JPG_QUALITY = "jpg_quality"
-    IP_ADDRESS = "ip_address"
-    PORT = "port"
-    IMAGE_CHANGE_FREQUENCY = "image_change_frequency"
+    FTV_DATA = "ftv_data"

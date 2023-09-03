@@ -106,15 +106,6 @@ enabled = false
 jpg_quality = 80
 
 # -----------------------------------------------------------------------------
-# IP address of your Samsung Frame TV on your local network
+# frame tv secret data file in toml format. This file should not be committed to git
 # -----------------------------------------------------------------------------
-ip_address = "192.168.0.254"
-# -----------------------------------------------------------------------------
-# port number of your Samsung Frame TV
-# -----------------------------------------------------------------------------
-port = 8002
-
-# -----------------------------------------------------------------------------
-# image change frequency in sec
-# -----------------------------------------------------------------------------
-image_change_frequency = 300
+ftv_data = "ftv_data.toml"
