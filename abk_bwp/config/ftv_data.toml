@@ -5,28 +5,28 @@
 #       - file name: where the api token is stored. DO not commit to GIT
 #       - SHELL environment variable: where the api token is stored
 #       - or you could add the token here, but for more security use the 2 options above
-#   - ip: ip address, where Frame TV is on local network
 #   - img_rate: frequency in seconds the image should change on Frame TV. e.g: 5 min: 5*60 = 300
+#   - ip: ip address, where Frame TV is on local network
 #   - mac: mac address of the Frame TV network card, needed to send magic package to wake up TV
 #   - port: port on which the Fram TV is on, usually 8001
 # -----------------------------------------------------------------------------
     [ftv_data.name_of_your_tv1]
     api_token = "api_token_for_name_of_your_tv1.txt"
-    ip_addr = "192.168.100.39"
     img_rate = 300
+    ip_addr = "192.168.100.39"
     mac_addr = "XX-XX-XX-XX-XX-XX"
     port = 8001
 
     [ftv_data.name_of_your_tv2]
     api_token = "API_TOKEN_FOR_NAME_OF_YOUR_TV2"
-    ip_addr = "192.168.100.45"
     img_rate = 400
+    ip_addr = "192.168.100.45"
     mac_addr = "XX-XX-XX-XX-XX-XX"
     port = 8045
 
     [ftv_data.name_of_your_tv3]
     api_token = "apiTokenInPLainTextFormat"
-    ip_addr = "192.168.100.42"
     img_rate = 500
+    ip_addr = "192.168.100.42"
     mac_addr = "XX-XX-XX-XX-XX-XX"
     port = 8042
