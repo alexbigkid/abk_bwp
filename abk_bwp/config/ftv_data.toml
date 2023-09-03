@@ -12,21 +12,21 @@
 # -----------------------------------------------------------------------------
     [ftv_data.name_of_your_tv1]
     api_token = "api_token_for_name_of_your_tv1.txt"
-    ip = "192.168.100.39"
+    ip_addr = "192.168.100.39"
     img_rate = 300
     mac_addr = "XX-XX-XX-XX-XX-XX"
     port = 8001
 
     [ftv_data.name_of_your_tv2]
     api_token = "API_TOKEN_FOR_NAME_OF_YOUR_TV2"
-    ip = "192.168.100.45"
+    ip_addr = "192.168.100.45"
     img_rate = 400
     mac_addr = "XX-XX-XX-XX-XX-XX"
     port = 8045
 
     [ftv_data.name_of_your_tv3]
     api_token = "apiTokenInPLainTextFormat"
-    ip = "192.168.100.42"
+    ip_addr = "192.168.100.42"
     img_rate = 500
     mac_addr = "XX-XX-XX-XX-XX-XX"
     port = 8042
