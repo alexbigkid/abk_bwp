@@ -22,6 +22,8 @@ from samsungtvws import SamsungTVWS
 import abk_common
 
 
+FTV_API_TOKEN_FILE_SUFFIX = '__api_token.txt'
+
 class FTVData(NamedTuple):
     """FTV - Frame TV properties"""
     api_token: str
@@ -40,7 +42,6 @@ class FTVSetting(NamedTuple):
 
 class FTV_DATA_KW(Enum):
     """FTV - Frame TV data keywords"""
-    API_TOKEN = "api_token"
     IP_ADDR = "ip_addr"
     IMG_RATE = "img_rate"
     MAC_ADDR = "mac_addr"
@@ -104,25 +105,14 @@ class FTV(object):
 
     @staticmethod
     @abk_common.function_trace
-    def _get_api_token(api_token: str) -> str:
-        """Get API token from text, shell env variable or file
+    def _get_api_token_file(tv_name: str) -> str:
+        """Get API token file based on the name of Frame TV
         Args:
-            api_token (str): text, env variable or file name of the API token
+            tv_name (str): TV name
         Returns:
-            str: api token
+            str: api token file name
         """
-        if api_token == "":
-            return ""
-        # try to get api_token from environment variable
-        api_token_str = os.environ.get(api_token, None)
-        if api_token_str is None:
-            api_token_file = pathlib.Path(__file__).parent / api_token
-            if os.path.isfile(api_token_file):
-                with open(api_token, "r") as file_handler:
-                    api_token_str = file_handler.read().strip()
-        if api_token_str is None:
-            api_token_str = api_token
-        return api_token_str
+        return f'{os.path.dirname(os.path.realpath(__file__))}/{tv_name}{FTV_API_TOKEN_FILE_SUFFIX}'
 
 
     @abk_common.function_trace
@@ -135,8 +125,6 @@ class FTV(object):
                 ftv_config = tomllib.load(file_handler)
             ftv_data = ftv_config.get("ftv_data", {})
             for ftv_name, ftv_data_dict in ftv_data.items():
-                api_token = ftv_data_dict[FTV_DATA_KW.API_TOKEN.value]
-                self._logger.debug(f"{ftv_name = }, {api_token = }")
                 img_rate = ftv_data_dict[FTV_DATA_KW.IMG_RATE.value]
                 self._logger.debug(f"{ftv_name = }, {img_rate = }")
                 ip_addr = ftv_data_dict[FTV_DATA_KW.IP_ADDR.value]
@@ -146,9 +134,9 @@ class FTV(object):
                 port = ftv_data_dict[FTV_DATA_KW.PORT.value]
                 self._logger.debug(f"{ftv_name = }, {port = }")
 
-                api_token_str = self._get_api_token(api_token)
-                self._logger.debug(f"{ftv_name = }, {api_token_str = }")
-                ftv = SamsungTVWS(host=ip_addr, port=port, token=api_token_str)
+                api_token_file_name = self._get_api_token_file(ftv_name)
+                self._logger.debug(f"{ftv_name = }, {api_token_file_name = }")
+                ftv = SamsungTVWS(host=ip_addr, port=port, token=api_token_file_name)
                 ftv_settings[ftv_name] = FTVSetting(ftv=ftv, img_rate=img_rate, mac_addr=mac_addr)
         except Exception as exc:
             self._logger.error(f"Error loading Frame TV settings {exc} from file: {self._ftv_data_file}")
@@ -158,9 +146,9 @@ class FTV(object):
 
     @abk_common.function_trace
     def wake_up_tv(self, tv_name: str) -> None:
-        """Wake up Frame TV
+        """Wake up TV
         Args:
-            tv_name (str): name of the Frame TV
+            tv_name (str): TV name
         """
         ftv_setting = self.ftvs.get(tv_name, None)
         if ftv_setting:
@@ -171,7 +159,7 @@ class FTV(object):
     def toggle_power(self, tv_name: str) -> None:
         """Toggle power on Frame TV
         Args:
-            tv_name (str): name of the Frame TV
+            tv_name (str): TV name
         """
         ftv_setting = self.ftvs.get(tv_name, None)
         if ftv_setting:
@@ -182,7 +170,7 @@ class FTV(object):
     def browse_to_url(self, tv_name: str, url: str) -> None:
         """Browse to URL on Frame TV
         Args:
-            tv_name (str): name of the Frame TV
+            tv_name (str): TV name
             url (str): URL to browse to
         """
         ftv_setting = self.ftvs.get(tv_name, None)
@@ -194,7 +182,7 @@ class FTV(object):
     def list_installed_apps(self, tv_name: str) -> list:
         """List installed apps on Frame TV
         Args:
-            tv_name (str): name of the Frame TV
+            tv_name (str): TV name
         """
         app_list = []
         ftv_setting = self.ftvs.get(tv_name, None)
@@ -208,7 +196,7 @@ class FTV(object):
     def open_app(self, tv_name: str, app_name: FTVApps) -> None:
         """Opens app on Frame TV
         Args:
-            tv_name (str): name of the Frame TV
+            tv_name (str): TV name
             app_name (FTVApps): name of the app to open, should be supported
         """
         ftv_setting = self.ftvs.get(tv_name, None)
@@ -220,7 +208,7 @@ class FTV(object):
     def get_app_status(self, tv_name: str, app_name: FTVApps):
         """Gets app status on Frame TV
         Args:
-            tv_name (str): name of the Frame TV
+            tv_name (str): TV name
             app_name (FTVApps): name of the app to get status for
         """
         app_status = ""
@@ -234,7 +222,7 @@ class FTV(object):
     def close_app(self, tv_name: str, app_name: FTVApps) -> None:
         """Closes app on Frame TV
         Args:
-            tv_name (str): name of the Frame TV
+            tv_name (str): TV name
             app_name (FTVApps): name of the app to close, should be supported
         """
         ftv_setting = self.ftvs.get(tv_name, None)
@@ -246,7 +234,7 @@ class FTV(object):
     def install_app(self, tv_name: str, app_name: FTVApps) -> None:
         """Closes app on Frame TV
         Args:
-            tv_name (str): name of the Frame TV
+            tv_name (str): TV name
             app_name (FTVApps): name of the app to install, should be supported
         """
         ftv_setting = self.ftvs.get(tv_name, None)
@@ -258,7 +246,7 @@ class FTV(object):
     def get_device_info(self, tv_name: str) -> None:
         """Gets device info for Frame TV
         Args:
-            tv_name (str): name of the Frame TV
+            tv_name (str): TV name
         """
         device_info = ""
         ftv_setting = self.ftvs.get(tv_name, None)
@@ -271,7 +259,7 @@ class FTV(object):
     def is_art_mode_supported(self, tv_name: str) -> bool:
         """ Returns True if TV supports art mode
         Args:
-            tv_name (str): name of the Frame TV
+            tv_name (str): TV name
         Returns:
             bool: True if TV supports art mode, false otherwise
         """
@@ -287,7 +275,7 @@ class FTV(object):
     def get_current_art(self, tv_name: str) -> str:
         """ Returns the current art
         Args:
-            tv_name (str): name of the Frame TV
+            tv_name (str): TV name
         Returns:
             str: the current art
         """
@@ -304,7 +292,7 @@ class FTV(object):
     def list_art_on_tv(self, tv_name: str) -> list:
         """Lists art available on FrameTV
         Args:
-            tv_name (str): name of the Frame TV
+            tv_name (str): TV name
         Returns:
             list: list of available art
         """
@@ -320,7 +308,7 @@ class FTV(object):
     def get_current_art_image(self, tv_name: str):
         """Gets current image thumbnail
         Args:
-            tv_name (str): name of the Frame TV
+            tv_name (str): TV name
         Returns:
             list: jpeg file
         """
@@ -337,7 +325,7 @@ class FTV(object):
     def set_current_art_image(self, tv_name: str, file_name: str, show_now: bool = False) -> None:
         """Sets current art image
         Args:
-            tv_name (str): name of the Frame TV
+            tv_name (str): TV name
             file_name (str): name of the image file to set
             show_now (bool): if True show immediately, otherwise delayed
         """
@@ -350,7 +338,7 @@ class FTV(object):
     def is_tv_in_art_mode(self, tv_name: str) -> bool:
         """Determine whether the TV is currently in art mode
         Args:
-            tv_name (str): name of the Frame TV
+            tv_name (str): TV name
         """
         is_art_mode = False
         ftv_setting = self.ftvs.get(tv_name, None)
@@ -364,7 +352,7 @@ class FTV(object):
     def activate_art_mode(self, tv_name: str, art_mode_on: bool = False) -> None:
         """Switch art mode on or off
         Args:
-            tv_name (str): name of the Frame TV
+            tv_name (str): TV name
             art_mode_on (bool): True to activate, False to deactivate. Default is False.
         """
         ftv_setting = self.ftvs.get(tv_name, None)
@@ -376,7 +364,7 @@ class FTV(object):
     def upload_image_to_tv(self, tv_name: str, file_name: str, file_type = FTVSupportedFileType.JPEG, filter: FTVImageMatte|None = None) -> None:
         """Uploads file to Frame TV
         Args:
-            tv_name (str): name of the Frame TV
+            tv_name (str): TV name
             file_name (str): name of the image file to upload to TV
             file_type (FTVSupportedFileType, optional): JPEG or PNG. Defaults to FTVSupportedFileType.JPEG
             filter (FTVImageMatte, optional): Image filter. Defaults to None.
@@ -401,7 +389,7 @@ class FTV(object):
     def delete_image_from_tv(self, tv_name: str, file_name:str) -> None:
         """Deletes uploaded file from Frame TV
         Args:
-            tv_name (str): name of the Frame TV
+            tv_name (str): TV name
             file_name (str): name of the image file to delete from TV
         """
         ftv_setting = self.ftvs.get(tv_name, None)
@@ -413,7 +401,7 @@ class FTV(object):
     def delete_image_list_from_tv(self, tv_name: str, image_list:list) -> None:
         """Delete multiple uploaded files from Frame TV
         Args:
-            tv_name (str): name of the Frame TV
+            tv_name (str): TV name
             file_name (str): name of the image file to delete from TV
         """
         ftv_setting = self.ftvs.get(tv_name, None)
@@ -425,7 +413,7 @@ class FTV(object):
     def list_available_filters(self, tv_name: str) -> list:
         """List available photo filters on Frame TV
         Args:
-            tv_name (str): name of the Frame TV
+            tv_name (str): TV name
         Return: list of available filters
         """
         available_filter_list = []
@@ -440,7 +428,7 @@ class FTV(object):
     def apply_filter_to_art(self, tv_name: str, file_name:str, filter_name: FTVImageFilters) -> None:
         """Apply a filter to a specific piece of art on Frame TV
         Args:
-            tv_name (str): name of the Frame TV
+            tv_name (str): TV name
             file_name (str): name of the image file to apply filter to
             filter_name (FTVImageFilters): filter to apply to the image file. See FTVImageFilters for available filters.
         """
