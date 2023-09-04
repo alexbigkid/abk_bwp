@@ -54,6 +54,7 @@ BWP_RESIZE_MID_IMG_SIZE = (2880, 1620)
 BWP_RESIZE_MIN_IMG_SIZE = (1920, 1080)
 BWP_RESIZE_JPG_QUALITY_MIN = 70
 BWP_RESIZE_JPG_QUALITY_MAX = 100
+BWP_FTV_DATA_FILE_DEFAULT = "ftv_data.toml"
 BWP_DEFAULT_BACKGROUND_IMG_PREFIX = "background_img"
 BWP_BING_NUMBER_OF_IMAGES_TO_REQUEST = 7
 BWP_BING_IMG_URL_PREFIX = "http://www.bing.com"
@@ -71,6 +72,7 @@ BWP_TITLE_OUTLINE_AMOUNT = 6
 # Supported Image Sizes
 # -----------------------------------------------------------------------------
 class ImageSizes(Enum):
+    """Supported IMage sizes"""
     IMG_640x480     = (640,     480)
     IMG_1024x768    = (1024,    768)
     IMG_1600x1200   = (1600,    1200)
@@ -105,28 +107,40 @@ def get_config_img_region() -> str:
     for img_region in conf_img_alt_region_list:
         if img_region == conf_img_region:
             return img_region
-    else:
-        return BWP_DEFAULT_REGION
+    return BWP_DEFAULT_REGION
 
 
 @lru_cache(maxsize=1)
 def get_config_bing_img_region() -> str:
+    """Gets the region for the bing service
+    Returns:
+        str: region string for Bing
+    """
     img_region: str = get_config_img_region()
     img_alt_bing_region_list: List[str] = bwp_config.get(CONSTANT_KW.CONSTANT.value, {}).get(CONSTANT_KW.ALT_BING_REGION.value, [])
     for bing_region in img_alt_bing_region_list:
         if bing_region.endswith(img_region.upper()):
             return bing_region
-    else:
-        return BWP_DEFAULT_BING_REGION
+    return BWP_DEFAULT_BING_REGION
 
 
 @lru_cache(maxsize=1)
 def is_config_ftv_enabled() -> bool:
+    """Determines whether the Frame TV feature is enabled in the config
+    Returns:
+        bool: true if Frame TV feature enabled, False otherwise
+    """
     return bwp_config.get(FTV_KW.FTV.value, {}).get(FTV_KW.ENABLED.value, False)
 
 
 @lru_cache(maxsize=128)
 def get_relative_img_dir(img_date: datetime.date) -> str:
+    """Gets the image directory structure depending on whether Frame TV feature is enabled
+    Args:
+        img_date (datetime.date): date time
+    Returns:
+        str: image directory structure
+    """
     if is_config_ftv_enabled():
         return os.path.join(f"{img_date.month:02d}", f"{img_date.day:02d}")
     else:
@@ -135,6 +149,12 @@ def get_relative_img_dir(img_date: datetime.date) -> str:
 
 @lru_cache(maxsize=3)
 def normalize_jpg_quality(jpg_quality: int) -> int:
+    """Normalizes image image quality. It should not be less then minimum and more then maximum
+    Args:
+        jpg_quality (int): jpg quality setting
+    Returns:
+        int: normalized between min and max
+    """
     if jpg_quality < BWP_RESIZE_JPG_QUALITY_MIN:
         return BWP_RESIZE_JPG_QUALITY_MIN
     if jpg_quality > BWP_RESIZE_JPG_QUALITY_MAX:
@@ -144,34 +164,65 @@ def normalize_jpg_quality(jpg_quality: int) -> int:
 
 @lru_cache(maxsize=1)
 def get_config_store_jpg_quality() -> int:
+    """Gets jpeg quality for storing images
+    Returns:
+        int: jpeg images quality normalized
+    """
     jpg_quality = bwp_config.get(ROOT_KW.STORE_JPG_QUALITY.value, BWP_RESIZE_JPG_QUALITY_MIN)
     return normalize_jpg_quality(jpg_quality)
 
 
 @lru_cache(maxsize=1)
 def get_config_desktop_jpg_quality() -> int:
-    jpg_quality:int =bwp_config.get(DESKTOP_IMG_KW.DESKTOP_IMG.value, {}).get(DESKTOP_IMG_KW.JPG_QUALITY.value, BWP_RESIZE_JPG_QUALITY_MIN)
+    """Gets jpeg quality for desktop images
+    Returns:
+        int: jpeg images quality normalized
+    """
+    jpg_quality:int = bwp_config.get(DESKTOP_IMG_KW.DESKTOP_IMG.value, {}).get(DESKTOP_IMG_KW.JPG_QUALITY.value, BWP_RESIZE_JPG_QUALITY_MIN)
     return normalize_jpg_quality(jpg_quality)
 
 
 @lru_cache(maxsize=1)
 def get_config_ftv_jpg_quality() -> int:
-    jpg_quality:int =bwp_config.get(FTV_KW.FTV.value, {}).get(FTV_KW.JPG_QUALITY.value, BWP_RESIZE_JPG_QUALITY_MIN)
+    """Gets jpeg quality for Frame TV images feature
+    Returns:
+        int: jpeg images quality normalized
+    """
+    jpg_quality:int = bwp_config.get(FTV_KW.FTV.value, {}).get(FTV_KW.JPG_QUALITY.value, BWP_RESIZE_JPG_QUALITY_MIN)
     return normalize_jpg_quality(jpg_quality)
 
 
 @lru_cache(maxsize=1)
+def get_config_ftv_data() -> str:
+    """Gets the file name for the Frame TV data
+    Returns:
+        str: name of the file where secret data for Frame TV are stored
+    """
+    ftv_data:str = bwp_config.get(FTV_KW.FTV.value, {}).get(FTV_KW.FTV_DATA.value, BWP_FTV_DATA_FILE_DEFAULT)
+    return ftv_data
+
+
+@lru_cache(maxsize=1)
 def get_config_background_img_size() -> Tuple[int, int]:
+    """Determines background image size dimension
+    Returns:
+        Tuple[int, int]: image size dimensions
+    """
     width = bwp_config.get(DESKTOP_IMG_KW.DESKTOP_IMG.value, {}).get(DESKTOP_IMG_KW.WIDTH.value, 0)
     height = bwp_config.get(DESKTOP_IMG_KW.DESKTOP_IMG.value, {}).get(DESKTOP_IMG_KW.HEIGHT.value, 0)
-    # if missconfigured return default size
     configured_size = (width, height)
+    # if misconfigured return default size
     if configured_size not in [img_size.value for img_size in ImageSizes]:
         return BWP_DEFAULT_IMG_SIZE
     return configured_size
 
 
 def delete_files_in_dir(dir_name: str, file_list: List[str]) -> None:
+    """Deletes files in given directory
+    Args:
+        dir_name (str): directory name
+        file_list (List[str]): file list to delete
+    """
     # bwp_logger.debug(f"In directory: {dir_name} deleting files: {file_list}")
     for file_to_delete in file_list:
         try:
@@ -183,15 +234,33 @@ def delete_files_in_dir(dir_name: str, file_list: List[str]) -> None:
 
 @lru_cache(maxsize=128)
 def get_full_img_dir_from_date(img_date: datetime.date) -> str:
+    """Gets full image directory name from date
+    Args:
+        img_date (datetime.date): image date
+    Returns:
+        str: image directory name
+    """
     return os.path.join(get_config_img_dir(), get_relative_img_dir(img_date))
 
 
 def get_full_img_dir_from_file_name(img_file_name: str) -> str:
+    """Gets full image directory name from file name
+    Args:
+        img_file_name (str): image file name
+    Returns:
+        str: image directory name
+    """
     img_date = get_date_from_img_file_name(img_file_name)
     return os.path.join(get_config_img_dir(), get_relative_img_dir(img_date))
 
 
 def get_date_from_img_file_name(img_file_name: str) -> Union[datetime.date, None]:
+    """Gets date from image file name
+    Args:
+        img_file_name (str): image file name
+    Returns:
+        Union[datetime.date, None]: image date
+    """
     try:
         date_str, _ = img_file_name.split("_")
         img_date = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
@@ -201,6 +270,12 @@ def get_date_from_img_file_name(img_file_name: str) -> Union[datetime.date, None
 
 
 def get_all_background_img_names(dir_name: str) -> List[str]:
+    """Gets all background image names
+    Args:
+        dir_name (str): directory name
+    Returns:
+        List[str]: list of file names
+    """
     file_name_list = []
     if os.path.isdir(dir_name):
         for _, _, file_list in os.walk(dir_name):
@@ -211,6 +286,10 @@ def get_all_background_img_names(dir_name: str) -> List[str]:
 
 
 def get_config_number_of_images_to_keep() -> int:
+    """Gets number of images to keep from config
+    Returns:
+        int: number of images to keep
+    """
     number_of_images_to_keep = bwp_config.get(ROOT_KW.NUMBER_OF_IMAGES_TO_KEEP.value, 0)
     if number_of_images_to_keep < 0:
         return 0
@@ -223,6 +302,7 @@ def get_config_number_of_images_to_keep() -> int:
 # -----------------------------------------------------------------------------
 @dataclass
 class ImageDownloadData():
+    """Image download data"""
     imageDate: datetime.date
     title: bytes
     imageUrl: str
@@ -234,6 +314,7 @@ class ImageDownloadData():
 # Supported Download services
 # -----------------------------------------------------------------------------
 class DownloadServiceType(Enum):
+    """Download service type"""
     PEAPIX  = "peapix"
     BING    = "bing"
 
@@ -242,6 +323,7 @@ class DownloadServiceType(Enum):
 # DownLoad Service
 # -----------------------------------------------------------------------------
 class DownLoadServiceBase(metaclass=ABCMeta):
+    """Class for download service base"""
 
     def __init__(self, logger: logging.Logger) -> None:
         """Super class init"""
@@ -257,6 +339,9 @@ class DownLoadServiceBase(metaclass=ABCMeta):
     @staticmethod
     @abk_common.function_trace
     def convert_dir_structure_if_needed() -> None:
+        """Converts the bing image data directory structure (YYYY/mm/YYYY-mm-dd_us.jpg)
+            to frame TV directory structure                  (mm/dd/YYYY-mm-dd_us.jpg)
+        """
         root_image_dir = get_config_img_dir()
         # get sub directory names from the defined picture directory
         dir_list = sorted(next(os.walk(root_image_dir))[BWP_DIRECTORIES])
@@ -265,8 +350,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
             open(f"{root_image_dir}/{BWP_FILE_NAME_WARNING}", "a").close()
             return
 
-        ftv_enabled = bwp_config.get(FTV_KW.FTV.value, {}).get(FTV_KW.ENABLED.value, False)
-        if ftv_enabled:
+        if is_config_ftv_enabled():
             filtered_year_dir_list = [bwp_dir for bwp_dir in dir_list if len(bwp_dir) == BWP_DIGITS_IN_A_YEAR and bwp_dir.isdigit()]
             if len(filtered_year_dir_list) > 0:
                 DownLoadServiceBase._convert_to_ftv_dir_structure(root_image_dir, filtered_year_dir_list)
@@ -363,6 +447,10 @@ class DownLoadServiceBase(metaclass=ABCMeta):
 
     @abk_common.function_trace
     def _download_images(self, img_dl_data_list: List[ImageDownloadData]) -> None:
+        """Downloads new images
+        Args:
+            img_dl_data_list (List[ImageDownloadData]): list of images to download
+        """
         for img_dl_data in img_dl_data_list:
             full_img_path = get_full_img_dir_from_file_name(img_dl_data.imageName)
             full_img_name = os.path.join(full_img_path, img_dl_data.imageName)
@@ -385,8 +473,13 @@ class DownLoadServiceBase(metaclass=ABCMeta):
 
 
 
+# -----------------------------------------------------------------------------
+# Bing DownLoad Service
+# -----------------------------------------------------------------------------
 class BingDownloadService(DownLoadServiceBase):
+    """Bing Download Service class. Inherited from the base download service class"""
     def __init__(self, logger: logging.Logger) -> None:
+        """Constructor for Bing Download Service"""
         super().__init__(logger)
 
     @abk_common.function_trace
@@ -411,12 +504,17 @@ class BingDownloadService(DownLoadServiceBase):
 
 
     def _process_bing_api_data(self, metadata_list: list) -> List[ImageDownloadData]:
+        """Processes Bing Service API data
+        Args:
+            metadata_list (list): Metadata list from Bing Service API
+        Returns:
+            List[ImageDownloadData]: Processed data
+        """
         return_list: List[ImageDownloadData] = []
         self._logger.debug(f"Received from API: {json.dumps(metadata_list, indent=4)}")
         img_root_dir = get_config_img_dir()
         img_region = get_config_img_region()
         self._logger.debug(f"{img_region=}")
-
 
         for img_data in metadata_list:
             try:
@@ -442,8 +540,14 @@ class BingDownloadService(DownLoadServiceBase):
 
 
 
+# -----------------------------------------------------------------------------
+# Peapix DownLoad Service
+# -----------------------------------------------------------------------------
 class PeapixDownloadService(DownLoadServiceBase):
+    """Peapix Download Service class. Inherited from the base download service class"""
+
     def __init__(self, logger: logging.Logger) -> None:
+        """Constructor for Peapix Download Service"""
         super().__init__(logger)
 
 
@@ -501,8 +605,9 @@ class PeapixDownloadService(DownLoadServiceBase):
         return return_list
 
 
+
 # -----------------------------------------------------------------------------
-# OS Dependency
+# OS Dependency Base Class
 # -----------------------------------------------------------------------------
 class IOsDependentBase(metaclass=ABCMeta):
     """OS dependency base class"""
@@ -510,7 +615,7 @@ class IOsDependentBase(metaclass=ABCMeta):
 
     @abk_common.function_trace
     def __init__(self, logger: logging.Logger = None) -> None:  # type: ignore
-        """Super class init"""
+        """Super class constructor"""
         self._logger = logger or logging.getLogger(__name__)
         self._logger.info(f"({__class__.__name__}) {self.os_type} OS dependent environment ...")
 
@@ -522,11 +627,15 @@ class IOsDependentBase(metaclass=ABCMeta):
 
 
 
+# -----------------------------------------------------------------------------
+# OS Dependency MacOS Class
+# -----------------------------------------------------------------------------
 class MacOSDependent(IOsDependentBase):
     """MacOS dependent code"""
 
     @abk_common.function_trace
     def __init__(self, logger: logging.Logger) -> None:
+        """Constructor for MacOS"""
         self.os_type = abk_common.OsType.MAC_OS
         super().__init__(logger)
 
@@ -548,11 +657,15 @@ END"""
 
 
 
+# -----------------------------------------------------------------------------
+# OS Dependency Linux Class
+# -----------------------------------------------------------------------------
 class LinuxDependent(IOsDependentBase):
     """Linux dependent code"""
 
     @abk_common.function_trace
     def __init__(self, logger: logging.Logger) -> None:
+        """Constructor for Linux"""
         self.os_type = abk_common.OsType.LINUX_OS
         super().__init__(logger)
 
@@ -569,11 +682,15 @@ class LinuxDependent(IOsDependentBase):
 
 
 
+# -----------------------------------------------------------------------------
+# OS Dependency Windows Class
+# -----------------------------------------------------------------------------
 class WindowsDependent(IOsDependentBase):
     """Windows dependent code"""
 
     @abk_common.function_trace
     def __init__(self, logger: logging.Logger) -> None:
+        """Constructor for Windows"""
         self.os_type = abk_common.OsType.WINDOWS_OS
         super().__init__(logger)
 
@@ -617,6 +734,7 @@ class BingWallPaper(object):
                  os_dependant: IOsDependentBase,
                  dl_service: DownLoadServiceBase
     ):
+        """Constructor for BingWallPaper"""
         self._logger = logger or logging.getLogger(__name__)
         self._options = options
         self._os_dependent = os_dependant
@@ -645,6 +763,7 @@ class BingWallPaper(object):
     @staticmethod
     @abk_common.function_trace
     def process_manually_downloaded_images() -> None:
+        """Processes manually downloaded images"""
         img_root_dir = get_config_img_dir()
         img_metadata = abk_common.read_json_file(os.path.join(img_root_dir, BWP_META_DATA_FILE_NAME))
         bwp_logger.debug(f"{json.dumps(img_metadata, indent=4)}")
@@ -679,11 +798,17 @@ class BingWallPaper(object):
     @staticmethod
     @abk_common.function_trace
     def _calculate_image_resizing(img_size: Tuple[int, int]) -> Tuple[int, int]:
+        """Calculates image re-sizing
+        Args:
+            img_size (Tuple[int, int]): image size in
+        Returns:
+            Tuple[int, int]: image size out
+        """
         WIDTH = 0
         HEIGHT = 1
         if img_size == BWP_RESIZE_MIN_IMG_SIZE or img_size == BWP_DEFAULT_IMG_SIZE:
             return img_size
-        # if we are over mid treshold scale to default image size BWP_DEFAULT_IMG_SIZE (3840x2160)
+        # if we are over mid threshold scale to default image size BWP_DEFAULT_IMG_SIZE (3840x2160)
         elif img_size[WIDTH] > BWP_RESIZE_MID_IMG_SIZE[WIDTH] or img_size[HEIGHT] > BWP_RESIZE_MID_IMG_SIZE[HEIGHT]:
             return BWP_DEFAULT_IMG_SIZE
         else:
@@ -692,6 +817,7 @@ class BingWallPaper(object):
 
     @abk_common.function_trace
     def update_current_background_image(self) -> None:
+        """Updates current background image"""
         config_img_dir = get_config_img_dir()
         today = datetime.date.today()
         today_img_path = get_full_img_dir_from_date(today)
@@ -711,6 +837,7 @@ class BingWallPaper(object):
     @staticmethod
     @abk_common.function_trace
     def _resize_background_image(src_img_name: str, dst_img_name : str, dst_img_size : Tuple[int, int]) -> bool:
+        """Re0sizes background image"""
         bwp_logger.debug(f"{src_img_name=}, {dst_img_name=}, {dst_img_size=}")
         try:
             dst_path = os.path.dirname(dst_img_name)
@@ -796,6 +923,7 @@ class BingWallPaper(object):
     @staticmethod
     @abk_common.function_trace
     def prepare_ftv_images() -> None:
+        """Prepares images for Frame TV"""
         config_img_dir = get_config_img_dir()
         ftv_dir = os.path.join(config_img_dir, BWP_FTV_IMAGES_TODAY_DIR)
         abk_common.ensure_dir(ftv_dir)
@@ -821,6 +949,7 @@ class BingWallPaper(object):
 # bwp
 # -----------------------------------------------------------------------------
 def bingwallpaper(bwp_logger:  logging.Logger):
+    """Main function to run the BingWallpaper application"""
     exit_code = 0
     try:
         # get the correct OS and instantiate OS dependent code
@@ -833,7 +962,7 @@ def bingwallpaper(bwp_logger:  logging.Logger):
         else:
             raise ValueError(f'ERROR: "{_platform}" is not supported')
 
-        # use bing service as defualt, peapix is for a back up solution
+        # use bing service as default, peapix is for a back up solution
         bwp_dl_service = bwp_config.get(ROOT_KW.DL_SERVICE.value, DownloadServiceType.PEAPIX.value)
         if  bwp_dl_service == DownloadServiceType.BING.value:
             dl_service = BingDownloadService(logger=bwp_logger)
@@ -856,9 +985,8 @@ def bingwallpaper(bwp_logger:  logging.Logger):
 
         if is_config_ftv_enabled():
             BingWallPaper.prepare_ftv_images()
-            ftv = FTV(logger=bwp_logger)
-            if ftv.is_art_mode_supported():
-                ftv.change_daily_images()
+            ftv = FTV(logger=bwp_logger, ftv_data_file=get_config_ftv_data())
+            ftv.change_daily_images()
 
     except Exception as exception:
         bwp_logger.error(f"{Fore.RED}ERROR: executing bingwallpaper")
