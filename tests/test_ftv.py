@@ -11,15 +11,15 @@ from unittest.mock import patch
 # local imports
 from context import ftv
 
-
+TEST_FTV_SECRET_CONFIG_FILE = 'tests/test_ftv_secret_config.toml'
 
 class TestFTV(unittest.TestCase):
     def setUp(self):
-        self._ftv = ftv.FTV(logger=logging.Logger(__name__))
+        self._ftv = ftv.FTV(logger=logging.Logger(__name__), ftv_data_file=TEST_FTV_SECRET_CONFIG_FILE)
 
     # -------------------------------------------------------------------------
     # Tests for get_environment_variable_value_
-    # # -------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @patch.dict(os.environ, {'ABK_TEST_ENV_VAR': '[fake_api_key]'})
     def test_get_environment_variable_value_returns_valid_value(self) -> None:
         """
