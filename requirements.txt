@@ -1,4 +1,5 @@
 colorama
+jsonschema
 optparse-pretty
 pillow
 PyYAML

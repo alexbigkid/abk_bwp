@@ -922,7 +922,7 @@ class BingWallPaper(object):
 
     @staticmethod
     @abk_common.function_trace
-    def prepare_ftv_images() -> None:
+    def prepare_ftv_images() -> list:
         """Prepares images for Frame TV"""
         config_img_dir = get_config_img_dir()
         ftv_dir = os.path.join(config_img_dir, BWP_FTV_IMAGES_TODAY_DIR)
@@ -938,11 +938,13 @@ class BingWallPaper(object):
         bwp_logger.debug(f"prepare_ftv_images: {todays_dir=}")
         bwp_logger.debug(f"prepare_ftv_images: {to_copy_file_list=}")
 
+        dst_file_list = []
         for img in to_copy_file_list:
             src_img_file_name = os.path.join(todays_dir, img)
             dst_img_file_name = os.path.join(ftv_dir, img)
             BingWallPaper._resize_background_image(src_img_file_name, dst_img_file_name, BWP_DEFAULT_IMG_SIZE)
-
+            dst_file_list.append(dst_img_file_name)
+        return dst_file_list
 
 
 # -----------------------------------------------------------------------------
@@ -984,9 +986,9 @@ def bingwallpaper(bwp_logger:  logging.Logger):
         BingWallPaper.trim_number_of_images()
 
         if is_config_ftv_enabled():
-            BingWallPaper.prepare_ftv_images()
+            ftv_image_list = BingWallPaper.prepare_ftv_images()
             ftv = FTV(logger=bwp_logger, ftv_data_file=get_config_ftv_data())
-            ftv.change_daily_images()
+            ftv.change_daily_images(ftv_image_list)
 
     except Exception as exception:
         bwp_logger.error(f"{Fore.RED}ERROR: executing bingwallpaper")
