@@ -52,7 +52,7 @@ I use pyenv tool for that. Here are the steps on MacOS:
 11. make bwp - will download bing image and add title to the image
 
 
-### Installing without pyenv or python virtual environmet. Note: the app does not run with python 2.7
+### Installing without pyenv or python virtual environment. Note: the app does not run with python 2.7
 If it is too many steps for you and just want to get it working "quick and dirty".
 Warning: there might be some python packages, which might collide with already installed packages.
 1. cd abk_bwp - change to the project directory
@@ -61,12 +61,12 @@ Warning: there might be some python packages, which might collide with already i
 
 
 ### Makefile rules
-There are some Makefile rules, which are created for your convinience. For more help with rules type: make help
+There are some Makefile rules, which are created for your convenience. For more help with rules type: make help
 Here are some described in the table
 
 | makefile rule            | description                                                                               |
 | :----------------------- | :---------------------------------------------------------------------------------------- |
-| bwp                      | executes the abk_bwp program, which dowloads Bing images and creates a desktop image      |
+| bwp                      | executes the abk_bwp program, which downloads Bing images and creates a desktop image     |
 | bwp_log                  | executes the abk_bwp program with logging into a file                                     |
 | bwp_trace                | executes the abk_bwp program with traces in console                                       |
 | bwp_desktop_enable       | executes the abk_bwp program, enables auto download (time configured in bwp_config.toml)  |
@@ -95,7 +95,7 @@ logging.yaml file by changing levels from CRITICAL to DEBUG
 #### Scheduler / plist tracing / Troubleshooting
 The project contains com.abk.bingwallpaper_debug.sh.plist file, which can be used to debug scheduler problems.
 1. Copy com.abk.bingwallpaper_debug.sh.plist to ~/Library/LaunchAgents/ directory.
-2. change to directory: cd ~/Labrary/LaunchAgents
+2. change to directory: cd ~/Library/LaunchAgents
 3. load the scheduler with: launchctl load -w com.abk.bingwallpaper_debug.sh.plist
 4. start the job with: launchctl start com.abk.bingwallpaper_debug.sh
 5. check the job run: launchctl list | grep com.abk.bingwallpaper_debug.sh
@@ -108,8 +108,8 @@ The project contains com.abk.bingwallpaper_debug.sh.plist file, which can be use
 8. execute following
    launchctl stop com.abk.bingwallpaper_debug.sh
    launchctl unload -w com.abk.bingwallpaper_debug.sh.plist
-9. delete the debug file from ~/Labrary/LaunchAgents
-   rm com.abk.bingwallpaper_debug.sh.plist in: ~/Labrary/LaunchAgents
+9. delete the debug file from ~/Library/LaunchAgents
+   rm com.abk.bingwallpaper_debug.sh.plist in: ~/Library/LaunchAgents
 
 
 #### App runs on:
