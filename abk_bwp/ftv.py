@@ -342,7 +342,7 @@ class FTV(object):
         Args:
             tv_name (str): TV name
         Returns:
-            bytearray | None: Image thumbnail or None if not available
+            bytearray: Image thumbnail or empty bytearray if not available
         """
         thumbnail = bytearray()
         ftv_setting = self.ftvs.get(tv_name, None)
@@ -393,7 +393,7 @@ class FTV(object):
 
 
     @abk_common.function_trace
-    def _get_file_type(self, file_name:str) -> (FTVSupportedFileType | None):
+    def _get_file_type(self, file_name:str):
         """Determine the file type
         Args:
             file_name (str): file name
