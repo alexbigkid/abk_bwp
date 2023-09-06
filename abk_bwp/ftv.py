@@ -108,7 +108,7 @@ class FTV(object):
 
 
     @property
-    def ftvs(self) -> dict[str, FTVSetting]:
+    def ftvs(self) -> dict:
         """ftvs getter
         Returns:
             dict[str, FTVs]: dictionary of Frame TV settings
@@ -143,7 +143,7 @@ class FTV(object):
 
 
     @abk_common.function_trace
-    def _load_ftv_settings(self) -> dict[str, FTVSetting]:
+    def _load_ftv_settings(self) -> dict:
         """Load Frame TV settings from file"""
         ftv_settings = {}
         try:
