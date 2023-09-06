@@ -207,12 +207,12 @@ class FTV(object):
 
 
     @abk_common.function_trace
-    def _list_installed_apps(self, tv_name: str) -> (list | None):
+    def _list_installed_apps(self, tv_name: str) -> list:
         """List installed apps on Frame TV
         Args:
             tv_name (str): TV name
         """
-        app_list = None
+        app_list = []
         ftv_setting = self.ftvs.get(tv_name, None)
         if ftv_setting:
             app_list = ftv_setting.ftv.app_list()
