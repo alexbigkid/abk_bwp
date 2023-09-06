@@ -207,7 +207,7 @@ class FTV(object):
 
 
     @abk_common.function_trace
-    def _list_installed_apps(self, tv_name: str) -> list | None:
+    def _list_installed_apps(self, tv_name: str) -> (list | None):
         """List installed apps on Frame TV
         Args:
             tv_name (str): TV name
@@ -233,17 +233,19 @@ class FTV(object):
 
 
     @abk_common.function_trace
-    def _get_app_status(self, tv_name: str, app_name: FTVApps):
+    def _get_app_status(self, tv_name: str, app_name: FTVApps) -> dict:
         """Gets app status on Frame TV
         Args:
             tv_name (str): TV name
             app_name (FTVApps): name of the app to get status for
+        Return (dict): dictionary of app_status
         """
-        app_status = ""
+        app_status = {}
         ftv_setting = self.ftvs.get(tv_name, None)
         if ftv_setting:
             app_status = ftv_setting.ftv.rest_app_status(app_name.value)
         self._logger.info(f'[{tv_name}]: {app_status = }')
+        return app_status
 
 
     @abk_common.function_trace
@@ -335,12 +337,12 @@ class FTV(object):
 
 
     @abk_common.function_trace
-    def _get_current_art_image(self, tv_name: str):
+    def _get_current_art_image(self, tv_name: str) -> (bytearray | None):
         """Gets current image thumbnail
         Args:
             tv_name (str): TV name
         Returns:
-            list: jpeg file
+            bytearray | None: Image thumbnail or None if not available
         """
         thumbnail = None
         ftv_setting = self.ftvs.get(tv_name, None)
@@ -391,10 +393,12 @@ class FTV(object):
 
 
     @abk_common.function_trace
-    def _get_file_type(self, file_name:str) -> FTVSupportedFileType|None:
+    def _get_file_type(self, file_name:str) -> (FTVSupportedFileType | None):
         """Determine the file type
         Args:
             file_name (str): file name
+        Return:
+            FTVSupportedFileType | None: file type or None if not supported
         """
         file_type = None
         if file_name.endswith('.jpg') or file_name.endswith('.jpeg'):
@@ -413,7 +417,7 @@ class FTV(object):
             files_to_upload (list): image file list to upload
         Return: list of image files uploaded
         """
-        uploaded_file_list: list[str] = []
+        uploaded_file_list: list = []
         self._logger.info(f'[{tv_name}]: {files_to_upload = }')
         ftv_setting = self.ftvs.get(tv_name, None)
         if ftv_setting:
@@ -535,7 +539,7 @@ class FTV(object):
 
 
     @abk_common.function_trace
-    def _get_uploaded_image_files(self, tv_name: str) -> list[str]:
+    def _get_uploaded_image_files(self, tv_name: str) -> list:
         """Read uploaded image files from file"""
         uploaded_image_list = []
         ftv_setting = self.ftvs.get(tv_name, None)
