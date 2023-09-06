@@ -32,6 +32,8 @@ Please see the file abk_bwp/config/bwp_config.toml file. There are some setting 
 Like the image size, which should ideally correspond to the size of your display.
 In the config file you will find also detailed explanation, what exactly each configuration item is for.
 
+For Uploading the images to TV please see the abk_bwp/config/ftv_data.toml configuration.
+
 
 ## Installing python dependencies:
 ### Installing with pyenv + virtual environment (Recommended)
