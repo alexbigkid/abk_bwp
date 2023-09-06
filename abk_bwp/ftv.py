@@ -584,4 +584,4 @@ class FTV(object):
 
 
 if __name__ == '__main__':
-    raise Exception(f"{__file__}: This module should not be executed directly. Only for imports")
+    raise RuntimeError(f"{__file__}: This module should not be executed directly. Only for imports")

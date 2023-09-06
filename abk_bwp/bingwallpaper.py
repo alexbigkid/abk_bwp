@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Program for downloading and upscaling/downscaling bing images to use as wallpaper sized """
 
 # Standard lib imports
@@ -66,7 +65,7 @@ BWP_TITLE_TEXT_POSITION_OFFSET = (100, 100)
 BWP_TITLE_TEXT_COLOR = (255, 255, 255)
 BWP_TITLE_GLOW_COLOR = (0,   0,   0)
 BWP_TITLE_OUTLINE_AMOUNT = 6
-
+BWP_REQUEST_TIMEOUT = 5                                 # timeout in seconds
 
 # -----------------------------------------------------------------------------
 # Supported Image Sizes
@@ -228,8 +227,7 @@ def delete_files_in_dir(dir_name: str, file_list: List[str]) -> None:
         try:
             os.remove(os.path.join(dir_name, file_to_delete))
         except Exception as exp:
-            # bwp_logger.error(f"ERROR: {exp=}, deleting file: {file_to_delete}")
-            pass
+            bwp_logger.error(f"ERROR: {exp=}, deleting file: {file_to_delete}")
 
 
 @lru_cache(maxsize=128)
@@ -298,7 +296,7 @@ def get_config_number_of_images_to_keep() -> int:
 
 
 # -----------------------------------------------------------------------------
-# Image Downlaod Data
+# Image Download Data
 # -----------------------------------------------------------------------------
 @dataclass
 class ImageDownloadData():
@@ -333,7 +331,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
     @abstractmethod
     def download_new_images(self) -> None:
         """Abstract method - should not be implemented. Interface purpose."""
-        raise NotImplemented
+        raise NotImplementedError
 
 
     @staticmethod
@@ -457,7 +455,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
             self._logger.debug(f"{full_img_name=}")
             try:
                 abk_common.ensure_dir(full_img_path)
-                resp = requests.get(img_dl_data.imageUrl, stream=True)
+                resp = requests.get(img_dl_data.imageUrl, stream=True, timeout=BWP_REQUEST_TIMEOUT)
                 if resp.status_code == 200:
                     with Image.open(io.BytesIO(resp.content)) as img:
                         resized_img = img.resize(BWP_DEFAULT_IMG_SIZE, Image.Resampling.LANCZOS)
@@ -478,9 +476,6 @@ class DownLoadServiceBase(metaclass=ABCMeta):
 # -----------------------------------------------------------------------------
 class BingDownloadService(DownLoadServiceBase):
     """Bing Download Service class. Inherited from the base download service class"""
-    def __init__(self, logger: logging.Logger) -> None:
-        """Constructor for Bing Download Service"""
-        super().__init__(logger)
 
     @abk_common.function_trace
     def download_new_images(self) -> None:
@@ -495,7 +490,7 @@ class BingDownloadService(DownLoadServiceBase):
         bing_meta_url   = "?".join([bing_config_url, bing_url_params])
         self._logger.debug(f"{bing_meta_url=}")
 
-        resp = requests.get(bing_meta_url)
+        resp = requests.get(bing_meta_url, timeout=BWP_REQUEST_TIMEOUT)
         if resp.status_code == 200: # good case
             dl_img_data = self._process_bing_api_data(resp.json().get("images", []))
             self._download_images(dl_img_data)
@@ -523,7 +518,7 @@ class BingDownloadService(DownLoadServiceBase):
                 img_date_str = f"{img_date.year:04d}-{img_date.month:02d}-{img_date.day:02d}"
                 img_to_check = os.path.join(get_full_img_dir_from_date(img_date), f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}")
                 img_url_base = img_data.get("urlbase", "")
-                if os.path.exists(img_to_check) == False:
+                if os.path.exists(img_to_check) is False:
                     return_list.append(ImageDownloadData(
                         imageDate=img_date,
                         title=img_data.get("copyright", ""),
@@ -531,7 +526,7 @@ class BingDownloadService(DownLoadServiceBase):
                         imagePath=get_full_img_dir_from_date(img_date),
                         imageName=f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}"
                     ))
-            except:
+            except Exception:
                 pass # nothing to be done, next
 
         self._logger.debug(f"Number if images to download: {len(return_list)}")
@@ -546,11 +541,6 @@ class BingDownloadService(DownLoadServiceBase):
 class PeapixDownloadService(DownLoadServiceBase):
     """Peapix Download Service class. Inherited from the base download service class"""
 
-    def __init__(self, logger: logging.Logger) -> None:
-        """Constructor for Peapix Download Service"""
-        super().__init__(logger)
-
-
     @abk_common.function_trace
     def download_new_images(self) -> None:
         """Downloads bing image and stores it in the defined directory"""
@@ -561,7 +551,7 @@ class PeapixDownloadService(DownLoadServiceBase):
         self._logger.debug(f"Getting Image info from: {get_metadata_url=}")
 
         # this might throw, but we have a try/catch in the bwp, so no extra handling here needed.
-        resp = requests.get(get_metadata_url)
+        resp = requests.get(get_metadata_url, timeout=BWP_REQUEST_TIMEOUT)
         if resp.status_code == 200: # good case
             dl_img_data = self._process_peapix_api_data(resp.json())
             self._download_images(dl_img_data)
@@ -589,7 +579,7 @@ class PeapixDownloadService(DownLoadServiceBase):
                 img_date_str = img_data.get("date", "")
                 img_date = datetime.datetime.strptime(img_date_str, "%Y-%m-%d").date()
                 img_to_check = os.path.join(get_full_img_dir_from_date(img_date), f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}")
-                if os.path.exists(img_to_check) == False:
+                if os.path.exists(img_to_check) is False:
                     return_list.append(ImageDownloadData(
                         imageDate=img_date,
                         title=img_data.get("title", "").encode('utf-8'),
@@ -597,7 +587,7 @@ class PeapixDownloadService(DownLoadServiceBase):
                         imagePath=get_full_img_dir_from_date(img_date),
                         imageName=f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}"
                     ))
-            except:
+            except Exception:
                 pass # nothing to be done, next
 
         self._logger.debug(f"Number if images to download: {len(return_list)}")
@@ -623,7 +613,7 @@ class IOsDependentBase(metaclass=ABCMeta):
     @abstractmethod
     def set_desktop_background(self, file_name: str) -> None:
         """Abstract method - should not be implemented. Interface purpose."""
-        raise NotImplemented
+        raise NotImplementedError
 
 
 
@@ -705,17 +695,17 @@ class WindowsDependent(IOsDependentBase):
         import ctypes
         import platform
 
-        winNum = platform.uname()[2]
+        win_num = platform.uname()[2]
         self._logger.info(f"os info: {platform.uname()}")
-        self._logger.info(f"win#: {winNum}")
-        if int(winNum) >= 10:
+        self._logger.info(f"win#: {win_num}")
+        if int(win_num) >= 10:
             try:
                 ctypes.windll.user32.SystemParametersInfoW(20, 0, file_name, 3)  # type: ignore
                 self._logger.info(f"Background image set to: {file_name}")
-            except:
+            except Exception:
                 self._logger.error(f"Was not able to set background image to: {file_name}")
         else:
-            self._logger.error(f"Windows 10 and above is supported, you are using Windows {winNum}")
+            self._logger.error(f"Windows 10 and above is supported, you are using Windows {win_num}")
         self._logger.info(f"({self.os_type.MAC_OS.value}) Not tested yet")
         self._logger.info(f"({self.os_type.MAC_OS.value}) Set background to {file_name}")
 
@@ -950,31 +940,31 @@ class BingWallPaper(object):
 # -----------------------------------------------------------------------------
 # bwp
 # -----------------------------------------------------------------------------
-def bingwallpaper(bwp_logger:  logging.Logger):
+def bingwallpaper(wp_logger: logging.Logger):
     """Main function to run the BingWallpaper application"""
     exit_code = 0
     try:
         # get the correct OS and instantiate OS dependent code
         if _platform in abk_common.OsPlatformType.PLATFORM_MAC.value:
-            bwp_os_dependent = MacOSDependent(logger=bwp_logger)
+            bwp_os_dependent = MacOSDependent(logger=wp_logger)
         elif _platform in abk_common.OsPlatformType.PLATFORM_LINUX.value:
-            bwp_os_dependent = LinuxDependent(logger=bwp_logger)
+            bwp_os_dependent = LinuxDependent(logger=wp_logger)
         elif _platform in abk_common.OsPlatformType.PLATFORM_WINDOWS.value:
-            bwp_os_dependent = WindowsDependent(logger=bwp_logger)
+            bwp_os_dependent = WindowsDependent(logger=wp_logger)
         else:
             raise ValueError(f'ERROR: "{_platform}" is not supported')
 
         # use bing service as default, peapix is for a back up solution
         bwp_dl_service = bwp_config.get(ROOT_KW.DL_SERVICE.value, DownloadServiceType.PEAPIX.value)
         if  bwp_dl_service == DownloadServiceType.BING.value:
-            dl_service = BingDownloadService(logger=bwp_logger)
+            dl_service = BingDownloadService(logger=wp_logger)
         elif bwp_dl_service == DownloadServiceType.PEAPIX.value:
-            dl_service = PeapixDownloadService(logger=bwp_logger)
+            dl_service = PeapixDownloadService(logger=wp_logger)
         else:
             raise ValueError(f'ERROR: Download service: "{bwp_dl_service=}" is not supported')
 
         bwp = BingWallPaper(
-            logger=bwp_logger,
+            logger=wp_logger,
             options=command_line_options.options,
             os_dependant=bwp_os_dependent,
             dl_service=dl_service
@@ -987,12 +977,12 @@ def bingwallpaper(bwp_logger:  logging.Logger):
 
         if is_config_ftv_enabled():
             ftv_image_list = BingWallPaper.prepare_ftv_images()
-            ftv = FTV(logger=bwp_logger, ftv_data_file=get_config_ftv_data())
+            ftv = FTV(logger=wp_logger, ftv_data_file=get_config_ftv_data())
             ftv.change_daily_images(ftv_image_list)
 
     except Exception as exception:
-        bwp_logger.error(f"{Fore.RED}ERROR: executing bingwallpaper")
-        bwp_logger.error(f"EXCEPTION: {exception}{Style.RESET_ALL}")
+        wp_logger.error(f"{Fore.RED}ERROR: executing bingwallpaper")
+        wp_logger.error(f"EXCEPTION: {exception}{Style.RESET_ALL}")
         exit_code = 1
     finally:
         sys.exit(exit_code)
