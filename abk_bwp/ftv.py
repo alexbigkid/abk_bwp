@@ -337,14 +337,14 @@ class FTV(object):
 
 
     @abk_common.function_trace
-    def _get_current_art_image(self, tv_name: str) -> (bytearray | None):
+    def _get_current_art_image(self, tv_name: str) -> bytearray:
         """Gets current image thumbnail
         Args:
             tv_name (str): TV name
         Returns:
             bytearray | None: Image thumbnail or None if not available
         """
-        thumbnail = None
+        thumbnail = bytearray()
         ftv_setting = self.ftvs.get(tv_name, None)
         if ftv_setting:
             current_art = ftv_setting.ftv.art().get_current()
