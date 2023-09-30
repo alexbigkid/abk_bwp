@@ -6,7 +6,6 @@ from enum import Enum
 import json
 import os
 import logging
-import pathlib
 from typing import NamedTuple
 import wakeonlan
 try:                            # for python 3.11 and up
@@ -29,7 +28,7 @@ import abk_common
 # -----------------------------------------------------------------------------
 # Local Constants
 # -----------------------------------------------------------------------------
-FTV_API_TOKEN_FILE_SUFFIX = '__api_token.txt'
+# FTV_API_TOKEN_FILE_SUFFIX = '_apiToken_secrets.txt'
 FTV_UPLOADED_IMAGE_FILES = f'{os.path.dirname(os.path.realpath(__file__))}/ftv_uploaded_image_files.json'
 
 
@@ -57,6 +56,7 @@ class FTVSetting:
 
 class FTV_DATA_KW(Enum):
     """FTV - Frame TV data keywords"""
+    API_TOKEN_FILE = "api_token_file"
     IP_ADDR = "ip_addr"
     IMG_RATE = "img_rate"
     MAC_ADDR = "mac_addr"
@@ -132,14 +132,36 @@ class FTV(object):
 
     @staticmethod
     @abk_common.function_trace
-    def _get_api_token_file(tv_name: str) -> str:
+    def _get_api_token_full_file_name(file_name: str) -> str:
         """Get API token file based on the name of Frame TV
         Args:
-            tv_name (str): TV name
+            file_name (str): short file name
         Returns:
-            str: api token file name
+            str: api token full file name
         """
-        return f'{os.path.dirname(os.path.realpath(__file__))}/{tv_name}{FTV_API_TOKEN_FILE_SUFFIX}'
+        return os.path.join(os.path.dirname(__file__), 'config', file_name)
+
+
+    @staticmethod
+    @abk_common.function_trace
+    def _get_api_token(api_token_holder: str) -> str:
+        """Get API token file based on the name of Frame TV
+        Args:
+            api_token_holder (str): an env variable or file, which holds api token
+        Returns:
+            str: api token
+        """
+        if api_token_holder == "":
+            return ""
+        # try to get api_token from environment variable
+        api_token_str = os.environ.get(api_token_holder, None)
+        if api_token_str is None:
+            if os.path.isfile(api_token_holder):
+                with open(api_token_holder, "r") as file_handler:
+                    api_token_str = file_handler.read().strip()
+        if api_token_str is None:
+            api_token_str = api_token_holder
+        return api_token_str
 
 
     @abk_common.function_trace
@@ -147,11 +169,13 @@ class FTV(object):
         """Load Frame TV settings from file"""
         ftv_settings = {}
         try:
-            ftv_config_name = pathlib.Path(__file__).parent / 'config' / self._ftv_data_file
-            with ftv_config_name.open(mode='rb') as file_handler:
+            ftv_config_name = os.path.join(os.path.dirname(__file__), 'config', self._ftv_data_file)
+            with open(ftv_config_name, mode='rb') as file_handler:
                 ftv_config = tomllib.load(file_handler)
             ftv_data = ftv_config.get("ftv_data", {})
             for ftv_name, ftv_data_dict in ftv_data.items():
+                api_token_file = ftv_data_dict[FTV_DATA_KW.API_TOKEN_FILE.value]
+                self._logger.debug(f"{ftv_name = }, {api_token_file = }")
                 img_rate = ftv_data_dict[FTV_DATA_KW.IMG_RATE.value]
                 self._logger.debug(f"{ftv_name = }, {img_rate = }")
                 ip_addr = ftv_data_dict[FTV_DATA_KW.IP_ADDR.value]
@@ -161,10 +185,14 @@ class FTV(object):
                 port = ftv_data_dict[FTV_DATA_KW.PORT.value]
                 self._logger.debug(f"{ftv_name = }, {port = }")
 
-                api_token_file_name = FTV._get_api_token_file(ftv_name)
-                self._logger.debug(f"{ftv_name = }, {api_token_file_name = }")
+                api_token_full_file_name = FTV._get_api_token_full_file_name(api_token_file)
+                self._logger.debug(f"{ftv_name = }, {api_token_full_file_name = }")
+                api_token = FTV._get_api_token(api_token_full_file_name)
+                self._logger.debug(f"{ftv_name = }, {api_token = }")
                 # ftv = SamsungTVWS(ip_addr)
-                ftv = SamsungTVWS(host=ip_addr, port=port, token=api_token_file_name)
+                # ftv = SamsungTVWS(host=ip_addr, port=port, token_file=api_token_full_file_name)
+                ftv = SamsungTVWS(host=ip_addr, port=8002)
+                # ftv = SamsungTVWS(host=ip_addr, token=api_token, port=8002, timeout=10, key_press_delay=2, name=ftv_name)
                 ftv_settings[ftv_name] = FTVSetting(ftv=ftv, img_rate=img_rate, mac_addr=mac_addr)
         except Exception as exc:
             self._logger.error(f"Error loading Frame TV settings {exc} from file: {self._ftv_data_file}")
@@ -393,7 +421,7 @@ class FTV(object):
 
 
     @abk_common.function_trace
-    def _get_file_type(self, file_name:str):
+    def _get_file_type(self, file_name: str):
         """Determine the file type
         Args:
             file_name (str): file name
@@ -421,6 +449,8 @@ class FTV(object):
         self._logger.info(f'[{tv_name}]: {files_to_upload = }')
         ftv_setting = self.ftvs.get(tv_name, None)
         if ftv_setting:
+            api_version = ftv_setting.ftv.art().get_api_version()
+            self._logger.info(f'[{tv_name}]: {api_version = }')
             self._logger.info(f'[{tv_name}]: {uploaded_file_list = }')
             files_to_upload_to_target = [os.path.basename(path_file) for path_file in files_to_upload]
             uploaded_images_on_target = self._get_uploaded_image_files(tv_name)
@@ -440,6 +470,7 @@ class FTV(object):
                         try:
                             with open(matching_file_path, 'rb') as fh:
                                 data = fh.read()
+                            self._logger.error(f'[uploading to {tv_name = }]: {file_to_upload = }, {matching_file_path = }')
                             ftv_setting.ftv.art().upload(data, file_type=file_type.value, matte='none')
                             uploaded_file_list.append(file_to_upload)
                         except Exception as exp:
@@ -581,6 +612,7 @@ class FTV(object):
         """
         for tv_name, ftv_setting in self.ftvs.items():
             if self._connect_to_tv(tv_name) and self._is_art_mode_supported(tv_name):
+                # self._toggle_power(tv_name)
                 self._delete_uploaded_images_from_tv(tv_name)
                 self._upload_image_list_to_tv(tv_name, image_list)
 
