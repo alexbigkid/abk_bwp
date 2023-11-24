@@ -60,6 +60,7 @@ BWP_BING_IMG_URL_PREFIX = "http://www.bing.com"
 BWP_BING_IMG_URL_POSTFIX = "_1920x1080.jpg"
 BWP_META_DATA_FILE_NAME = "IMAGES_METADATA.json"
 BWP_EXIF_IMAGE_DESCRIPTION_FIELD = 0x010e
+BWP_EXIF_IMAGE_COPYRIGHT_FIELD = 0x8298
 BWP_TITLE_TEXT_FONT_SIZE = 42
 BWP_TITLE_TEXT_POSITION_OFFSET = (100, 100)
 BWP_TITLE_TEXT_COLOR = (255, 255, 255)
@@ -303,7 +304,8 @@ class ImageDownloadData():
     """Image download data"""
     imageDate: datetime.date
     title: bytes
-    imageUrl: str
+    copyright: bytes
+    imageUrl: List[str]
     imagePath: str
     imageName: str
 
@@ -455,16 +457,19 @@ class DownLoadServiceBase(metaclass=ABCMeta):
             self._logger.debug(f"{full_img_name=}")
             try:
                 abk_common.ensure_dir(full_img_path)
-                resp = requests.get(img_dl_data.imageUrl, stream=True, timeout=BWP_REQUEST_TIMEOUT)
-                if resp.status_code == 200:
-                    with Image.open(io.BytesIO(resp.content)) as img:
-                        resized_img = img.resize(BWP_DEFAULT_IMG_SIZE, Image.Resampling.LANCZOS)
-                        if img_dl_data.title:
-                            exif_data = resized_img.getexif()
-                            exif_data.setdefault(BWP_EXIF_IMAGE_DESCRIPTION_FIELD, img_dl_data.title)
-                            resized_img.save(full_img_name, exif=exif_data, optimize=True, quality=get_config_store_jpg_quality())
-                        else:
-                            resized_img.save(full_img_name, optimize=True, quality=get_config_store_jpg_quality())
+                for image_url in img_dl_data.imageUrl:
+                    resp = requests.get(image_url, stream=True, timeout=BWP_REQUEST_TIMEOUT)
+                    if resp.status_code == 200:
+                        with Image.open(io.BytesIO(resp.content)) as img:
+                            resized_img = img.resize(BWP_DEFAULT_IMG_SIZE, Image.Resampling.LANCZOS)
+                            if img_dl_data.title:
+                                exif_data = resized_img.getexif()
+                                exif_data.setdefault(BWP_EXIF_IMAGE_DESCRIPTION_FIELD, img_dl_data.title)
+                                exif_data.setdefault(BWP_EXIF_IMAGE_COPYRIGHT_FIELD, img_dl_data.copyright)
+                                resized_img.save(full_img_name, exif=exif_data, optimize=True, quality=get_config_store_jpg_quality())
+                            else:
+                                resized_img.save(full_img_name, optimize=True, quality=get_config_store_jpg_quality())
+                        break
             except Exception as exp:
                 self._logger.error(f"ERROR: {exp=}, downloading image: {full_img_name}")
         return
@@ -521,8 +526,9 @@ class BingDownloadService(DownLoadServiceBase):
                 if os.path.exists(img_to_check) is False:
                     return_list.append(ImageDownloadData(
                         imageDate=img_date,
-                        title=img_data.get("copyright", ""),
-                        imageUrl=f"{BWP_BING_IMG_URL_PREFIX}{img_url_base}{BWP_BING_IMG_URL_POSTFIX}",
+                        title=img_data.get("copyright", "").encode('utf-8'),
+                        copyright=img_data.get("copyright", "").encode('utf-8'),
+                        imageUrl=[f"{BWP_BING_IMG_URL_PREFIX}{img_url_base}{BWP_BING_IMG_URL_POSTFIX}"],
                         imagePath=get_full_img_dir_from_date(img_date),
                         imageName=f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}"
                     ))
@@ -583,7 +589,8 @@ class PeapixDownloadService(DownLoadServiceBase):
                     return_list.append(ImageDownloadData(
                         imageDate=img_date,
                         title=img_data.get("title", "").encode('utf-8'),
-                        imageUrl=img_data.get("imageUrl", ""),
+                        copyright=img_data.get("copyright", "").encode('utf-8'),
+                        imageUrl=[img_data.get("imageUrl", ""), img_data.get("fullUrl", ""), img_data.get("thumbUrl", "")],
                         imagePath=get_full_img_dir_from_date(img_date),
                         imageName=f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}"
                     ))
@@ -847,7 +854,14 @@ class BingWallPaper(object):
                         title_bytes = title_value.encode('ISO-8859-1').split(b'\x00', 1)[0]
                         title_txt = title_bytes.decode('utf-8', errors='ignore')
                         bwp_logger.debug(f"_resize_background_image: {title_txt = }")
-                        BingWallPaper.add_outline_text(resized_img, title_txt)
+
+                        copyright_txt = ""
+                        if (copyright_value := exif_data.get(BWP_EXIF_IMAGE_COPYRIGHT_FIELD, None)) is not None:
+                            copyright_bytes = copyright_value.encode('ISO-8859-1').split(b'\x00', 1)[0]
+                            copyright_txt = copyright_bytes.decode('utf-8', errors='ignore')
+                        bwp_logger.debug(f"_resize_background_image: {copyright_txt = }")
+
+                        BingWallPaper.add_outline_text(resized_img, title_txt, copyright_txt)
                         resized_img.save(dst_img_name, optimize=True, quality=get_config_desktop_jpg_quality())
         except Exception as exp:
             bwp_logger.error(f"ERROR:_resize_background_image: {exp=}, resizing file: {src_img_name=} to {dst_img_name=} with {dst_img_size=}")
@@ -857,15 +871,18 @@ class BingWallPaper(object):
 
     @staticmethod
     @abk_common.function_trace
-    def add_outline_text(resized_img: Image.Image, title_txt: str) -> None:
+    def add_outline_text(resized_img: Image.Image, title_txt: str, copyright_txt: str) -> None:
         """Adds an outlined (Glow effect) text to the image
         Args:
             resized_img (Image.Image): image the text will be added to
             title_txt (str): text to add to the image
+            copyright_txt (str): copyright text to add to the image
         """
         WIDTH               = 0
         HEIGHT              = 1
         title_font          = ImageFont.truetype(get_text_overlay_font_name(), BWP_TITLE_TEXT_FONT_SIZE)
+        if copyright_txt == "":
+            title_txt = f"{title_txt}\n{copyright_txt}"
         _, _, title_width, title_height = title_font.getbbox(title_txt)
         resized_img_size    = resized_img.size
         # location to place text
