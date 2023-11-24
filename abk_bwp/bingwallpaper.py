@@ -458,6 +458,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
             try:
                 abk_common.ensure_dir(full_img_path)
                 for image_url in img_dl_data.imageUrl:
+                    self._logger.info(f"{image_url = }")
                     resp = requests.get(image_url, stream=True, timeout=BWP_REQUEST_TIMEOUT)
                     if resp.status_code == 200:
                         with Image.open(io.BytesIO(resp.content)) as img:
@@ -856,7 +857,7 @@ class BingWallPaper(object):
                         bwp_logger.debug(f"_resize_background_image: {title_txt = }")
 
                         copyright_txt = ""
-                        if (copyright_value := exif_data.get(BWP_EXIF_IMAGE_COPYRIGHT_FIELD, None)) is not None:
+                        if (copyright_value := exif_data.get(BWP_EXIF_IMAGE_COPYRIGHT_FIELD, "")) != "":
                             copyright_bytes = copyright_value.encode('ISO-8859-1').split(b'\x00', 1)[0]
                             copyright_txt = copyright_bytes.decode('utf-8', errors='ignore')
                         bwp_logger.debug(f"_resize_background_image: {copyright_txt = }")
@@ -881,9 +882,10 @@ class BingWallPaper(object):
         WIDTH               = 0
         HEIGHT              = 1
         title_font          = ImageFont.truetype(get_text_overlay_font_name(), BWP_TITLE_TEXT_FONT_SIZE)
-        if copyright_txt == "":
+        longest_txt = title_txt if len(copyright_txt) < len(title_txt) else copyright_txt
+        if copyright_txt != "":
             title_txt = f"{title_txt}\n{copyright_txt}"
-        _, _, title_width, title_height = title_font.getbbox(title_txt)
+        _, _, title_width, title_height = title_font.getbbox(longest_txt)
         resized_img_size    = resized_img.size
         # location to place text
         x = resized_img_size[WIDTH]  - title_width  - BWP_TITLE_TEXT_POSITION_OFFSET[WIDTH]
