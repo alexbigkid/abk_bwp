@@ -1,0 +1,13 @@
+[project]
+requires-python = ">=3.12"
+
+[tool.ruff]
+line-length = 98
+
+[tool.ruff.lint]
+extend-select = [
+  "D",   # pydocstyle
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"

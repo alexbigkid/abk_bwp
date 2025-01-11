@@ -1,4 +1,4 @@
-""" 1. Creates a link bingwallpaper.py in home_dir/abkBin directory to current dir
+"""1. Creates a link bingwallpaper.py in home_dir/abkBin directory to current dir
     2. Platform dependant operation - create platfrom dependent environment
         2.1. Mac
             2.1.1. create a plist file for scheduled job in current directory
@@ -8,8 +8,8 @@
             2.2.1. NOT READY YET
         2.3 Windows
             2.3.1. NOT READY YET
-    3. schedule the job permanent job running at 8am or when logged in
-"""
+    3. schedule the job permanent job running at 8am or when logged in.
+"""  # noqa: D205, D208
 
 # Standard lib imports
 import os
@@ -31,14 +31,14 @@ import abk_common
 
 
 class IInstallBase(metaclass=ABCMeta):
-    """Abstract class (mostly)"""
+    """Abstract class (mostly)."""
     os_type: abk_common.OsType = None  # type: ignore
     _shell_file_name: str = None  # type: ignore
 
 
     @property
     def shell_file_name(self) -> str:
-        """Returns the name of the shell file to be created for the installation"""
+        """Returns the name of the shell file to be created for the installation."""
         if self._shell_file_name is None:
             extension = ("sh", "ps1")[self.os_type == abk_common.OsType.WINDOWS_OS]
             self._shell_file_name = f"{abk_common.BWP_APP_NAME}.{extension}"
@@ -47,7 +47,7 @@ class IInstallBase(metaclass=ABCMeta):
 
     @abk_common.function_trace
     def __init__(self, logger: logging.Logger = None) -> None:  # type: ignore
-        """Super class init"""
+        """Super class init."""
         self._logger = logger or logging.getLogger(__name__)
         self._logger.info(f"({__class__.__name__}) Initializing {self.os_type} installation environment ...")
 
@@ -87,17 +87,22 @@ class IInstallBase(metaclass=ABCMeta):
 
 
 class InstallOnMacOS(IInstallBase):
-    """Concrete class for installation on MacOS"""
+    """Concrete class for installation on MacOS."""
 
     @abk_common.function_trace
     def __init__(self, logger: logging.Logger) -> None:
+        """Init install for MacOS.
+
+        Args:
+            logger: logger to use
+        """
         self.os_type = abk_common.OsType.MAC_OS
         super().__init__(logger)
 
 
     @abk_common.function_trace
     def setup_installation(self) -> None:
-        """Setup installation on MacOS"""
+        """Setup installation on MacOS."""
         time_to_exe: time = bwp_config.get(ROOT_KW.TIME_TO_FETCH.value, datetime.strptime("12:00:00", "%H:%M:%S").time())
 
         self._logger.debug(f"{time_to_exe.hour = }, {time_to_exe.minute = }, {time_to_exe.second = }")
@@ -113,6 +118,7 @@ class InstallOnMacOS(IInstallBase):
     @abk_common.function_trace
     def _create_plist_file(self, time_to_exe: time, script_name: str) -> str:
         """Creates plist file with info for MacOS to trigger scheduled job.
+
         Args:
             time_to_exe (time): time to execute the download of the bing image
             script_name (str): script name to execute
@@ -167,7 +173,8 @@ class InstallOnMacOS(IInstallBase):
 
     @abk_common.function_trace
     def _create_plist_link(self, full_file_name: str) -> str:
-        """Creates link in the $HOME/Library/LaunchAgent to the real locacion of the app script
+        """Creates link in the $HOME/Library/LaunchAgent to the real locacion of the app script.
+
         Args:
             full_file_name (str): full name + path of the app script
         Returns:
@@ -186,19 +193,18 @@ class InstallOnMacOS(IInstallBase):
 
 
     @abk_common.function_trace
-    def _stop_and_unload_bingwallpaper_job(self, plist_name: str, plist_lable: str) -> None:
-        """Stops and unloads bing wall paper job.
-           Executes until the end. Can also exit with first error occuring.
-           This is an expected behaviour though.
+    def _stop_and_unload_bingwallpaper_job(self, plist_name: str, plist_label: str) -> None:
+        """Stops and unloads bing wall paper job. Executes until the end. Can also exit with first error occurring. This is an expected behavior though.
+
         Args:
             plist_name (str): full name (path + file name) of the link of the plist file
-            plist_lable (str): the plist lable
+            plist_label (str): the plist label
         """
-        self._logger.debug(f"{plist_name=}, {plist_lable=}")
+        self._logger.debug(f"{plist_name=}, {plist_label=}")
 
         cmd_list = []
-        cmd_list.append(f"launchctl list | grep {plist_lable}")
-        cmd_list.append(f"launchctl stop {plist_lable}")
+        cmd_list.append(f"launchctl list | grep {plist_label}")
+        cmd_list.append(f"launchctl stop {plist_label}")
         cmd_list.append(f"launchctl unload -w {plist_name}")
 
         try:
@@ -211,17 +217,18 @@ class InstallOnMacOS(IInstallBase):
 
 
     @abk_common.function_trace
-    def _load_and_start_bingwallpaper_job(self, plist_name: str, plist_lable: str) -> None:
-        """Loads and starts the scheduled job
+    def _load_and_start_bingwallpaper_job(self, plist_name: str, plist_label: str) -> None:
+        """Loads and starts the scheduled job.
+
         Args:
             plist_name (str): full name (path + file name) of the link of the plist file
-            plist_lable (str): the plist lable
+            plist_label (str): the plist label
         """
-        self._logger.debug(f"{plist_name=}, {plist_lable=}")
+        self._logger.debug(f"{plist_name=}, {plist_label=}")
 
         cmd_list = []
         cmd_list.append(f"launchctl load -w {plist_name}")
-        cmd_list.append(f"launchctl start {plist_lable}")
+        cmd_list.append(f"launchctl start {plist_label}")
 
         try:
             for cmd in cmd_list:
@@ -236,31 +243,41 @@ class InstallOnMacOS(IInstallBase):
 
 
 class InstallOnLinux(IInstallBase):
-    """Concrete class for installation on Linux"""
+    """Concrete class for installation on Linux."""
 
     def __init__(self, logger: logging.Logger) -> None:
+        """Init install on Linux class.
+
+        Args:
+            logger: logger
+        """
         self.os_type = abk_common.OsType.LINUX_OS
         super().__init__(logger)
 
 
     @abk_common.function_trace
     def setup_installation(self) -> None:
-        """Setup instalaltion on Linux"""
+        """Setup installation on Linux."""
         self._logger.info(f"{self.os_type.value} installation is not supported yet")
 
 
 
 class InstallOnWindows(IInstallBase):
-    """Concrete class for installation on Windows"""
+    """Concrete class for installation on Windows."""
 
     def __init__(self, logger: logging.Logger) -> None:
+        """Init install on Windows class.
+
+        Args:
+            logger: logger
+        """
         self.os_type = abk_common.OsType.WINDOWS_OS
         super().__init__(logger)
 
 
     @abk_common.function_trace
     def setup_installation(self) -> None:
-        """Setup instalaltion on Windows"""
+        """Setup installation on Windows."""
         # self._logger.debug(f"{time_to_exe.hour=}, {time_to_exe.minute=}, {app_name=}")
         self._logger.info(f"{self.os_type.value} installation is not supported yet")
 
@@ -268,6 +285,15 @@ class InstallOnWindows(IInstallBase):
 
 @abk_common.function_trace
 def bwp_install(install_logger: Union[logging.Logger, None] = None) -> None:
+    """BingWallPaper install.
+
+    Args:
+        install_logger: passed in logger. Defaults to None.
+
+    Raises:
+        ValueError: not supported OS
+        Exception: any other exception
+    """
     exit_code = 0
     _logger = install_logger or logging.getLogger(__name__)
     try:
