@@ -5,10 +5,4 @@
 coverage
 parameterized
 tox
-#black
-#flake8
-#flake8-bugbear
-#flake8-builtins
-#flake8-comprehensions
-#flake8-string-format
-#pydocstyle
+ruff
