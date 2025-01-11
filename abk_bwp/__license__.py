@@ -1,3 +1,4 @@
+"""License."""
 __author__ = "Alex Berger"
 __copyright__ = "Copyright (C) 2022 ABKcompany"
 __license__ = "GNU GENERAL PUBLIC LICENSE"

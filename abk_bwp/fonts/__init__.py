@@ -1,9 +1,15 @@
+"""Font init."""
 import os
 import random
 
 BWP_FILES = 2
 
 def get_text_overlay_font_name() -> str:
+    """Gets text overlay font name.
+
+    Returns:
+        str: font name
+    """
     font_path = os.path.dirname(__file__)
     font_list_all = sorted(next(os.walk(font_path))[BWP_FILES])
     font_list = [font for font in font_list_all if font.endswith("tf")]

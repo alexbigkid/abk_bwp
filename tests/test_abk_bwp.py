@@ -1,4 +1,4 @@
-"""Unit tests for abk_bwp.py"""
+"""Unit tests for abk_bwp.py."""
 
 # Standard library imports
 from typing import Union
@@ -15,8 +15,10 @@ from context import abk_bwp
 
 
 class TestAbkBwp(unittest.TestCase):
+    """TestAbkBwp."""
 
     def setUp(self) -> None:
+        """Set up."""
         self.maxDiff = None
         return super().setUp()
 
@@ -27,7 +29,14 @@ class TestAbkBwp(unittest.TestCase):
         ["disable",     True,           False],
     ])
     def test__handle_ftv_option__calls_update_enable_field_in_toml_file(self, ftv_input: Union[str, None], ftv_enabled: bool, exp_ftv_enabled: bool) -> None:
-        with patch.dict(config.bwp_config, {"ftv": {"enabled": ftv_enabled}}) as mock_bwp_config:
+        """test__handle_ftv_option__calls_update_enable_field_in_toml_file.
+
+        Args:
+            ftv_input (Union[str, None]): FTV input
+            ftv_enabled (bool): FTV enabled
+            exp_ftv_enabled (bool): expected FTV enabled
+        """
+        with patch.dict(config.bwp_config, {"ftv": {"enabled": ftv_enabled}}):
             with patch("abk_bwp.update_enable_field_in_toml_file") as mock_update_enable_field_in_toml_file:
                 abk_bwp.handle_ftv_option(ftv_input)
         mock_update_enable_field_in_toml_file.assert_called_once_with(key_to_update=config.FTV_KW.FTV.value, update_to=exp_ftv_enabled)
@@ -35,7 +44,7 @@ class TestAbkBwp(unittest.TestCase):
 
 
     @parameterized.expand([
-        # input         ftv confg       # result
+        # input         ftv config       result
         [None,          True,           True],
         [None,          False,          False],
         ["enable",      True,           True],
@@ -46,7 +55,14 @@ class TestAbkBwp(unittest.TestCase):
         ["",            False,          False],
     ])
     def test__handle_ftv_option__does_not_calls_update_enable_field_in_toml_file(self, ftv_input: Union[str, None], ftv_enabled: bool, exp_ftv_enabled: bool) -> None:
-        with patch.dict(config.bwp_config, {"ftv": {"enabled": ftv_enabled}}) as mock_bwp_config:
+        """test__handle_ftv_option__does_not_calls_update_enable_field_in_toml_file.
+
+        Args:
+            ftv_input (Union[str, None]): FTV input
+            ftv_enabled (bool): FTV enabled
+            exp_ftv_enabled (bool): expected FTV enabled
+        """
+        with patch.dict(config.bwp_config, {"ftv": {"enabled": ftv_enabled}}):
             with patch("abk_bwp.update_enable_field_in_toml_file") as mock_update_enable_field_in_toml_file:
                 abk_bwp.handle_ftv_option(ftv_input)
         mock_update_enable_field_in_toml_file.assert_not_called()
@@ -59,8 +75,15 @@ class TestAbkBwp(unittest.TestCase):
         ["disable",     True,               False],
     ])
     def test__handle_desktop_auto_update_option__calls_update_enable_field_in_toml_file(self, desktop_img_input: Union[str, None], desktop_img_enabled: bool, exp_desktop_img_enabled: bool) -> None:
+        """test__handle_desktop_auto_update_option__calls_update_enable_field_in_toml_file.
+
+        Args:
+            desktop_img_input (Union[str, None]): desktop image input
+            desktop_img_enabled (bool): desktop image enabled
+            exp_desktop_img_enabled (bool): expected desktop image enabled
+        """
         function_to_call = ("uninstall", "install")[exp_desktop_img_enabled]
-        with patch.dict(config.bwp_config, {"desktop_img": {"enabled": desktop_img_enabled}}) as mock_bwp_config:
+        with patch.dict(config.bwp_config, {"desktop_img": {"enabled": desktop_img_enabled}}):
             with patch("abk_bwp.update_enable_field_in_toml_file") as  mock_update_enable_field_in_toml_file:
                 with patch(f"{function_to_call}.bwp_{function_to_call}") as mock_bwp_install_uninstall:
                     abk_bwp.handle_desktop_auto_update_option(desktop_img_input)
@@ -81,7 +104,14 @@ class TestAbkBwp(unittest.TestCase):
         ["",            False,          False],
     ])
     def test__handle_desktop_auto_update_option__does_not_calls_update_enable_field_in_toml_file(self, desktop_img_input: Union[str, None], desktop_img_enabled: bool, exp_desktop_img_enabled: bool) -> None:
-        with patch.dict(config.bwp_config, {"desktop_img": {"enabled": desktop_img_enabled}}) as mock_bwp_config:
+        """test__handle_desktop_auto_update_option__does_not_calls_update_enable_field_in_toml_file.
+
+        Args:
+            desktop_img_input (Union[str, None]): desktop image input
+            desktop_img_enabled (bool): desktop image enabled
+            exp_desktop_img_enabled (bool): expected desktop image enabled
+        """
+        with patch.dict(config.bwp_config, {"desktop_img": {"enabled": desktop_img_enabled}}):
             with patch("abk_bwp.update_enable_field_in_toml_file") as mock_update_enable_field_in_toml_file:
                 abk_bwp.handle_desktop_auto_update_option(desktop_img_input)
         mock_update_enable_field_in_toml_file.assert_not_called()

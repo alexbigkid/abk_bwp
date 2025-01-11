@@ -1,3 +1,4 @@
+"""Encrypted auth config file."""
 import asyncio
 import logging
 from typing import Optional

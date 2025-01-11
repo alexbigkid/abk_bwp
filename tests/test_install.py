@@ -1,25 +1,26 @@
-"""Unit tests for install.py"""
+"""Unit tests for install.py."""
 
 # Standard library imports
 import unittest
-from unittest.mock import mock_open, patch, call
 
 # Third party imports
 
 # Local imports
-from context import install
+# from context import install
 
 
-
-class TestAbkCommon(unittest.TestCase):
+class TestInstall(unittest.TestCase):
+    """TestInstall."""
     mut = None
 
     def setUp(self) -> None:
+        """Set up tests for install."""
         self.maxDiff = None
         return super().setUp()
 
 
     def test_install_001(self) -> None:
+        """test_install_001."""
         self.assertTrue(True)
 
 
