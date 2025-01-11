@@ -234,7 +234,7 @@ class CommandLineOptions(object):
 
     def _setup_logging(self) -> None:
         try:
-            with open(self.options.config_log_file, "r", encoding="utf-8") as stream:
+            with open(self.options.config_log_file, "r") as stream:
                 config_yaml = yaml.load(stream, Loader=yaml.FullLoader)
                 logging.config.dictConfig(config_yaml)
                 logger_type = (LoggerType.CONSOLE_LOGGER.value, LoggerType.FILE_LOGGER.value)[self.options.log_into_file]
