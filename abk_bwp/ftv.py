@@ -1,4 +1,4 @@
-"""Main function or entry module for the ABK BingWallPaper (abk_bwp) package"""
+"""Main function or entry module for the ABK BingWallPaper (abk_bwp) package."""
 
 # Standard lib imports
 from dataclasses import dataclass
@@ -37,7 +37,7 @@ FTV_UPLOADED_IMAGE_FILES = f'{os.path.dirname(os.path.realpath(__file__))}/ftv_u
 # Local data definitions
 # -----------------------------------------------------------------------------
 class FTVData(NamedTuple):
-    """FTV - Frame TV properties"""
+    """FTV - Frame TV properties."""
     api_token: str
     img_rate: int
     ip_addr: str
@@ -47,7 +47,7 @@ class FTVData(NamedTuple):
 
 @dataclass
 class FTVSetting:
-    """FTV - Frame TV setting"""
+    """FTV - Frame TV setting."""
     ftv: SamsungTVWS
     img_rate: int
     mac_addr: str
@@ -55,7 +55,7 @@ class FTVSetting:
 
 
 class FTV_DATA_KW(Enum):
-    """FTV - Frame TV data keywords"""
+    """FTV - Frame TV data keywords."""
     API_TOKEN_FILE = "api_token_file"
     IP_ADDR = "ip_addr"
     IMG_RATE = "img_rate"
@@ -64,23 +64,23 @@ class FTV_DATA_KW(Enum):
 
 
 class FTVSupportedFileType(Enum):
-    """FTV - Frame TV supported file types"""
+    """FTV - Frame TV supported file types."""
     JPEG = "JPEG"
     PNG = "PNG"
 
 
 class FTVApps(Enum):
-    """FTV - Frame TV supported apps"""
+    """FTV - Frame TV supported apps."""
     Spotify = '3201606009684'
 
 
 class FTVImageMatte(Enum):
-    """FTV - Frame TV supported image matte"""
+    """FTV - Frame TV supported image matte."""
     MODERN_APRICOT = 'modern_apricot'
 
 
 class FTVImageFilters(Enum):
-    """FTV - Frame TV supported image filters"""
+    """FTV - Frame TV supported image filters."""
     INK = 'ink'
 
 
@@ -97,10 +97,16 @@ FTV_UPLOADED_IMAGE_FILES_SCHEMA = {
 # FTV
 # -----------------------------------------------------------------------------
 class FTV(object):
-    """FTV - Frame TV class"""
+    """FTV - Frame TV class."""
 
     @abk_common.function_trace
     def __init__(self, logger: logging.Logger, ftv_data_file: str) -> None:
+        """Init for FTV.
+
+        Args:
+            logger: logger to use
+            ftv_data_file (str): FTV data file
+        """
         self._logger = logger or logging.getLogger(__name__)
         # logging.basicConfig(level=logging.DEBUG)
         self._ftv_data_file = ftv_data_file
@@ -109,7 +115,8 @@ class FTV(object):
 
     @property
     def ftvs(self) -> dict:
-        """ftvs getter
+        """FTVs getter.
+
         Returns:
             dict[str, FTVs]: dictionary of Frame TV settings
         """
@@ -121,7 +128,8 @@ class FTV(object):
     @staticmethod
     @abk_common.function_trace
     def _get_environment_variable_value(env_variable: str) -> str:
-        """Get environment variable value from shell
+        """Get environment variable value from shell.
+
         Args:
             env_variable (str): name of the environment variable to load
         Returns:
@@ -133,7 +141,8 @@ class FTV(object):
     @staticmethod
     @abk_common.function_trace
     def _get_api_token_full_file_name(file_name: str) -> str:
-        """Get API token file based on the name of Frame TV
+        """Get API token file based on the name of Frame TV.
+
         Args:
             file_name (str): short file name
         Returns:
@@ -145,7 +154,8 @@ class FTV(object):
     @staticmethod
     @abk_common.function_trace
     def _get_api_token(api_token_holder: str) -> str:
-        """Get API token file based on the name of Frame TV
+        """Get API token file based on the name of Frame TV.
+
         Args:
             api_token_holder (str): an env variable or file, which holds api token
         Returns:
@@ -166,7 +176,7 @@ class FTV(object):
 
     @abk_common.function_trace
     def _load_ftv_settings(self) -> dict:
-        """Load Frame TV settings from file"""
+        """Load Frame TV settings from file."""
         ftv_settings = {}
         try:
             ftv_config_name = os.path.join(os.path.dirname(__file__), 'config', self._ftv_data_file)
@@ -202,7 +212,8 @@ class FTV(object):
 
     @abk_common.function_trace
     def _wake_up_tv(self, tv_name: str) -> None:
-        """Wake up TV
+        """Wake up TV.
+
         Args:
             tv_name (str): TV name
         """
@@ -213,7 +224,8 @@ class FTV(object):
 
     @abk_common.function_trace
     def _toggle_power(self, tv_name: str) -> None:
-        """Toggle power on Frame TV
+        """Toggle power on Frame TV.
+
         Args:
             tv_name (str): TV name
         """
@@ -224,7 +236,8 @@ class FTV(object):
 
     @abk_common.function_trace
     def _browse_to_url(self, tv_name: str, url: str) -> None:
-        """Browse to URL on Frame TV
+        """Browse to URL on Frame TV.
+
         Args:
             tv_name (str): TV name
             url (str): URL to browse to
@@ -236,7 +249,8 @@ class FTV(object):
 
     @abk_common.function_trace
     def _list_installed_apps(self, tv_name: str) -> list:
-        """List installed apps on Frame TV
+        """List installed apps on Frame TV.
+
         Args:
             tv_name (str): TV name
         """
@@ -250,7 +264,8 @@ class FTV(object):
 
     @abk_common.function_trace
     def _open_app(self, tv_name: str, app_name: FTVApps) -> None:
-        """Opens app on Frame TV
+        """Opens app on Frame TV.
+
         Args:
             tv_name (str): TV name
             app_name (FTVApps): name of the app to open, should be supported
@@ -262,7 +277,8 @@ class FTV(object):
 
     @abk_common.function_trace
     def _get_app_status(self, tv_name: str, app_name: FTVApps) -> dict:
-        """Gets app status on Frame TV
+        """Gets app status on Frame TV.
+
         Args:
             tv_name (str): TV name
             app_name (FTVApps): name of the app to get status for
@@ -278,7 +294,8 @@ class FTV(object):
 
     @abk_common.function_trace
     def _close_app(self, tv_name: str, app_name: FTVApps) -> None:
-        """Closes app on Frame TV
+        """Closes app on Frame TV.
+
         Args:
             tv_name (str): TV name
             app_name (FTVApps): name of the app to close, should be supported
@@ -290,7 +307,8 @@ class FTV(object):
 
     @abk_common.function_trace
     def _install_app(self, tv_name: str, app_name: FTVApps) -> None:
-        """Closes app on Frame TV
+        """Closes app on Frame TV.
+
         Args:
             tv_name (str): TV name
             app_name (FTVApps): name of the app to install, should be supported
@@ -302,7 +320,8 @@ class FTV(object):
 
     @abk_common.function_trace
     def _get_device_info(self, tv_name: str) -> dict:
-        """Gets device info for Frame TV
+        """Gets device info for Frame TV.
+
         Args:
             tv_name (str): TV name
         """
@@ -317,7 +336,8 @@ class FTV(object):
 
     @abk_common.function_trace
     def _is_art_mode_supported(self, tv_name: str) -> bool:
-        """ Returns True if TV supports art mode
+        """Returns True if TV supports art mode.
+
         Args:
             tv_name (str): TV name
         Returns:
@@ -333,7 +353,8 @@ class FTV(object):
 
     @abk_common.function_trace
     def _get_current_art(self, tv_name: str) -> str:
-        """ Returns the current art
+        """Returns the current art.
+
         Args:
             tv_name (str): TV name
         Returns:
@@ -350,7 +371,8 @@ class FTV(object):
 
     @abk_common.function_trace
     def _list_art_on_tv(self, tv_name: str) -> list:
-        """Lists art available on FrameTV
+        """Lists art available on FrameTV.
+
         Args:
             tv_name (str): TV name
         Returns:
@@ -366,7 +388,8 @@ class FTV(object):
 
     @abk_common.function_trace
     def _get_current_art_image(self, tv_name: str) -> bytearray:
-        """Gets current image thumbnail
+        """Gets current image thumbnail.
+
         Args:
             tv_name (str): TV name
         Returns:
@@ -383,7 +406,8 @@ class FTV(object):
 
     @abk_common.function_trace
     def _set_current_art_image(self, tv_name: str, file_name: str, show_now: bool = False) -> None:
-        """Sets current art image
+        """Sets current art image.
+
         Args:
             tv_name (str): TV name
             file_name (str): name of the image file to set
@@ -396,7 +420,8 @@ class FTV(object):
 
     @abk_common.function_trace
     def _is_tv_in_art_mode(self, tv_name: str) -> bool:
-        """Determine whether the TV is currently in art mode
+        """Determine whether the TV is currently in art mode.
+
         Args:
             tv_name (str): TV name
         """
@@ -410,7 +435,8 @@ class FTV(object):
 
     @abk_common.function_trace
     def _activate_art_mode(self, tv_name: str, art_mode_on: bool = False) -> None:
-        """Switch art mode on or off
+        """Switch art mode on or off.
+
         Args:
             tv_name (str): TV name
             art_mode_on (bool): True to activate, False to deactivate. Default is False.
@@ -422,7 +448,8 @@ class FTV(object):
 
     @abk_common.function_trace
     def _get_file_type(self, file_name: str):
-        """Determine the file type
+        """Determine the file type.
+
         Args:
             file_name (str): file name
         Return:
@@ -439,7 +466,8 @@ class FTV(object):
 
     @abk_common.function_trace
     def _upload_image_list_to_tv(self, tv_name: str, files_to_upload: list) -> list:
-        """Uploads images to Frame TV and updates updated list name
+        """Uploads images to Frame TV and updates updated list name.
+
         Args:
             tv_name (str): TV name
             files_to_upload (list): image file list to upload
@@ -483,7 +511,8 @@ class FTV(object):
 
     @abk_common.function_trace
     def _delete_image_from_tv(self, tv_name: str, file_name:str) -> None:
-        """Deletes uploaded file from Frame TV
+        """Deletes uploaded file from Frame TV.
+
         Args:
             tv_name (str): TV name
             file_name (str): name of the image file to delete from TV
@@ -495,7 +524,8 @@ class FTV(object):
 
     @abk_common.function_trace
     def _delete_uploaded_images_from_tv(self, tv_name: str) -> list:
-        """Delete multiple uploaded files from Frame TV
+        """Delete multiple uploaded files from Frame TV.
+
         Args:
             tv_name (str): TV name
         Return: list of deleted images
@@ -522,7 +552,8 @@ class FTV(object):
 
     @abk_common.function_trace
     def _list_available_filters(self, tv_name: str) -> list:
-        """List available photo filters on Frame TV
+        """List available photo filters on Frame TV.
+
         Args:
             tv_name (str): TV name
         Return: list of available filters
@@ -537,7 +568,8 @@ class FTV(object):
 
     @abk_common.function_trace
     def _apply_filter_to_art(self, tv_name: str, file_name:str, filter_name: FTVImageFilters) -> None:
-        """Apply a filter to a specific piece of art on Frame TV
+        """Apply a filter to a specific piece of art on Frame TV.
+
         Args:
             tv_name (str): TV name
             file_name (str): name of the image file to apply filter to
@@ -550,7 +582,8 @@ class FTV(object):
 
     @abk_common.function_trace
     def _connect_to_tv(self, tv_name: str) -> bool:
-        """Connects to Frame TV
+        """Connects to Frame TV.
+
         Args:
             tv_name (str): TV name
         Returns:
@@ -571,7 +604,7 @@ class FTV(object):
 
     @abk_common.function_trace
     def _get_uploaded_image_files(self, tv_name: str) -> list:
-        """Read uploaded image files from file"""
+        """Read uploaded image files from file."""
         uploaded_image_list = []
         ftv_setting = self.ftvs.get(tv_name, None)
         if ftv_setting:
@@ -588,7 +621,7 @@ class FTV(object):
 
     @abk_common.function_trace
     def _record_uploaded_image_files(self, tv_name: str, image_list: list) -> None:
-        """Read uploaded image files from file"""
+        """Read uploaded image files from file."""
         uploaded_image_files = {}
         ftv_setting = self.ftvs.get(tv_name, None)
         if ftv_setting:
@@ -603,10 +636,10 @@ class FTV(object):
 
     @abk_common.function_trace
     def change_daily_images(self, image_list: list) -> bool:
-    # def change_daily_images(self, img_file_list: list) -> bool:
-        """Changes the daily images on Frame TV
+        """Changes the daily images on Frame TV.
+
         Args:
-            img_file_list (list): list of image files to upload to FrameTV
+            image_list (list): list of image files to upload to FrameTV
         Returns:
             bool: True if the daily images were changed, False otherwise
         """

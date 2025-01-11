@@ -1,5 +1,4 @@
-"""Program for downloading and upscaling/downscaling bing images to use as wallpaper sized """
-
+"""Program for downloading and upscaling/downscaling bing images to use as wallpaper sized."""
 # Standard lib imports
 import io
 import os
@@ -72,7 +71,7 @@ BWP_REQUEST_TIMEOUT = 5                                 # timeout in seconds
 # Supported Image Sizes
 # -----------------------------------------------------------------------------
 class ImageSizes(Enum):
-    """Supported Image sizes"""
+    """Supported Image sizes."""
     IMG_640x480     = (640,     480)
     IMG_1024x768    = (1024,    768)
     IMG_1600x1200   = (1600,    1200)
@@ -86,7 +85,8 @@ class ImageSizes(Enum):
 # -----------------------------------------------------------------------------
 @lru_cache(maxsize=1)
 def get_config_img_dir() -> str:
-    """Defines the image directory, creates if not existent yet
+    """Defines the image directory, creates if not existent yet.
+
     Returns:
         str: full directory name where images will be saved
     """
@@ -98,7 +98,8 @@ def get_config_img_dir() -> str:
 
 @lru_cache(maxsize=1)
 def get_config_img_region() -> str:
-    """Gets the region from config toml file
+    """Gets the region from config toml file.
+
     Returns:
         str: region string
     """
@@ -112,7 +113,8 @@ def get_config_img_region() -> str:
 
 @lru_cache(maxsize=1)
 def get_config_bing_img_region() -> str:
-    """Gets the region for the bing service
+    """Gets the region for the bing service.
+
     Returns:
         str: region string for Bing
     """
@@ -126,7 +128,8 @@ def get_config_bing_img_region() -> str:
 
 @lru_cache(maxsize=1)
 def is_config_ftv_enabled() -> bool:
-    """Determines whether the Frame TV feature is enabled in the config
+    """Determines whether the Frame TV feature is enabled in the config.
+
     Returns:
         bool: true if Frame TV feature enabled, False otherwise
     """
@@ -135,7 +138,8 @@ def is_config_ftv_enabled() -> bool:
 
 @lru_cache(maxsize=128)
 def get_relative_img_dir(img_date: datetime.date) -> str:
-    """Gets the image directory structure depending on whether Frame TV feature is enabled
+    """Gets the image directory structure depending on whether Frame TV feature is enabled.
+
     Args:
         img_date (datetime.date): date time
     Returns:
@@ -149,7 +153,8 @@ def get_relative_img_dir(img_date: datetime.date) -> str:
 
 @lru_cache(maxsize=3)
 def normalize_jpg_quality(jpg_quality: int) -> int:
-    """Normalizes image image quality. It should not be less then minimum and more then maximum
+    """Normalizes image image quality. It should not be less then minimum and more then maximum.
+
     Args:
         jpg_quality (int): jpg quality setting
     Returns:
@@ -164,7 +169,8 @@ def normalize_jpg_quality(jpg_quality: int) -> int:
 
 @lru_cache(maxsize=1)
 def get_config_store_jpg_quality() -> int:
-    """Gets jpeg quality for storing images
+    """Gets jpeg quality for storing images.
+
     Returns:
         int: jpeg images quality normalized
     """
@@ -174,7 +180,8 @@ def get_config_store_jpg_quality() -> int:
 
 @lru_cache(maxsize=1)
 def get_config_desktop_jpg_quality() -> int:
-    """Gets jpeg quality for desktop images
+    """Gets jpeg quality for desktop images.
+
     Returns:
         int: jpeg images quality normalized
     """
@@ -184,7 +191,8 @@ def get_config_desktop_jpg_quality() -> int:
 
 @lru_cache(maxsize=1)
 def get_config_ftv_jpg_quality() -> int:
-    """Gets jpeg quality for Frame TV images feature
+    """Gets jpeg quality for Frame TV images feature.
+
     Returns:
         int: jpeg images quality normalized
     """
@@ -194,7 +202,8 @@ def get_config_ftv_jpg_quality() -> int:
 
 @lru_cache(maxsize=1)
 def get_config_ftv_data() -> str:
-    """Gets the file name for the Frame TV data
+    """Gets the file name for the Frame TV data.
+
     Returns:
         str: name of the file where secret data for Frame TV are stored
     """
@@ -204,7 +213,8 @@ def get_config_ftv_data() -> str:
 
 @lru_cache(maxsize=1)
 def get_config_background_img_size() -> Tuple[int, int]:
-    """Determines background image size dimension
+    """Determines background image size dimension.
+
     Returns:
         Tuple[int, int]: image size dimensions
     """
@@ -218,7 +228,8 @@ def get_config_background_img_size() -> Tuple[int, int]:
 
 
 def delete_files_in_dir(dir_name: str, file_list: List[str]) -> None:
-    """Deletes files in given directory
+    """Deletes files in given directory.
+
     Args:
         dir_name (str): directory name
         file_list (List[str]): file list to delete
@@ -233,7 +244,8 @@ def delete_files_in_dir(dir_name: str, file_list: List[str]) -> None:
 
 @lru_cache(maxsize=128)
 def get_full_img_dir_from_date(img_date: datetime.date) -> str:
-    """Gets full image directory name from date
+    """Gets full image directory name from date.
+
     Args:
         img_date (datetime.date): image date
     Returns:
@@ -243,7 +255,8 @@ def get_full_img_dir_from_date(img_date: datetime.date) -> str:
 
 
 def get_full_img_dir_from_file_name(img_file_name: str) -> str:
-    """Gets full image directory name from file name
+    """Gets full image directory name from file name.
+
     Args:
         img_file_name (str): image file name
     Returns:
@@ -254,7 +267,8 @@ def get_full_img_dir_from_file_name(img_file_name: str) -> str:
 
 
 def get_date_from_img_file_name(img_file_name: str) -> Union[datetime.date, None]:
-    """Gets date from image file name
+    """Gets date from image file name.
+
     Args:
         img_file_name (str): image file name
     Returns:
@@ -269,7 +283,8 @@ def get_date_from_img_file_name(img_file_name: str) -> Union[datetime.date, None
 
 
 def get_all_background_img_names(dir_name: str) -> List[str]:
-    """Gets all background image names
+    """Gets all background image names.
+
     Args:
         dir_name (str): directory name
     Returns:
@@ -285,7 +300,8 @@ def get_all_background_img_names(dir_name: str) -> List[str]:
 
 
 def get_config_number_of_images_to_keep() -> int:
-    """Gets number of images to keep from config
+    """Gets number of images to keep from config.
+
     Returns:
         int: number of images to keep
     """
@@ -301,7 +317,7 @@ def get_config_number_of_images_to_keep() -> int:
 # -----------------------------------------------------------------------------
 @dataclass
 class ImageDownloadData():
-    """Image download data"""
+    """Image download data."""
     imageDate: datetime.date
     title: bytes
     copyright: bytes
@@ -314,7 +330,7 @@ class ImageDownloadData():
 # Supported Download services
 # -----------------------------------------------------------------------------
 class DownloadServiceType(Enum):
-    """Download service type"""
+    """Download service type."""
     PEAPIX  = "peapix"
     BING    = "bing"
 
@@ -323,10 +339,10 @@ class DownloadServiceType(Enum):
 # DownLoad Service
 # -----------------------------------------------------------------------------
 class DownLoadServiceBase(metaclass=ABCMeta):
-    """Class for download service base"""
+    """Class for download service base."""
 
     def __init__(self, logger: logging.Logger) -> None:
-        """Super class init"""
+        """Super class init."""
         self._logger = logger or logging.getLogger(__name__)
 
 
@@ -339,9 +355,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
     @staticmethod
     @abk_common.function_trace
     def convert_dir_structure_if_needed() -> None:
-        """Converts the bing image data directory structure (YYYY/mm/YYYY-mm-dd_us.jpg)
-            to frame TV directory structure                  (mm/dd/YYYY-mm-dd_us.jpg)
-        """
+        """Converts the bing image data directory structure (YYYY/mm/YYYY-mm-dd_us.jpg) to frame TV directory structure (mm/dd/YYYY-mm-dd_us.jpg)."""
         root_image_dir = get_config_img_dir()
         # get sub directory names from the defined picture directory
         dir_list = sorted(next(os.walk(root_image_dir))[BWP_DIRECTORIES])
@@ -363,8 +377,8 @@ class DownLoadServiceBase(metaclass=ABCMeta):
     @staticmethod
     @abk_common.function_trace
     def _convert_to_ftv_dir_structure(root_image_dir: str, year_list: List[str]) -> None:
-        """ Converts the bing image data directory structure (YYYY/mm/YYYY-mm-dd_us.jpg)
-            to frame TV directory structure                  (mm/dd/YYYY-mm-dd_us.jpg)
+        """Converts the bing image data directory structure (YYYY/mm/YYYY-mm-dd_us.jpg) to frame TV directory structure (mm/dd/YYYY-mm-dd_us.jpg).
+
         Args:
             root_image_dir (str): directory where images are stored
             year_list (List[str]): year list directory names
@@ -406,8 +420,8 @@ class DownLoadServiceBase(metaclass=ABCMeta):
     @staticmethod
     @abk_common.function_trace
     def _convert_to_date_dir_structure(root_image_dir: str, month_list: List[str]) -> None:
-        """ Converts the bing image frame TV directory structure (mm/dd/YYYY-mm-dd_us.jpg)
-            to data directory structure                          (YYYY/mm/YYYY-mm-dd_us.jpg)
+        """Converts the bing image frame TV directory structure (mm/dd/YYYY-mm-dd_us.jpg) to data directory structure (YYYY/mm/YYYY-mm-dd_us.jpg).
+
         Args:
             root_image_dir (str): directory where images are stored
             month_list (List[str]): month list directory names
@@ -447,7 +461,8 @@ class DownLoadServiceBase(metaclass=ABCMeta):
 
     @abk_common.function_trace
     def _download_images(self, img_dl_data_list: List[ImageDownloadData]) -> None:
-        """Downloads new images
+        """Downloads new images.
+
         Args:
             img_dl_data_list (List[ImageDownloadData]): list of images to download
         """
@@ -481,11 +496,11 @@ class DownLoadServiceBase(metaclass=ABCMeta):
 # Bing DownLoad Service
 # -----------------------------------------------------------------------------
 class BingDownloadService(DownLoadServiceBase):
-    """Bing Download Service class. Inherited from the base download service class"""
+    """Bing Download Service class. Inherited from the base download service class."""
 
     @abk_common.function_trace
     def download_new_images(self) -> None:
-        """Downloads bing image and stores it in the defined directory"""
+        """Downloads bing image and stores it in the defined directory."""
         DDI_RESP_FORMAT     = "format=js"
         DDI_RESP_IDX        = "idx=0"
         DDI_RESP_NUMBER     = f"n={BWP_BING_NUMBER_OF_IMAGES_TO_REQUEST}"
@@ -505,7 +520,8 @@ class BingDownloadService(DownLoadServiceBase):
 
 
     def _process_bing_api_data(self, metadata_list: list) -> List[ImageDownloadData]:
-        """Processes Bing Service API data
+        """Processes Bing Service API data.
+
         Args:
             metadata_list (list): Metadata list from Bing Service API
         Returns:
@@ -547,11 +563,11 @@ class BingDownloadService(DownLoadServiceBase):
 # Peapix DownLoad Service
 # -----------------------------------------------------------------------------
 class PeapixDownloadService(DownLoadServiceBase):
-    """Peapix Download Service class. Inherited from the base download service class"""
+    """Peapix Download Service class. Inherited from the base download service class."""
 
     @abk_common.function_trace
     def download_new_images(self) -> None:
-        """Downloads bing image and stores it in the defined directory"""
+        """Downloads bing image and stores it in the defined directory."""
         dst_dir = get_config_img_dir()
         self._logger.debug(f"{dst_dir=}")
         country_part_url = "=".join(["country", bwp_config.get(ROOT_KW.REGION.value, "us")])
@@ -569,11 +585,10 @@ class PeapixDownloadService(DownLoadServiceBase):
 
     @abk_common.function_trace
     def _process_peapix_api_data(self, metadata_list: List[Dict[str, str]]) -> List[ImageDownloadData]:
-        """Processes the received meta data from the peapix API and
-           keeps only data about images which needs to be downloaded.
-           Filters out data about images we already have.
+        """Processes the received meta data from the peapix API and keeps only data about images which needs to be downloaded. Filters out data about images we already have.
+
         Args:
-            metadata (List[Dict[str, str]]): metadata to be processed
+            metadata_list (List[Dict[str, str]]): metadata to be processed
         Returns:
             List[Dict[str, str]]: metadata about images to download
         """
@@ -609,12 +624,12 @@ class PeapixDownloadService(DownLoadServiceBase):
 # OS Dependency Base Class
 # -----------------------------------------------------------------------------
 class IOsDependentBase(metaclass=ABCMeta):
-    """OS dependency base class"""
+    """OS dependency base class."""
     os_type: abk_common.OsType
 
     @abk_common.function_trace
     def __init__(self, logger: logging.Logger = None) -> None:  # type: ignore
-        """Super class constructor"""
+        """Super class constructor."""
         self._logger = logger or logging.getLogger(__name__)
         self._logger.info(f"({__class__.__name__}) {self.os_type} OS dependent environment ...")
 
@@ -630,18 +645,19 @@ class IOsDependentBase(metaclass=ABCMeta):
 # OS Dependency MacOS Class
 # -----------------------------------------------------------------------------
 class MacOSDependent(IOsDependentBase):
-    """MacOS dependent code"""
+    """MacOS dependent code."""
 
     @abk_common.function_trace
     def __init__(self, logger: logging.Logger) -> None:
-        """Constructor for MacOS"""
+        """Constructor for MacOS."""
         self.os_type = abk_common.OsType.MAC_OS
         super().__init__(logger)
 
 
     @abk_common.function_trace
     def set_desktop_background(self, file_name: str) -> None:
-        """Sets desktop image on Mac OS
+        """Sets desktop image on Mac OS.
+
         Args:
             file_name (str): file name which should be used to set the background
         """
@@ -660,18 +676,19 @@ END"""
 # OS Dependency Linux Class
 # -----------------------------------------------------------------------------
 class LinuxDependent(IOsDependentBase):
-    """Linux dependent code"""
+    """Linux dependent code."""
 
     @abk_common.function_trace
     def __init__(self, logger: logging.Logger) -> None:
-        """Constructor for Linux"""
+        """Constructor for Linux."""
         self.os_type = abk_common.OsType.LINUX_OS
         super().__init__(logger)
 
 
     @abk_common.function_trace
     def set_desktop_background(self, file_name: str) -> None:
-        """Sets desktop image on Linux
+        """Sets desktop image on Linux.
+
         Args:
             file_name (str): file name which should be used to set the background
         """
@@ -685,18 +702,19 @@ class LinuxDependent(IOsDependentBase):
 # OS Dependency Windows Class
 # -----------------------------------------------------------------------------
 class WindowsDependent(IOsDependentBase):
-    """Windows dependent code"""
+    """Windows dependent code."""
 
     @abk_common.function_trace
     def __init__(self, logger: logging.Logger) -> None:
-        """Constructor for Windows"""
+        """Constructor for Windows."""
         self.os_type = abk_common.OsType.WINDOWS_OS
         super().__init__(logger)
 
 
     @abk_common.function_trace
     def set_desktop_background(self, file_name: str) -> None:
-        """Sets desktop image on Windows
+        """Sets desktop image on Windows.
+
         Args:
             file_name (str): file name which should be used to set the background
         """
@@ -724,7 +742,7 @@ class WindowsDependent(IOsDependentBase):
 # Bing Wallpaper
 # -----------------------------------------------------------------------------
 class BingWallPaper(object):
-    """BingWallPaper downloads images from bing.com and sets it as a wallpaper"""
+    """BingWallPaper downloads images from bing.com and sets it as a wallpaper."""
 
     @abk_common.function_trace
     def __init__(self,
@@ -733,7 +751,7 @@ class BingWallPaper(object):
                  os_dependant: IOsDependentBase,
                  dl_service: DownLoadServiceBase
     ):
-        """Constructor for BingWallPaper"""
+        """Constructor for BingWallPaper."""
         self._logger = logger or logging.getLogger(__name__)
         self._options = options
         self._os_dependent = os_dependant
@@ -741,20 +759,21 @@ class BingWallPaper(object):
 
 
     def convert_dir_structure_if_needed(self) -> None:
-        """Convert directory structure if needed"""
+        """Convert directory structure if needed."""
         self._dl_service.convert_dir_structure_if_needed()
 
 
     @abk_common.function_trace
     def download_new_images(self) -> None:
-        """Downloads bing image and stores it in the defined directory"""
+        """Downloads bing image and stores it in the defined directory."""
         self._dl_service.download_new_images()
 
 
     def set_desktop_background(self, full_img_name: str) -> None:
-        """Sets background image on different OS
+        """Sets background image on different OS.
+
         Args:
-            file_name (str): file name which should be used to set the background
+            full_img_name (str): file image name which should be used to set the background
         """
         self._os_dependent.set_desktop_background(full_img_name)
 
@@ -762,7 +781,7 @@ class BingWallPaper(object):
     @staticmethod
     @abk_common.function_trace
     def process_manually_downloaded_images() -> None:
-        """Processes manually downloaded images"""
+        """Processes manually downloaded images."""
         img_root_dir = get_config_img_dir()
         img_metadata = abk_common.read_json_file(os.path.join(img_root_dir, BWP_META_DATA_FILE_NAME))
         bwp_logger.debug(f"{json.dumps(img_metadata, indent=4)}")
@@ -797,7 +816,8 @@ class BingWallPaper(object):
     @staticmethod
     @abk_common.function_trace
     def _calculate_image_resizing(img_size: Tuple[int, int]) -> Tuple[int, int]:
-        """Calculates image re-sizing
+        """Calculates image re-sizing.
+
         Args:
             img_size (Tuple[int, int]): image size in
         Returns:
@@ -816,7 +836,7 @@ class BingWallPaper(object):
 
     @abk_common.function_trace
     def update_current_background_image(self) -> None:
-        """Updates current background image"""
+        """Updates current background image."""
         config_img_dir = get_config_img_dir()
         today = datetime.date.today()
         today_img_path = get_full_img_dir_from_date(today)
@@ -836,7 +856,7 @@ class BingWallPaper(object):
     @staticmethod
     @abk_common.function_trace
     def _resize_background_image(src_img_name: str, dst_img_name : str, dst_img_size : Tuple[int, int]) -> bool:
-        """Re0sizes background image"""
+        """Re0sizes background image."""
         bwp_logger.debug(f"{src_img_name=}, {dst_img_name=}, {dst_img_size=}")
         try:
             dst_path = os.path.dirname(dst_img_name)
@@ -874,7 +894,8 @@ class BingWallPaper(object):
     @staticmethod
     @abk_common.function_trace
     def add_outline_text(resized_img: Image.Image, title_txt: str, copyright_txt: str) -> None:
-        """Adds an outlined (Glow effect) text to the image
+        """Adds an outlined (Glow effect) text to the image.
+
         Args:
             resized_img (Image.Image): image the text will be added to
             title_txt (str): text to add to the image
@@ -908,9 +929,9 @@ class BingWallPaper(object):
     @staticmethod
     @abk_common.function_trace
     def trim_number_of_images() -> None:
-        """Deletes some images if it reaches max number to keep
-           The max number of images to retain to be defined in the abk_bwp/config/bwp_config.toml file
-           config parameter number_of_images_to_keep
+        """Deletes some images if it reaches max number to keep.
+
+        The max number of images to retain to be defined in the abk_bwp/config/bwp_config.toml file config parameter number_of_images_to_keep.
         """
         img_dir = get_config_img_dir()
         background_img_file_list = get_all_background_img_names(img_dir)
@@ -933,7 +954,7 @@ class BingWallPaper(object):
     @staticmethod
     @abk_common.function_trace
     def prepare_ftv_images() -> list:
-        """Prepares images for Frame TV"""
+        """Prepares images for Frame TV."""
         config_img_dir = get_config_img_dir()
         ftv_dir = os.path.join(config_img_dir, BWP_FTV_IMAGES_TODAY_DIR)
         abk_common.ensure_dir(ftv_dir)
@@ -961,7 +982,7 @@ class BingWallPaper(object):
 # bwp
 # -----------------------------------------------------------------------------
 def bingwallpaper(wp_logger: logging.Logger):
-    """Main function to run the BingWallpaper application"""
+    """Main function to run the BingWallpaper application."""
     exit_code = 0
     try:
         # get the correct OS and instantiate OS dependent code
