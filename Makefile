@@ -75,10 +75,10 @@ coverage:
 # Running tests Makefile rules
 # -----------------------------------------------------------------------------
 lint:
-	ruff check abk_bwp/
+	ruff check ./abk_bwp/
 
 lint_fix:
-	ruff check --fix abk_bwp/
+	ruff check --fix ./abk_bwp/
 
 
 # -----------------------------------------------------------------------------

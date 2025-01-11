@@ -5,4 +5,3 @@
 coverage
 parameterized
 tox
-ruff
