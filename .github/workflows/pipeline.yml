@@ -41,6 +41,8 @@ jobs:
               run: make install_test
             - name: install tox-gh
               run: python -m pip install tox-gh
+            - name: run lint
+              run: make lint
             - name: run unit tests
               run: make test_vff
             # coverage has a problem with windows so not running it if windows OS
