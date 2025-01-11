@@ -234,18 +234,18 @@ class CommandLineOptions(object):
 
     def _setup_logging(self) -> None:
         try:
-            with open(self.options.config_log_file, "r") as stream:
+            with open(self.options.config_log_file, "r", encoding="utf-8") as stream:
                 config_yaml = yaml.load(stream, Loader=yaml.FullLoader)
                 logging.config.dictConfig(config_yaml)
                 logger_type = (LoggerType.CONSOLE_LOGGER.value, LoggerType.FILE_LOGGER.value)[self.options.log_into_file]
                 self._logger = logging.getLogger(logger_type)
-                self._logger.disabled = self.options.verbose == False
+                self._logger.disabled = not self.options.verbose
                 self._logger.debug(f"{logger_type=}")
-        except ValueError as ve:
+        except ValueError:
             raise ValueError(f"{self.options.config_log_file} is not a valid yaml format")
         except IOError:
             raise IOError(f"{self.options.config_log_file} does not exist.")
-        except Exception as exp:
+        except Exception:
             # print(f"ERROR: {exp=}, disabling logging")
             self._logger = logging.getLogger(__name__)
             self._logger.disabled = True

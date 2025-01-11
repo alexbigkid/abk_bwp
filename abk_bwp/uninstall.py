@@ -36,9 +36,9 @@ class IUninstallBase(metaclass=ABCMeta):
 
     @property
     def shell_file_name(self) -> str:
-        if self._shell_file_name == None:
-            extention = ("sh", "ps1")[self.os_type == abk_common.OsType.WINDOWS_OS]
-            self._shell_file_name = f"{abk_common.BWP_APP_NAME}.{extention}"
+        if self._shell_file_name is None:
+            extension = ("sh", "ps1")[self.os_type == abk_common.OsType.WINDOWS_OS]
+            self._shell_file_name = f"{abk_common.BWP_APP_NAME}.{extension}"
         return self._shell_file_name
 
 
@@ -52,13 +52,13 @@ class IUninstallBase(metaclass=ABCMeta):
     @abstractmethod
     def teardown_installation(self) -> None:
         """Abstract method - should not be implemented. Interface purpose."""
-        raise NotImplemented
+        raise NotImplementedError
 
 
     @abstractmethod
     def cleanup_image_dir(self, image_dir: str) -> None:
         """Abstract method - should not be implemented. Interface purpose."""
-        raise NotImplemented
+        raise NotImplementedError
 
 
 
@@ -116,7 +116,7 @@ class UninstallOnMacOS(IUninstallBase):
         if os.path.isdir(images_dir):
             try:
                 shutil.rmtree(images_dir)
-            except:
+            except Exception:
                 self._logger.error(f"deleting image directory {images_dir} failed")
 
 
@@ -238,12 +238,12 @@ def bwp_uninstall(uninstall_logger: Union[logging.Logger, None] = None) -> None:
         else:
             raise ValueError(f'ERROR: "{_platform}" is not supported')
 
-        if bwp_config.get(ROOT_KW.RETAIN_IMAGES.value, False) == False:
+        if not bwp_config.get(ROOT_KW.RETAIN_IMAGES.value, False):
             uninstallation.cleanup_image_dir(bwp_config[ROOT_KW.IMAGE_DIR.value])
         uninstallation.teardown_installation()
-    except Exception as exception:
+    except Exception as exc:
         _logger.error(f"{Fore.RED}ERROR: executing bingwallpaper")
-        _logger.error(f"EXCEPTION: {exception}{Style.RESET_ALL}")
+        _logger.error(f"EXCEPTION: {exc}{Style.RESET_ALL}")
         exit_code = 1
     finally:
         sys.exit(exit_code)

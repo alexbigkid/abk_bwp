@@ -72,7 +72,7 @@ BWP_REQUEST_TIMEOUT = 5                                 # timeout in seconds
 # Supported Image Sizes
 # -----------------------------------------------------------------------------
 class ImageSizes(Enum):
-    """Supported IMage sizes"""
+    """Supported Image sizes"""
     IMG_640x480     = (640,     480)
     IMG_1024x768    = (1024,    768)
     IMG_1600x1200   = (1600,    1200)
@@ -514,6 +514,7 @@ class BingDownloadService(DownLoadServiceBase):
         return_list: List[ImageDownloadData] = []
         self._logger.debug(f"Received from API: {json.dumps(metadata_list, indent=4)}")
         img_root_dir = get_config_img_dir()
+        self._logger.debug(f"{img_root_dir=}")
         img_region = get_config_img_region()
         self._logger.debug(f"{img_region=}")
 

@@ -38,9 +38,10 @@ class IInstallBase(metaclass=ABCMeta):
 
     @property
     def shell_file_name(self) -> str:
-        if self._shell_file_name == None:
-            extention = ("sh", "ps1")[self.os_type == abk_common.OsType.WINDOWS_OS]
-            self._shell_file_name = f"{abk_common.BWP_APP_NAME}.{extention}"
+        """Returns the name of the shell file to be created for the installation"""
+        if self._shell_file_name is None:
+            extension = ("sh", "ps1")[self.os_type == abk_common.OsType.WINDOWS_OS]
+            self._shell_file_name = f"{abk_common.BWP_APP_NAME}.{extension}"
         return self._shell_file_name
 
 
@@ -81,7 +82,7 @@ class IInstallBase(metaclass=ABCMeta):
     @abstractmethod
     def setup_installation(self) -> None:
         """Abstract method - should not be implemented. Interface purpose."""
-        raise NotImplemented
+        raise NotImplementedError
 
 
 
@@ -96,17 +97,17 @@ class InstallOnMacOS(IInstallBase):
 
     @abk_common.function_trace
     def setup_installation(self) -> None:
-        """Setup instalaltion on MacOS"""
+        """Setup installation on MacOS"""
         time_to_exe: time = bwp_config.get(ROOT_KW.TIME_TO_FETCH.value, datetime.strptime("12:00:00", "%H:%M:%S").time())
 
         self._logger.debug(f"{time_to_exe.hour = }, {time_to_exe.minute = }, {time_to_exe.second = }")
         current_path = os.path.dirname(__file__)
-        plist_lable = self._create_plist_file(time_to_exe, self.shell_file_name)
-        # plist_lable = self._create_plist_file(time_to_exe, "bingwallpaper.py")
-        plist_full_name = os.path.join(current_path, f"{plist_lable}.plist")
+        plist_label = self._create_plist_file(time_to_exe, self.shell_file_name)
+        # plist_label = self._create_plist_file(time_to_exe, "bingwallpaper.py")
+        plist_full_name = os.path.join(current_path, f"{plist_label}.plist")
         dst_plist_name = self._create_plist_link(plist_full_name)
-        self._stop_and_unload_bingwallpaper_job(dst_plist_name, plist_lable)
-        self._load_and_start_bingwallpaper_job(dst_plist_name, plist_lable)
+        self._stop_and_unload_bingwallpaper_job(dst_plist_name, plist_label)
+        self._load_and_start_bingwallpaper_job(dst_plist_name, plist_label)
 
 
     @abk_common.function_trace
@@ -116,7 +117,7 @@ class InstallOnMacOS(IInstallBase):
             time_to_exe (time): time to execute the download of the bing image
             script_name (str): script name to execute
         Returns:
-            Tuple[str, str]: plist lable and plist file name
+            Tuple[str, str]: plist label and plist file name
         """
         self._logger.debug(f"{time_to_exe.hour=}, {time_to_exe.minute=}, {script_name=}")
         user_name = abk_common.get_user_name()
@@ -229,8 +230,8 @@ class InstallOnMacOS(IInstallBase):
                 self._logger.info(f"command '{cmd}' succeeded, returned: {retCode}")
         except subprocess.CalledProcessError as e:
             self._logger.critical(f"ERROR: returned: {e.returncode}")
-        except:
-            self._logger.critical(f"ERROR: unknow")
+        except Exception:
+            self._logger.critical("ERROR: unknown")
 
 
 
