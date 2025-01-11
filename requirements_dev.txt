@@ -11,3 +11,4 @@ pip-date
 pip-chill
 pipdeptree
 ruff
+pre-commit
