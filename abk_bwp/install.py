@@ -21,7 +21,6 @@ from abc import ABCMeta, abstractmethod
 from datetime import datetime, time
 from sys import platform as _platform
 from typing import Union
-import json
 
 # Third party imports
 from colorama import Fore, Style
