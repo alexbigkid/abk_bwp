@@ -9,7 +9,7 @@ env:
     ENV: prod
 
 jobs:
-    Deploy:
+    build:
         name: Run on ${{ matrix.py }} - ${{ matrix.os }}
         runs-on: ${{ matrix.os }}-latest
         strategy:
@@ -20,9 +20,9 @@ jobs:
 
         steps:
             - name: checkout repo
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
             - name: setup python ${{ matrix.py }}
-              uses: actions/setup-python@v3
+              uses: actions/setup-python@v5
               with:
                 python-version: ${{ matrix.py }}
             - name: Python Info
