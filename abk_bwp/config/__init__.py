@@ -1,20 +1,23 @@
 """Loading config."""
+
 from enum import Enum
 import pathlib
+
 # this ensures it will work with python 3.7 and up
-try:                            # for python 3.11 and up
-    import tomllib              # type: ignore
-except ModuleNotFoundError:     # for 3.7 <= python < 3.11
-    import tomli as tomllib     # type: ignore
+try:  # for python 3.11 and up
+    import tomllib  # type: ignore
+except ModuleNotFoundError:  # for 3.7 <= python < 3.11
+    import tomli as tomllib  # type: ignore
 
 
-bwp_file_name = pathlib.Path(__file__).parent / 'bwp_config.toml'
-with bwp_file_name.open(mode='rb') as file_handler:
+bwp_file_name = pathlib.Path(__file__).parent / "bwp_config.toml"
+with bwp_file_name.open(mode="rb") as file_handler:
     bwp_config = tomllib.load(file_handler)
 
 
 class ROOT_KW(Enum):
     """Loads root level key words."""
+
     TIME_TO_FETCH = "time_to_fetch"
     IMAGE_DIR = "image_dir"
     STORE_JPG_QUALITY = "store_jpg_quality"
@@ -27,6 +30,7 @@ class ROOT_KW(Enum):
 
 class DESKTOP_IMG_KW(Enum):
     """Loads desktop image key words."""
+
     DESKTOP_IMG = "desktop_img"
     ENABLED = "enabled"
     WIDTH = "width"
@@ -37,6 +41,7 @@ class DESKTOP_IMG_KW(Enum):
 
 class CONSTANT_KW(Enum):
     """Loads constants key words."""
+
     CONSTANT = "constant"
     ALT_DL_SERVICE = "alt_dl_service"
     BING_URL = "bing_url"
@@ -47,6 +52,7 @@ class CONSTANT_KW(Enum):
 
 class FTV_KW(Enum):
     """Loads FTV key words."""
+
     FTV = "ftv"
     ENABLED = "enabled"
     JPG_QUALITY = "jpg_quality"

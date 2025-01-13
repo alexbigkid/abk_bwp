@@ -8,10 +8,11 @@ import os
 import logging
 from typing import NamedTuple
 import wakeonlan
-try:                            # for python 3.11 and up
-    import tomllib              # type: ignore
-except ModuleNotFoundError:     # for 3.7 <= python < 3.11
-    import tomli as tomllib     # type: ignore
+
+try:  # for python 3.11 and up
+    import tomllib  # type: ignore
+except ModuleNotFoundError:  # for 3.7 <= python < 3.11
+    import tomli as tomllib  # type: ignore
 
 # Third party imports
 from jsonschema import validate, exceptions
@@ -24,13 +25,13 @@ from samsungtvws import SamsungTVWS
 import abk_common
 
 
-
 # -----------------------------------------------------------------------------
 # Local Constants
 # -----------------------------------------------------------------------------
 # FTV_API_TOKEN_FILE_SUFFIX = '_apiToken_secrets.txt'
-FTV_UPLOADED_IMAGE_FILES = f'{os.path.dirname(os.path.realpath(__file__))}/ftv_uploaded_image_files.json'
-
+FTV_UPLOADED_IMAGE_FILES = (
+    f"{os.path.dirname(os.path.realpath(__file__))}/ftv_uploaded_image_files.json"
+)
 
 
 # -----------------------------------------------------------------------------
@@ -38,6 +39,7 @@ FTV_UPLOADED_IMAGE_FILES = f'{os.path.dirname(os.path.realpath(__file__))}/ftv_u
 # -----------------------------------------------------------------------------
 class FTVData(NamedTuple):
     """FTV - Frame TV properties."""
+
     api_token: str
     img_rate: int
     ip_addr: str
@@ -48,6 +50,7 @@ class FTVData(NamedTuple):
 @dataclass
 class FTVSetting:
     """FTV - Frame TV setting."""
+
     ftv: SamsungTVWS
     img_rate: int
     mac_addr: str
@@ -56,6 +59,7 @@ class FTVSetting:
 
 class FTV_DATA_KW(Enum):
     """FTV - Frame TV data keywords."""
+
     API_TOKEN_FILE = "api_token_file"
     IP_ADDR = "ip_addr"
     IMG_RATE = "img_rate"
@@ -65,31 +69,32 @@ class FTV_DATA_KW(Enum):
 
 class FTVSupportedFileType(Enum):
     """FTV - Frame TV supported file types."""
+
     JPEG = "JPEG"
     PNG = "PNG"
 
 
 class FTVApps(Enum):
     """FTV - Frame TV supported apps."""
-    Spotify = '3201606009684'
+
+    Spotify = "3201606009684"
 
 
 class FTVImageMatte(Enum):
     """FTV - Frame TV supported image matte."""
-    MODERN_APRICOT = 'modern_apricot'
+
+    MODERN_APRICOT = "modern_apricot"
 
 
 class FTVImageFilters(Enum):
     """FTV - Frame TV supported image filters."""
-    INK = 'ink'
+
+    INK = "ink"
 
 
 FTV_UPLOADED_IMAGE_FILES_SCHEMA = {
     "type": "object",
-    "additionalProperties": {
-        "type": "array",
-        "items": { "type": "string" }
-    }
+    "additionalProperties": {"type": "array", "items": {"type": "string"}},
 }
 
 
@@ -112,7 +117,6 @@ class FTV(object):
         self._ftv_data_file = ftv_data_file
         self._ftv_settings: dict[str, FTVSetting] | None = None
 
-
     @property
     def ftvs(self) -> dict:
         """FTVs getter.
@@ -123,7 +127,6 @@ class FTV(object):
         if self._ftv_settings is None:
             self._ftv_settings = self._load_ftv_settings()
         return self._ftv_settings
-
 
     @staticmethod
     @abk_common.function_trace
@@ -137,7 +140,6 @@ class FTV(object):
         """
         return os.environ[env_variable] if env_variable in os.environ else ""
 
-
     @staticmethod
     @abk_common.function_trace
     def _get_api_token_full_file_name(file_name: str) -> str:
@@ -148,8 +150,7 @@ class FTV(object):
         Returns:
             str: api token full file name
         """
-        return os.path.join(os.path.dirname(__file__), 'config', file_name)
-
+        return os.path.join(os.path.dirname(__file__), "config", file_name)
 
     @staticmethod
     @abk_common.function_trace
@@ -173,14 +174,15 @@ class FTV(object):
             api_token_str = api_token_holder
         return api_token_str
 
-
     @abk_common.function_trace
     def _load_ftv_settings(self) -> dict:
         """Load Frame TV settings from file."""
         ftv_settings = {}
         try:
-            ftv_config_name = os.path.join(os.path.dirname(__file__), 'config', self._ftv_data_file)
-            with open(ftv_config_name, mode='rb') as file_handler:
+            ftv_config_name = os.path.join(
+                os.path.dirname(__file__), "config", self._ftv_data_file
+            )
+            with open(ftv_config_name, mode="rb") as file_handler:
                 ftv_config = tomllib.load(file_handler)
             ftv_data = ftv_config.get("ftv_data", {})
             for ftv_name, ftv_data_dict in ftv_data.items():
@@ -205,10 +207,11 @@ class FTV(object):
                 # ftv = SamsungTVWS(host=ip_addr, token=api_token, port=8002, timeout=10, key_press_delay=2, name=ftv_name)
                 ftv_settings[ftv_name] = FTVSetting(ftv=ftv, img_rate=img_rate, mac_addr=mac_addr)
         except Exception as exc:
-            self._logger.error(f"Error loading Frame TV settings {exc} from file: {self._ftv_data_file}")
+            self._logger.error(
+                f"Error loading Frame TV settings {exc} from file: {self._ftv_data_file}"
+            )
             raise exc
         return ftv_settings
-
 
     @abk_common.function_trace
     def _wake_up_tv(self, tv_name: str) -> None:
@@ -221,7 +224,6 @@ class FTV(object):
         if ftv_setting:
             wakeonlan.send_magic_packet(ftv_setting.mac_addr)
 
-
     @abk_common.function_trace
     def _toggle_power(self, tv_name: str) -> None:
         """Toggle power on Frame TV.
@@ -232,7 +234,6 @@ class FTV(object):
         ftv_setting = self.ftvs.get(tv_name, None)
         if ftv_setting:
             ftv_setting.ftv.shortcuts().power()
-
 
     @abk_common.function_trace
     def _browse_to_url(self, tv_name: str, url: str) -> None:
@@ -246,7 +247,6 @@ class FTV(object):
         if ftv_setting:
             ftv_setting.ftv.open_browser(url)
 
-
     @abk_common.function_trace
     def _list_installed_apps(self, tv_name: str) -> list:
         """List installed apps on Frame TV.
@@ -258,9 +258,8 @@ class FTV(object):
         ftv_setting = self.ftvs.get(tv_name, None)
         if ftv_setting:
             app_list = ftv_setting.ftv.app_list()
-        self._logger.info(f'[{tv_name}]: {app_list = }')
+        self._logger.info(f"[{tv_name}]: {app_list = }")
         return app_list
-
 
     @abk_common.function_trace
     def _open_app(self, tv_name: str, app_name: FTVApps) -> None:
@@ -273,7 +272,6 @@ class FTV(object):
         ftv_setting = self.ftvs.get(tv_name, None)
         if ftv_setting:
             ftv_setting.ftv.run_app(app_name.value)
-
 
     @abk_common.function_trace
     def _get_app_status(self, tv_name: str, app_name: FTVApps) -> dict:
@@ -288,9 +286,8 @@ class FTV(object):
         ftv_setting = self.ftvs.get(tv_name, None)
         if ftv_setting:
             app_status = ftv_setting.ftv.rest_app_status(app_name.value)
-        self._logger.info(f'[{tv_name}]: {app_status = }')
+        self._logger.info(f"[{tv_name}]: {app_status = }")
         return app_status
-
 
     @abk_common.function_trace
     def _close_app(self, tv_name: str, app_name: FTVApps) -> None:
@@ -304,7 +301,6 @@ class FTV(object):
         if ftv_setting:
             ftv_setting.ftv.rest_app_close(app_name.value)
 
-
     @abk_common.function_trace
     def _install_app(self, tv_name: str, app_name: FTVApps) -> None:
         """Closes app on Frame TV.
@@ -317,7 +313,6 @@ class FTV(object):
         if ftv_setting:
             ftv_setting.ftv.rest_app_install(app_name.value)
 
-
     @abk_common.function_trace
     def _get_device_info(self, tv_name: str) -> dict:
         """Gets device info for Frame TV.
@@ -327,12 +322,11 @@ class FTV(object):
         """
         device_info = {}
         ftv_setting = self.ftvs.get(tv_name, None)
-        self._logger.info(f'[{tv_name}]: {ftv_setting = }')
+        self._logger.info(f"[{tv_name}]: {ftv_setting = }")
         if ftv_setting:
             device_info = ftv_setting.ftv.rest_device_info()
-        self._logger.info(f'[{tv_name}]: {device_info = }')
+        self._logger.info(f"[{tv_name}]: {device_info = }")
         return device_info
-
 
     @abk_common.function_trace
     def _is_art_mode_supported(self, tv_name: str) -> bool:
@@ -347,9 +341,8 @@ class FTV(object):
         ftv_setting = self.ftvs.get(tv_name, None)
         if ftv_setting:
             art_supported = ftv_setting.ftv.art().supported()
-        self._logger.info(f'[{tv_name}]: {art_supported = }')
+        self._logger.info(f"[{tv_name}]: {art_supported = }")
         return art_supported
-
 
     @abk_common.function_trace
     def _get_current_art(self, tv_name: str) -> str:
@@ -364,10 +357,8 @@ class FTV(object):
         ftv_setting = self.ftvs.get(tv_name, None)
         if ftv_setting:
             current_art = ftv_setting.ftv.art().get_current()
-        self._logger.info(f'[{tv_name}]: {current_art = }')
+        self._logger.info(f"[{tv_name}]: {current_art = }")
         return current_art
-
-
 
     @abk_common.function_trace
     def _list_art_on_tv(self, tv_name: str) -> list:
@@ -382,9 +373,8 @@ class FTV(object):
         ftv_setting = self.ftvs.get(tv_name, None)
         if ftv_setting:
             art_list = ftv_setting.ftv.art().available()
-        self._logger.info(f'[{tv_name}]: {art_list = }')
+        self._logger.info(f"[{tv_name}]: {art_list = }")
         return art_list
-
 
     @abk_common.function_trace
     def _get_current_art_image(self, tv_name: str) -> bytearray:
@@ -403,9 +393,10 @@ class FTV(object):
         # self._logger.info(f'[{tv_name}]: {thumbnail = }')
         return thumbnail
 
-
     @abk_common.function_trace
-    def _set_current_art_image(self, tv_name: str, file_name: str, show_now: bool = False) -> None:
+    def _set_current_art_image(
+        self, tv_name: str, file_name: str, show_now: bool = False
+    ) -> None:
         """Sets current art image.
 
         Args:
@@ -416,7 +407,6 @@ class FTV(object):
         ftv_setting = self.ftvs.get(tv_name, None)
         if ftv_setting:
             ftv_setting.ftv.art().select_image(file_name, show=show_now)
-
 
     @abk_common.function_trace
     def _is_tv_in_art_mode(self, tv_name: str) -> bool:
@@ -429,9 +419,8 @@ class FTV(object):
         ftv_setting = self.ftvs.get(tv_name, None)
         if ftv_setting:
             is_art_mode = ftv_setting.ftv.art().get_artmode()
-        self._logger.debug(f'[{tv_name}]: {is_art_mode = }')
+        self._logger.debug(f"[{tv_name}]: {is_art_mode = }")
         return is_art_mode
-
 
     @abk_common.function_trace
     def _activate_art_mode(self, tv_name: str, art_mode_on: bool = False) -> None:
@@ -445,7 +434,6 @@ class FTV(object):
         if ftv_setting:
             ftv_setting.ftv.art().set_artmode(art_mode_on)
 
-
     @abk_common.function_trace
     def _get_file_type(self, file_name: str):
         """Determine the file type.
@@ -456,13 +444,12 @@ class FTV(object):
             FTVSupportedFileType | None: file type or None if not supported
         """
         file_type = None
-        if file_name.endswith('.jpg') or file_name.endswith('.jpeg'):
+        if file_name.endswith(".jpg") or file_name.endswith(".jpeg"):
             file_type = FTVSupportedFileType.JPEG
-        elif file_name.endswith('.png'):
+        elif file_name.endswith(".png"):
             file_type = FTVSupportedFileType.PNG
-        self._logger.debug(f'[{file_name}]: {file_type = }')
+        self._logger.debug(f"[{file_name}]: {file_type = }")
         return file_type
-
 
     @abk_common.function_trace
     def _upload_image_list_to_tv(self, tv_name: str, files_to_upload: list) -> list:
@@ -474,43 +461,56 @@ class FTV(object):
         Return: list of image files uploaded
         """
         uploaded_file_list: list = []
-        self._logger.info(f'[{tv_name}]: {files_to_upload = }')
+        self._logger.info(f"[{tv_name}]: {files_to_upload = }")
         ftv_setting = self.ftvs.get(tv_name, None)
         if ftv_setting:
             api_version = ftv_setting.ftv.art().get_api_version()
-            self._logger.info(f'[{tv_name}]: {api_version = }')
-            self._logger.info(f'[{tv_name}]: {uploaded_file_list = }')
-            files_to_upload_to_target = [os.path.basename(path_file) for path_file in files_to_upload]
+            self._logger.info(f"[{tv_name}]: {api_version = }")
+            self._logger.info(f"[{tv_name}]: {uploaded_file_list = }")
+            files_to_upload_to_target = [
+                os.path.basename(path_file) for path_file in files_to_upload
+            ]
             uploaded_images_on_target = self._get_uploaded_image_files(tv_name)
-            files_remaining_to_upload = list(set(files_to_upload_to_target) - set(uploaded_images_on_target))
-            self._logger.info(f'[{tv_name}]: {files_to_upload_to_target = }')
-            self._logger.info(f'[{tv_name}]: {uploaded_images_on_target = }')
-            self._logger.info(f'[{tv_name}]: {files_remaining_to_upload = }')
+            files_remaining_to_upload = list(
+                set(files_to_upload_to_target) - set(uploaded_images_on_target)
+            )
+            self._logger.info(f"[{tv_name}]: {files_to_upload_to_target = }")
+            self._logger.info(f"[{tv_name}]: {uploaded_images_on_target = }")
+            self._logger.info(f"[{tv_name}]: {files_remaining_to_upload = }")
             # update files with path to upload list
-            files_to_upload = [file for file in files_to_upload if os.path.basename(file) in files_remaining_to_upload]
+            files_to_upload = [
+                file
+                for file in files_to_upload
+                if os.path.basename(file) in files_remaining_to_upload
+            ]
 
             for file_to_upload in files_remaining_to_upload:
-                matching_file_paths = (fp for fp in files_to_upload if os.path.basename(fp) == file_to_upload)
+                matching_file_paths = (
+                    fp for fp in files_to_upload if os.path.basename(fp) == file_to_upload
+                )
                 matching_file_path = next(matching_file_paths, None)
                 if matching_file_path:
                     file_type = self._get_file_type(file_to_upload)
                     if file_type:
                         try:
-                            with open(matching_file_path, 'rb') as fh:
+                            with open(matching_file_path, "rb") as fh:
                                 data = fh.read()
-                            self._logger.error(f'[uploading to {tv_name = }]: {file_to_upload = }, {matching_file_path = }')
-                            ftv_setting.ftv.art().upload(data, file_type=file_type.value, matte='none')
+                            self._logger.error(
+                                f"[uploading to {tv_name = }]: {file_to_upload = }, {matching_file_path = }"
+                            )
+                            ftv_setting.ftv.art().upload(
+                                data, file_type=file_type.value, matte="none"
+                            )
                             uploaded_file_list.append(file_to_upload)
                         except Exception as exp:
-                            self._logger.error(f'[{tv_name}]: {exp = }')
+                            self._logger.error(f"[{tv_name}]: {exp = }")
             uploaded_images_on_target = list(set(uploaded_images_on_target + uploaded_file_list))
-            self._logger.info(f'[{tv_name}]: {uploaded_images_on_target = }')
+            self._logger.info(f"[{tv_name}]: {uploaded_images_on_target = }")
             self._record_uploaded_image_files(tv_name, uploaded_images_on_target)
         return uploaded_file_list
 
-
     @abk_common.function_trace
-    def _delete_image_from_tv(self, tv_name: str, file_name:str) -> None:
+    def _delete_image_from_tv(self, tv_name: str, file_name: str) -> None:
         """Deletes uploaded file from Frame TV.
 
         Args:
@@ -520,7 +520,6 @@ class FTV(object):
         ftv_setting = self.ftvs.get(tv_name, None)
         if ftv_setting:
             ftv_setting.ftv.art().delete(file_name)
-
 
     @abk_common.function_trace
     def _delete_uploaded_images_from_tv(self, tv_name: str) -> list:
@@ -534,7 +533,7 @@ class FTV(object):
         ftv_setting = self.ftvs.get(tv_name, None)
         if ftv_setting:
             uploaded_images = self._get_uploaded_image_files(tv_name)
-            self._logger.debug(f'[{tv_name}]: {uploaded_images = }')
+            self._logger.debug(f"[{tv_name}]: {uploaded_images = }")
             if len(uploaded_images) > 0:
                 for image_to_delete in uploaded_images:
                     try:
@@ -542,13 +541,14 @@ class FTV(object):
                         # ftv_setting.ftv.art().delete_list(image_list) # not working
                         deleted_images.append(image_to_delete)
                     except Exception as exp:
-                        self._logger.error(f'[{tv_name}]: image NOT deleted: {image_to_delete} {exp = }')
+                        self._logger.error(
+                            f"[{tv_name}]: image NOT deleted: {image_to_delete} {exp = }"
+                        )
                 remaining_images = list(set(uploaded_images) - set(deleted_images))
-                self._logger.debug(f'[{tv_name}]: {deleted_images = }')
-                self._logger.debug(f'[{tv_name}]: {remaining_images = }')
+                self._logger.debug(f"[{tv_name}]: {deleted_images = }")
+                self._logger.debug(f"[{tv_name}]: {remaining_images = }")
                 self._record_uploaded_image_files(tv_name, remaining_images)
         return deleted_images
-
 
     @abk_common.function_trace
     def _list_available_filters(self, tv_name: str) -> list:
@@ -562,12 +562,13 @@ class FTV(object):
         ftv_setting = self.ftvs.get(tv_name, None)
         if ftv_setting:
             available_filter_list = ftv_setting.ftv.art().get_photo_filter_list()
-        self._logger.debug(f'[{tv_name}]: {available_filter_list = }')
+        self._logger.debug(f"[{tv_name}]: {available_filter_list = }")
         return available_filter_list
 
-
     @abk_common.function_trace
-    def _apply_filter_to_art(self, tv_name: str, file_name:str, filter_name: FTVImageFilters) -> None:
+    def _apply_filter_to_art(
+        self, tv_name: str, file_name: str, filter_name: FTVImageFilters
+    ) -> None:
         """Apply a filter to a specific piece of art on Frame TV.
 
         Args:
@@ -578,7 +579,6 @@ class FTV(object):
         ftv_setting = self.ftvs.get(tv_name, None)
         if ftv_setting:
             ftv_setting.ftv.art().set_photo_filter(file_name, filter_name.value)
-
 
     @abk_common.function_trace
     def _connect_to_tv(self, tv_name: str) -> bool:
@@ -594,13 +594,12 @@ class FTV(object):
             try:
                 self._wake_up_tv(tv_name)
                 tv_info = self._get_device_info(tv_name)
-                self._logger.info(f'[{tv_name}]: {tv_info = }')
+                self._logger.info(f"[{tv_name}]: {tv_info = }")
                 ftv_setting.reachable = True
             except Exception as exc:
-                self._logger.error(f'[{tv_name}]: {exc}')
+                self._logger.error(f"[{tv_name}]: {exc}")
                 ftv_setting.reachable = False
         return ftv_setting.reachable if ftv_setting else False
-
 
     @abk_common.function_trace
     def _get_uploaded_image_files(self, tv_name: str) -> list:
@@ -609,15 +608,16 @@ class FTV(object):
         ftv_setting = self.ftvs.get(tv_name, None)
         if ftv_setting:
             if os.path.isfile(FTV_UPLOADED_IMAGE_FILES):
-                with open(FTV_UPLOADED_IMAGE_FILES, 'r') as img_data_file:
+                with open(FTV_UPLOADED_IMAGE_FILES, "r") as img_data_file:
                     uploaded_images_json = json.load(img_data_file)
                 try:
-                    validate(instance=uploaded_images_json, schema=FTV_UPLOADED_IMAGE_FILES_SCHEMA)
+                    validate(
+                        instance=uploaded_images_json, schema=FTV_UPLOADED_IMAGE_FILES_SCHEMA
+                    )
                     uploaded_image_list = uploaded_images_json.get(tv_name, [])
                 except exceptions.ValidationError as exp:
                     self._logger.error(f"ERROR: {exp=}, validating uploaded image file")
         return uploaded_image_list
-
 
     @abk_common.function_trace
     def _record_uploaded_image_files(self, tv_name: str, image_list: list) -> None:
@@ -626,13 +626,12 @@ class FTV(object):
         ftv_setting = self.ftvs.get(tv_name, None)
         if ftv_setting:
             if os.path.isfile(FTV_UPLOADED_IMAGE_FILES):
-                with open(FTV_UPLOADED_IMAGE_FILES, 'r') as img_data_file:
+                with open(FTV_UPLOADED_IMAGE_FILES, "r") as img_data_file:
                     uploaded_image_files = json.load(img_data_file)
                 uploaded_image_files[tv_name] = image_list
-                self._logger.debug(f'[{tv_name}]: {uploaded_image_files = }')
-                with open(FTV_UPLOADED_IMAGE_FILES, 'w') as img_data_file:
+                self._logger.debug(f"[{tv_name}]: {uploaded_image_files = }")
+                with open(FTV_UPLOADED_IMAGE_FILES, "w") as img_data_file:
                     json.dump(uploaded_image_files, img_data_file, indent=4)
-
 
     @abk_common.function_trace
     def change_daily_images(self, image_list: list) -> bool:
@@ -652,5 +651,7 @@ class FTV(object):
         return any(ftv_setting.reachable for ftv_setting in self.ftvs.values())
 
 
-if __name__ == '__main__':
-    raise RuntimeError(f"{__file__}: This module should not be executed directly. Only for imports")
+if __name__ == "__main__":
+    raise RuntimeError(
+        f"{__file__}: This module should not be executed directly. Only for imports"
+    )

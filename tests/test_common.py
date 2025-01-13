@@ -17,7 +17,6 @@ from context import abk_common
 GENERAL_EXCEPTION_MSG = "General Exception Raised"
 
 
-
 @unittest.skipIf(sys.platform.startswith("win"), "should not run on Windows")
 @mock.patch("os.environ")
 class TestGetpassGetuser(unittest.TestCase):
@@ -94,7 +93,9 @@ loggers:
         self.clo = abk_common.CommandLineOptions(options=values)
         return super().setUp()
 
-    def test_CommandLineOptions__setup_logger_throws_given_yaml_config_file_does_not_exist(self) -> None:
+    def test_CommandLineOptions__setup_logger_throws_given_yaml_config_file_does_not_exist(
+        self,
+    ) -> None:
         """test_CommandLineOptions__setup_logger_throws_given_yaml_config_file_does_not_exist."""
         with self.assertRaises(IOError) as context:
             self.clo.options.config_log_file = "NotValidFile.yaml"
@@ -103,7 +104,9 @@ loggers:
 
     def test_CommandLineOptions__setup_logger_throws_given_invalid_yaml_file(self) -> None:
         """test_CommandLineOptions__setup_logger_throws_given_invalid_yaml_file."""
-        with mock.patch("builtins.open", mock.mock_open(read_data='{"notValid": 2}')) as mock_file:
+        with mock.patch(
+            "builtins.open", mock.mock_open(read_data='{"notValid": 2}')
+        ) as mock_file:
             with self.assertRaises(ValueError) as mock_ve:
                 self.clo.options.config_log_file = "valid.yaml"
                 self.clo._setup_logging()

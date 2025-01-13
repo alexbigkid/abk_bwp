@@ -1,4 +1,5 @@
 """Common functionality."""
+
 # Standard library imports
 import os
 import json
@@ -26,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 class OsType(Enum):
     """OsType string representation."""
+
     MAC_OS = "MacOS"
     LINUX_OS = "Linux"
     WINDOWS_OS = "Windows"
@@ -33,6 +35,7 @@ class OsType(Enum):
 
 class OsPlatformType(Enum):
     """OsPlatformType."""
+
     PLATFORM_MAC = frozenset({"darwin"})
     PLATFORM_LINUX = frozenset({"linux", "linux2"})
     PLATFORM_WINDOWS = frozenset({"win32", "win64"})
@@ -40,6 +43,7 @@ class OsPlatformType(Enum):
 
 class LoggerType(Enum):
     """Logger type."""
+
     CONSOLE_LOGGER = "consoleLogger"
     FILE_LOGGER = "fileLogger"
 
@@ -50,12 +54,14 @@ def function_trace(original_function):
     Args:
         original_function (_type_): function above which the decorator is defined
     """
+
     def function_wrapper(*args, **kwargs):
         _logger = logging.getLogger(original_function.__name__)
         _logger.debug(f"{Fore.YELLOW}-> {original_function.__name__}{Style.RESET_ALL}")
         result = original_function(*args, **kwargs)
         _logger.debug(f"{Fore.YELLOW}<- {original_function.__name__}{Style.RESET_ALL}\n")
         return result
+
     return function_wrapper
 
 
@@ -134,7 +140,9 @@ def ensure_link_exists(src: str, dst: str) -> None:
             logger.info(f"created link {dst=} to {src=}")
         except OSError as error:
             if error.errno != errno.EEXIST:
-                logger.error(f"ERROR:ensure_link_exists: create link failed with error = {error.errno}")
+                logger.error(
+                    f"ERROR:ensure_link_exists: create link failed with error = {error.errno}"
+                )
                 raise
     else:
         logger.info(f"link {dst=} exists, do nothing")
@@ -153,7 +161,9 @@ def remove_link(fileName: str) -> None:
             os.unlink(fileName)
             logger.info(f"deleted link {fileName}")
         except OSError as error:
-            logger.error(f"ERROR:remove_link: failed to delete link {fileName}, with error={error.errno}")
+            logger.error(
+                f"ERROR:remove_link: failed to delete link {fileName}, with error={error.errno}"
+            )
             pass
     else:
         logger.info(f"link {fileName} does not exist, do nothing")
@@ -204,7 +214,7 @@ def read_json_file(json_file_name: str) -> dict:
     Returns:
         dict: dictionary of read JSON file
     """
-    json_data:dict = {}
+    json_data: dict = {}
     if os.path.exists(json_file_name) and os.path.isfile(json_file_name):
         try:
             with open(json_file_name) as fh:
@@ -216,6 +226,7 @@ def read_json_file(json_file_name: str) -> dict:
 
 class PerformanceTimer(object):
     """Performance Times class."""
+
     def __init__(self, timer_name: str, pt_logger: logging.Logger):
         """Init for performance timer."""
         self._timer_name = timer_name
@@ -233,6 +244,7 @@ class PerformanceTimer(object):
 
 class CommandLineOptions(object):
     """CommandLineOptions module handles all parameters passed in to the python script."""
+
     _args: list = None  # type: ignore
     options: Values = None  # type: ignore
     _logger: logging.Logger = None  # type: ignore
@@ -253,7 +265,7 @@ class CommandLineOptions(object):
             action="store_true",
             dest="verbose",
             default=False,
-            help="verbose execution"
+            help="verbose execution",
         )
         parser.add_option(
             "-l",
@@ -261,7 +273,7 @@ class CommandLineOptions(object):
             action="store_true",
             dest="log_into_file",
             default=False,
-            help="log into file bingwallpaper.log if True, otherwise log into console"
+            help="log into file bingwallpaper.log if True, otherwise log into console",
         )
         parser.add_option(
             "-c",
@@ -270,7 +282,7 @@ class CommandLineOptions(object):
             type="string",
             dest="config_log_file",
             default="logging.yaml",
-            help="config file for logging"
+            help="config file for logging",
         )
         parser.add_option(
             "-d",
@@ -278,7 +290,7 @@ class CommandLineOptions(object):
             dest="dau",
             type="choice",
             choices=["disable", "enable"],
-            help="[disable, enable] an auto update of the background image on desktop"
+            help="[disable, enable] an auto update of the background image on desktop",
         )
         parser.add_option(
             "-f",
@@ -286,7 +298,7 @@ class CommandLineOptions(object):
             dest="ftv",
             type="choice",
             choices=["disable", "enable"],
-            help="[disable, enable] an auto update of the background image on desktop"
+            help="[disable, enable] an auto update of the background image on desktop",
         )
         (self.options, self._args) = parser.parse_args()
 
@@ -302,7 +314,9 @@ class CommandLineOptions(object):
             with open(self.options.config_log_file, "r") as stream:
                 config_yaml = yaml.load(stream, Loader=yaml.FullLoader)
                 logging.config.dictConfig(config_yaml)
-                logger_type = (LoggerType.CONSOLE_LOGGER.value, LoggerType.FILE_LOGGER.value)[self.options.log_into_file]
+                logger_type = (LoggerType.CONSOLE_LOGGER.value, LoggerType.FILE_LOGGER.value)[
+                    self.options.log_into_file
+                ]
                 self._logger = logging.getLogger(logger_type)
                 self._logger.disabled = not self.options.verbose
                 self._logger.debug(f"{logger_type=}")

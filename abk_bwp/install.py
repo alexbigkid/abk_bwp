@@ -1,14 +1,14 @@
 """1. Creates a link bingwallpaper.py in home_dir/abkBin directory to current dir
-    2. Platform dependant operation - create platfrom dependent environment
-        2.1. Mac
-            2.1.1. create a plist file for scheduled job in current directory
-            2.1.2. create a link in ~/Library/LaunchAgents/com.<userName>.bingwallpaper.py.list to the plist in current directory
-            2.1.3. stop, unload, load and start the job via plist file
-        2.2 Linux
-            2.2.1. NOT READY YET
-        2.3 Windows
-            2.3.1. NOT READY YET
-    3. schedule the job permanent job running at 8am or when logged in.
+2. Platform dependant operation - create platfrom dependent environment
+    2.1. Mac
+        2.1.1. create a plist file for scheduled job in current directory
+        2.1.2. create a link in ~/Library/LaunchAgents/com.<userName>.bingwallpaper.py.list to the plist in current directory
+        2.1.3. stop, unload, load and start the job via plist file
+    2.2 Linux
+        2.2.1. NOT READY YET
+    2.3 Windows
+        2.3.1. NOT READY YET
+3. schedule the job permanent job running at 8am or when logged in.
 """  # noqa: D205, D208
 
 # Standard lib imports
@@ -32,9 +32,9 @@ import abk_common
 
 class IInstallBase(metaclass=ABCMeta):
     """Abstract class (mostly)."""
+
     os_type: abk_common.OsType = None  # type: ignore
     _shell_file_name: str = None  # type: ignore
-
 
     @property
     def shell_file_name(self) -> str:
@@ -44,13 +44,13 @@ class IInstallBase(metaclass=ABCMeta):
             self._shell_file_name = f"{abk_common.BWP_APP_NAME}.{extension}"
         return self._shell_file_name
 
-
     @abk_common.function_trace
     def __init__(self, logger: logging.Logger = None) -> None:  # type: ignore
         """Super class init."""
         self._logger = logger or logging.getLogger(__name__)
-        self._logger.info(f"({__class__.__name__}) Initializing {self.os_type} installation environment ...")
-
+        self._logger.info(
+            f"({__class__.__name__}) Initializing {self.os_type} installation environment ..."
+        )
 
     # @abk_common.function_trace
     # def install_python_packages(self) -> None:
@@ -78,12 +78,10 @@ class IInstallBase(metaclass=ABCMeta):
     # #     echo "/usr/bin/ruby -e \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)\""
     # # fi
 
-
     @abstractmethod
     def setup_installation(self) -> None:
         """Abstract method - should not be implemented. Interface purpose."""
         raise NotImplementedError
-
 
 
 class InstallOnMacOS(IInstallBase):
@@ -99,13 +97,16 @@ class InstallOnMacOS(IInstallBase):
         self.os_type = abk_common.OsType.MAC_OS
         super().__init__(logger)
 
-
     @abk_common.function_trace
     def setup_installation(self) -> None:
         """Setup installation on MacOS."""
-        time_to_exe: time = bwp_config.get(ROOT_KW.TIME_TO_FETCH.value, datetime.strptime("12:00:00", "%H:%M:%S").time())
+        time_to_exe: time = bwp_config.get(
+            ROOT_KW.TIME_TO_FETCH.value, datetime.strptime("12:00:00", "%H:%M:%S").time()
+        )
 
-        self._logger.debug(f"{time_to_exe.hour = }, {time_to_exe.minute = }, {time_to_exe.second = }")
+        self._logger.debug(
+            f"{time_to_exe.hour = }, {time_to_exe.minute = }, {time_to_exe.second = }"
+        )
         current_path = os.path.dirname(__file__)
         plist_label = self._create_plist_file(time_to_exe, self.shell_file_name)
         # plist_label = self._create_plist_file(time_to_exe, "bingwallpaper.py")
@@ -113,7 +114,6 @@ class InstallOnMacOS(IInstallBase):
         dst_plist_name = self._create_plist_link(plist_full_name)
         self._stop_and_unload_bingwallpaper_job(dst_plist_name, plist_label)
         self._load_and_start_bingwallpaper_job(dst_plist_name, plist_label)
-
 
     @abk_common.function_trace
     def _create_plist_file(self, time_to_exe: time, script_name: str) -> str:
@@ -138,38 +138,35 @@ class InstallOnMacOS(IInstallBase):
                 '<?xml version="1.0" encoding="UTF-8"?>\n',
                 '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n',
                 '<plist version="1.0">\n',
-                '<dict>\n',
-                '    <key>Label</key>\n',
-               f'    <string>{plist_label}</string>\n',
-                '    <key>WorkingDirectory</key>\n',
-               f'    <string>{current_path}</string>\n',
-                '    <key>ProgramArguments</key>\n',
-                '    <array>\n',
-                '        <string>bash</string>\n',
-               f'        <string>{full_script_name}</string>\n',
-                '    </array>\n',
-                '    <key>RunAtLoad</key>\n',
-                '    <true/>\n',
-                '    <key>StartCalendarInterval</key>\n',
-                '    <dict>\n',
-                '        <key>Hour</key>\n',
-               f'        <integer>{time_to_exe.hour}</integer>\n',
-                '        <key>Minute</key>\n',
-               f'        <integer>{time_to_exe.minute}</integer>\n',
-                '    </dict>\n',
-                '    <!--\n'
-                '    <key>StandardErrorPath</key>\n',
-               f'    <string>/tmp/{plist_label}.stderr</string>\n',
-                '    <key>StandardOutPath</key>\n',
-               f'    <string>/tmp/{plist_label}.stdout</string>\n',
-                '    -->\n'
-                '</dict>\n',
-                '</plist>\n',
+                "<dict>\n",
+                "    <key>Label</key>\n",
+                f"    <string>{plist_label}</string>\n",
+                "    <key>WorkingDirectory</key>\n",
+                f"    <string>{current_path}</string>\n",
+                "    <key>ProgramArguments</key>\n",
+                "    <array>\n",
+                "        <string>bash</string>\n",
+                f"        <string>{full_script_name}</string>\n",
+                "    </array>\n",
+                "    <key>RunAtLoad</key>\n",
+                "    <true/>\n",
+                "    <key>StartCalendarInterval</key>\n",
+                "    <dict>\n",
+                "        <key>Hour</key>\n",
+                f"        <integer>{time_to_exe.hour}</integer>\n",
+                "        <key>Minute</key>\n",
+                f"        <integer>{time_to_exe.minute}</integer>\n",
+                "    </dict>\n",
+                "    <!--\n    <key>StandardErrorPath</key>\n",
+                f"    <string>/tmp/{plist_label}.stderr</string>\n",
+                "    <key>StandardOutPath</key>\n",
+                f"    <string>/tmp/{plist_label}.stdout</string>\n",
+                "    -->\n</dict>\n",
+                "</plist>\n",
             ]
             fh.writelines(lines_to_write)
         self._logger.debug(f"{plist_label=}")
         return plist_label
-
 
     @abk_common.function_trace
     def _create_plist_link(self, full_file_name: str) -> str:
@@ -190,7 +187,6 @@ class InstallOnMacOS(IInstallBase):
         abk_common.ensure_link_exists(full_file_name, dst_file_name)
         self._logger.debug(f"{dst_file_name=}")
         return dst_file_name
-
 
     @abk_common.function_trace
     def _stop_and_unload_bingwallpaper_job(self, plist_name: str, plist_label: str) -> None:
@@ -213,8 +209,9 @@ class InstallOnMacOS(IInstallBase):
                 retCode = subprocess.check_call(cmd, shell=True)
                 self._logger.info(f"command '{cmd}' succeeded, returned: {retCode}")
         except subprocess.CalledProcessError as e:
-            self._logger.info(f"error: {e.returncode=}. It is expected though, since not all commands will execute successfully.")
-
+            self._logger.info(
+                f"error: {e.returncode=}. It is expected though, since not all commands will execute successfully."
+            )
 
     @abk_common.function_trace
     def _load_and_start_bingwallpaper_job(self, plist_name: str, plist_label: str) -> None:
@@ -241,7 +238,6 @@ class InstallOnMacOS(IInstallBase):
             self._logger.critical("ERROR: unknown")
 
 
-
 class InstallOnLinux(IInstallBase):
     """Concrete class for installation on Linux."""
 
@@ -254,12 +250,10 @@ class InstallOnLinux(IInstallBase):
         self.os_type = abk_common.OsType.LINUX_OS
         super().__init__(logger)
 
-
     @abk_common.function_trace
     def setup_installation(self) -> None:
         """Setup installation on Linux."""
         self._logger.info(f"{self.os_type.value} installation is not supported yet")
-
 
 
 class InstallOnWindows(IInstallBase):
@@ -274,13 +268,11 @@ class InstallOnWindows(IInstallBase):
         self.os_type = abk_common.OsType.WINDOWS_OS
         super().__init__(logger)
 
-
     @abk_common.function_trace
     def setup_installation(self) -> None:
         """Setup installation on Windows."""
         # self._logger.debug(f"{time_to_exe.hour=}, {time_to_exe.minute=}, {app_name=}")
         self._logger.info(f"{self.os_type.value} installation is not supported yet")
-
 
 
 @abk_common.function_trace

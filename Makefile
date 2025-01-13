@@ -80,6 +80,9 @@ lint:
 lint_fix:
 	ruff check --fix ./abk_bwp/ ./tests/
 
+format:
+	ruff format ./abk_bwp/ ./tests/
+
 
 # -----------------------------------------------------------------------------
 # Package bulding and deploying Makefile rules

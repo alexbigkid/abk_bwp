@@ -69,7 +69,9 @@ def handle_desktop_auto_update_option(enable_option: Union[str, None]) -> None:
     if (enable := enable_option == BWP_ENABLE) or enable_option == BWP_DISABLE:
         is_enabled = get_config_enabled_setting(str(DESKTOP_IMG_KW.DESKTOP_IMG.value))
         if is_enabled != enable:
-            update_enable_field_in_toml_file(key_to_update=DESKTOP_IMG_KW.DESKTOP_IMG.value, update_to=enable)
+            update_enable_field_in_toml_file(
+                key_to_update=DESKTOP_IMG_KW.DESKTOP_IMG.value, update_to=enable
+            )
             if enable:
                 install.bwp_install()
             else:

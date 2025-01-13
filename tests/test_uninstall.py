@@ -9,9 +9,9 @@ import unittest
 # from context import uninstall
 
 
-
 class TestUninstall(unittest.TestCase):
     """TestUninstall."""
+
     mut = None
 
     def setUp(self) -> None:
@@ -23,12 +23,10 @@ class TestUninstall(unittest.TestCase):
         self.maxDiff = None
         return super().setUp()
 
-
     def test_uninstall_001(self) -> None:
         """test_uninstall_001."""
         self.assertTrue(True)
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

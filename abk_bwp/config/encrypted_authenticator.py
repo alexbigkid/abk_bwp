@@ -1,4 +1,5 @@
 """Encrypted auth config file."""
+
 import asyncio
 import logging
 from typing import Optional
@@ -14,9 +15,7 @@ PORT = 8080
 # PORT = 8080  # Warning: this can be different from the remote port
 
 
-async def _get_token(
-    host: str, web_session: aiohttp.ClientSession, port: int
-) -> tuple[str, str]:
+async def _get_token(host: str, web_session: aiohttp.ClientSession, port: int) -> tuple[str, str]:
     authenticator = SamsungTVEncryptedWSAsyncAuthenticator(
         host, web_session=web_session, port=port
     )

@@ -11,6 +11,7 @@ import unittest
 
 class TestInstall(unittest.TestCase):
     """TestInstall."""
+
     mut = None
 
     def setUp(self) -> None:
@@ -18,12 +19,10 @@ class TestInstall(unittest.TestCase):
         self.maxDiff = None
         return super().setUp()
 
-
     def test_install_001(self) -> None:
         """test_install_001."""
         self.assertTrue(True)
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
