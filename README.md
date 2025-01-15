@@ -119,6 +119,6 @@ The project contains com.abk.bingwallpaper_debug.sh.plist file, which can be use
 
 
 #### Pipeline Unit Tests ran on:
-- [x] Linux latest / Python 3.8.x, 3.9.x, 3.10.x, 3.11.x
-- [x] MacOS latest / Python 3.8.x, 3.9.x, 3.10.x, 3.11.x
-- [x] Windows latest / Python 3.8.x, 3.9.x, 3.10.x, 3.11.x
+- [x] Linux latest / Python 3.8.x, 3.9.x, 3.10.x, 3.11.x, 3.12.x
+- [x] MacOS latest / Python 3.8.x, 3.9.x, 3.10.x, 3.11.x, 3.12.x
+- [x] Windows latest / Python 3.8.x, 3.9.x, 3.10.x, 3.11.x, 3.12.x
