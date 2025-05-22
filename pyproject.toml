@@ -1,21 +1,91 @@
 [project]
-requires-python = ">=3.12"
+name = "abk_bwp"
+version = "0.1.0"
+description = "Downloads daily Bing images and sets them as desktop wallpaper"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+    { name = "ABK", email = "alexbigkid@users.noreply.github.com"}
+]
+maintainers = [
+    { name = "ABK", email = "alexbigkid@users.noreply.github.com"}
+]
+keywords = ["bing", "wallpaper", "desktop", "background", "peapix"]
+dependencies = [
+    "colorama",
+    "jsonschema",
+    "pillow",
+    "PyYAML",
+    "requests",
+    "samsungtvws[async,encrypted]",
+    "tomlkit",
+    "urllib3",
+    "wakeonlan"
+]
 
-[tool.black]
-line-length = 98
+
+# [project.optional-dependencies]
+[dependency-groups]
+dev = [
+    "coverage",
+    "parameterized",
+    "ruff",
+    "tox",
+]
+debug = [
+    "build",
+    "setuptools",
+    "twine",
+    "pip-check",
+    "pip-date",
+    "pip-chill",
+    "pipdeptree",
+    "pre-commit",
+    "wheel"
+]
+
+
+[project.scripts]
+bwp = "abk_bwp.cli:main"
+test = "unittest:main"
+
+
+[tool.uv]
+managed = true
+
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+# requires = ["uv"]
+# build-backend = "uv_build"
+# requires = ["setuptools>=42", "wheel"]
+# build-backend = "setuptools.build_meta"
+
+
+[tool.unittest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
 
 [tool.ruff]
 line-length = 98
 indent-width = 4
 exclude = ["E231", "E202"]
-src = ["abk_bwp"]
+src = ["src", "tests"]
+# extend-ignore = ["E501", "E722", "F401", "F841", "F403", "F405", "F841"]
+
 
 [tool.ruff.lint]
 preview = true
 select = ["D", "F401", "E302"]  # Enable specific Flake8-compatible rules
+# extend-select = ["E", "W"]
+
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
 
 [tool.ruff.format]
 line-ending = "lf"
@@ -23,6 +93,7 @@ quote-style = "double"
 indent-style = "space"
 skip-magic-trailing-comma = true
 docstring-code-format = true
+
 
 [tool.ruff.lint.isort]
 lines-after-imports = 2

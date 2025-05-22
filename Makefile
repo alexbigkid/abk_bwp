@@ -1,71 +1,65 @@
 .PHONY:	upgrade_setuptools install install_dev install_nth test test_v test_ff test_vff settings help
 .SILENT: clean
-BWP_HOME = abk_bwp
+BWP_HOME = src/abk_bwp
 
 # -----------------------------------------------------------------------------
 # BingWallPaper Makefile rules
 # -----------------------------------------------------------------------------
 bwp_ftv_enable:
-	cd $(BWP_HOME) && python abk_bwp.py -c logging.yaml -v -f enable
+	cd $(BWP_HOME) && uv run abk_bwp.py -c logging.yaml -v -f enable
 
 bwp_ftv_disable:
-	cd $(BWP_HOME) && python abk_bwp.py -c logging.yaml -v -f disable
+	cd $(BWP_HOME) && uv run abk_bwp.py -c logging.yaml -v -f disable
 
 bwp_desktop_enable:
-	cd $(BWP_HOME) && python abk_bwp.py -c logging.yaml -v -d enable
+	cd $(BWP_HOME) && uv run abk_bwp.py -c logging.yaml -v -d enable
 
 bwp_desktop_disable:
-	cd $(BWP_HOME) && python abk_bwp.py -c logging.yaml -v -d disable
+	cd $(BWP_HOME) && uv run abk_bwp.py -c logging.yaml -v -d disable
 
 bwp:
-	cd $(BWP_HOME) && python bingwallpaper.py
+	cd $(BWP_HOME) && uv run bingwallpaper.py
 
 bwp_log:
-	cd $(BWP_HOME) && python bingwallpaper.py -c logging.yaml -l bingwallpaper.log -v
+	cd $(BWP_HOME) && uv run bingwallpaper.py -c logging.yaml -l bingwallpaper.log -v
 
 bwp_trace:
-	cd $(BWP_HOME) && python bingwallpaper.py -c logging.yaml -v
+	cd $(BWP_HOME) && uv run bingwallpaper.py -c logging.yaml -v
 
 
 # -----------------------------------------------------------------------------
 # Dependency installation Makefile rules
 # -----------------------------------------------------------------------------
-upgrade_setuptools:
-	pip install --upgrade setuptools wheel
+install:
+	uv sync
 
-install: upgrade_setuptools
-	pip install --requirement requirements.txt
-
-install_test: upgrade_setuptools
-	pip install --requirement requirements_test.txt
-
-install_dev: upgrade_setuptools
-	pip install --requirement requirements_dev.txt
+install_debug:
+	uv pip install --group debug
 
 
 # -----------------------------------------------------------------------------
 # Running tests Makefile rules
 # -----------------------------------------------------------------------------
 test:
-	python -m unittest discover --start-directory tests
+	uv run python -m unittest discover --start-directory tests
 
 test_v:
-	python -m unittest discover --start-directory tests --verbose
+	uv run python -m unittest discover --start-directory tests --verbose
 
 test_ff:
-	python -m unittest discover --start-directory tests --failfast
+	uv run python -m unittest discover --start-directory tests --failfast
 
 test_vff:
-	python -m unittest discover --start-directory tests --verbose --failfast
+	uv run python -m unittest discover --start-directory tests --verbose --failfast
 
 %:
 	@:
 
 test_1:
-	python -m unittest "tests.$(filter-out $@,$(MAKECMDGOALS))"
+	uv run python -m unittest "tests.$(filter-out $@,$(MAKECMDGOALS))"
 
 coverage:
-	coverage run --source $(BWP_HOME) --omit ./tests/*,./abk_bwp/config/*,./abk_bwp/fonts,./samsung-tv-ws-api/*  -m unittest discover --start-directory tests
+	coverage run --source $(BWP_HOME) --omit ./tests/*,./src/abk_bwp/config/*,./src/abk_bwp/fonts,./samsung-tv-ws-api/*  -m unittest discover --start-directory tests
 	@echo
 	coverage report
 	coverage xml
@@ -75,13 +69,13 @@ coverage:
 # Running tests Makefile rules
 # -----------------------------------------------------------------------------
 lint:
-	ruff check ./abk_bwp/ ./tests/
+	uv run ruff check ./src/abk_bwp/ ./tests/
 
 lint_fix:
-	ruff check --fix ./abk_bwp/ ./tests/
+	uv run ruff check --fix ./src/abk_bwp/ ./tests/
 
 format:
-	ruff format ./abk_bwp/ ./tests/
+	uv run ruff format ./src/abk_bwp/ ./tests/
 
 
 # -----------------------------------------------------------------------------
@@ -141,6 +135,7 @@ clean:
 	@echo "___________________"
 	find . -name "__pycache__" -type d -prune
 	rm -rf  $(find . -name "__pycache__" -type d -prune)
+	uv clean cache
 
 
 # -----------------------------------------------------------------------------
@@ -163,8 +158,7 @@ help:
 	@echo "  bwp_ftv_enable     - WIP: executes the abk_bwp program, enables Samsung frame TV support (Not working yet)"
 	@echo "  bwp_ftv_disable    - WIP: executes the abk_bwp program, disables Samsung frame TV support (Not working yet)"
 	@echo "  install            - installs required packages"
-	@echo "  install_test       - installs required packages for test"
-	@echo "  install_dev        - installs required packages for development"
+	@echo "  install_debug      - installs required packages for debug session"
 	@echo "  test               - runs test"
 	@echo "  test_v             - runs test with verbose messaging"
 	@echo "  test_ff            - runs test fast fail"

@@ -28,7 +28,7 @@ jobs:
             matrix:
                 # os: [ubuntu-latest]
                 os: [ ubuntu, macOS, windows ]
-                py: [ "3.8", "3.9", "3.10", "3.11", "3.12" ]
+                py: [ "3.11", "3.12", "3.13"]
 
         steps:
             - name: checkout repo
@@ -37,6 +37,8 @@ jobs:
               uses: actions/setup-python@v5
               with:
                 python-version: ${{ matrix.py }}
+            - name: Install uv
+              uses: astral-sh/setup-uv@v3
             - name: Python Info
               run: |
                 echo ""

@@ -11,23 +11,25 @@
 3. schedule the job permanent job running at 8am or when logged in.
 """  # noqa: D205, D208
 
-# Standard lib imports
-import os
-import sys
 import logging
 import logging.config
+
+# Standard lib imports
+import os
 import subprocess
+import sys
 from abc import ABCMeta, abstractmethod
 from datetime import datetime, time
 from sys import platform as _platform
 from typing import Union
+
+import abk_common
 
 # Third party imports
 from colorama import Fore, Style
 
 # local imports
 from config import ROOT_KW, bwp_config
-import abk_common
 
 
 class IInstallBase(metaclass=ABCMeta):
@@ -313,5 +315,5 @@ def bwp_install(install_logger: Union[logging.Logger, None] = None) -> None:
 if __name__ == "__main__":
     command_line_options = abk_common.CommandLineOptions()
     command_line_options.handle_options()
-    install_logger = command_line_options._logger
+    install_logger = command_line_options.logger
     bwp_install(install_logger)

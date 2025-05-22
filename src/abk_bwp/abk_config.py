@@ -1,9 +1,9 @@
 """Main function or entry module for the ABK BingWallPaper (abk_bwp) package."""
 
 # Standard lib imports
+import logging
 import os
 import sys
-import logging
 from typing import Union
 
 # Third party imports
@@ -11,10 +11,8 @@ import tomlkit
 from colorama import Fore, Style
 
 # Local imports
-from config import DESKTOP_IMG_KW, FTV_KW, bwp_config
-import abk_common
-import install
-import uninstall
+from abk_bwp import abk_common, clo, install, uninstall
+from abk_bwp.config import DESKTOP_IMG_KW, FTV_KW, bwp_config
 
 
 BWP_ENABLE = "enable"
@@ -93,14 +91,14 @@ def handle_ftv_option(enable_option: Union[str, None]) -> None:
             update_enable_field_in_toml_file(key_to_update=FTV_KW.FTV.value, update_to=enable)
 
 
-def abk_bwp():
+def abk_bwp(clo: clo.CommandLineOptions) -> None:
     """Basically the main function of the package."""
     exit_code = 0
     try:
-        abk_bwp_logger.debug(f"{command_line_options.options=}")
-        abk_bwp_logger.debug(f"{command_line_options._args=}")
-        handle_desktop_auto_update_option(command_line_options.options.dau)
-        handle_ftv_option(command_line_options.options.ftv)
+        abk_bwp_logger.debug(f"{clo.options=}")
+        abk_bwp_logger.debug(f"{clo._args=}")
+        handle_desktop_auto_update_option(clo.options.dau)
+        handle_ftv_option(clo.options.ftv)
     except Exception as exception:
         abk_bwp_logger.error(f"{Fore.RED}ERROR: executing bingwallpaper")
         abk_bwp_logger.error(f"EXCEPTION: {exception}{Style.RESET_ALL}")
@@ -110,7 +108,7 @@ def abk_bwp():
 
 
 if __name__ == "__main__":
-    command_line_options = abk_common.CommandLineOptions()
+    command_line_options = clo.CommandLineOptions()
     command_line_options.handle_options()
-    abk_bwp_logger = command_line_options._logger
-    abk_bwp()
+    abk_bwp_logger = command_line_options.logger
+    abk_bwp(command_line_options)

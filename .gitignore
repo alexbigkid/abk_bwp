@@ -7,9 +7,14 @@ __pycache__/
 # Setuptools distribution folder.
 dist/
 build/
+wheels/
+target/
 
 # Python egg metadata, regenerated from source files by setuptools.
 /*.egg-info
+
+# Python virtual environments
+.venv
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -19,7 +24,6 @@ build/
 
 # Installer logs
 pip-log.txt
-pip-delete-this-directory.txt
 
 # Unit test / coverage reports
 htmlcov/
@@ -31,18 +35,7 @@ coverage.xml
 *.cover
 .hypothesis/
 
-# PyBuilder
-target/
-
-# pyenv
-.python-version
-
-# dotenv
-.env
-.envrc
-
-#abk ignores
-.vscode/
+# abk ignores
 com.*.bingwallpaper.py.plist
 logs/*
 samsung-tv-ws-api/

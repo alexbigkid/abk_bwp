@@ -22,7 +22,7 @@ from samsungtvws import SamsungTVWS
 # from samsungtvws import SamsungTVArt
 
 # local imports
-import abk_common
+from abk_bwp import abk_common
 
 
 # -----------------------------------------------------------------------------

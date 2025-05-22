@@ -10,23 +10,25 @@
         2.3.1. NOT READY YET.
 """  # noqa: D205, D208, D210
 
+import logging
+import logging.config
+
 # Standard lib imports
 import os
 import shutil
-import logging
-import logging.config
 import subprocess
+import sys
 from abc import ABCMeta, abstractmethod
 from sys import platform as _platform
-import sys
 from typing import Tuple, Union
+
+import abk_common
 
 # Third party imports
 from colorama import Fore, Style
 
 # Local imports
 from config import ROOT_KW, bwp_config
-import abk_common
 
 
 class IUninstallBase(metaclass=ABCMeta):
@@ -284,5 +286,5 @@ def bwp_uninstall(uninstall_logger: Union[logging.Logger, None] = None) -> None:
 if __name__ == "__main__":
     command_line_options = abk_common.CommandLineOptions()
     command_line_options.handle_options()
-    uninstall_logger = command_line_options._logger
+    uninstall_logger = command_line_options.logger
     bwp_uninstall(uninstall_logger)

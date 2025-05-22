@@ -1,22 +1,18 @@
 """Common functionality."""
 
 # Standard library imports
-import os
-import json
-import yaml
-import timeit
 import errno
 import getpass
+import json
 import logging
-import logging.config
+import os
+import timeit
 from enum import Enum
 
 # Third party imports
-from optparse import OptionParser, Values
 from colorama import Fore, Style
 
 # Local application imports
-import __license__
 
 
 BWP_MAIN_FILE_NAME = "abk_bwp.py"
@@ -39,13 +35,6 @@ class OsPlatformType(Enum):
     PLATFORM_MAC = frozenset({"darwin"})
     PLATFORM_LINUX = frozenset({"linux", "linux2"})
     PLATFORM_WINDOWS = frozenset({"win32", "win64"})
-
-
-class LoggerType(Enum):
-    """Logger type."""
-
-    CONSOLE_LOGGER = "consoleLogger"
-    FILE_LOGGER = "fileLogger"
 
 
 def function_trace(original_function):
@@ -240,94 +229,6 @@ class PerformanceTimer(object):
         """Exit for performance timer."""
         time_took = (timeit.default_timer() - self.start) * 1000.0
         self._logger.info(f"Executing {self._timer_name} took {str(time_took)} ms")
-
-
-class CommandLineOptions(object):
-    """CommandLineOptions module handles all parameters passed in to the python script."""
-
-    _args: list = None  # type: ignore
-    options: Values = None  # type: ignore
-    _logger: logging.Logger = None  # type: ignore
-
-    def __init__(self, args: list = None, options: Values = None):  # type: ignore
-        """Init for Command Line Options."""
-        self._args = args
-        self.options = options
-
-    def handle_options(self) -> None:
-        """Handles user specified options and arguments."""
-        usage_string = "usage: %prog [options]"
-        version_string = f"%prog version: {Fore.GREEN}{__license__.__version__}{Style.RESET_ALL}"
-        parser = OptionParser(usage=usage_string, version=version_string)
-        parser.add_option(
-            "-v",
-            "--verbose",
-            action="store_true",
-            dest="verbose",
-            default=False,
-            help="verbose execution",
-        )
-        parser.add_option(
-            "-l",
-            "--log_into_file",
-            action="store_true",
-            dest="log_into_file",
-            default=False,
-            help="log into file bingwallpaper.log if True, otherwise log into console",
-        )
-        parser.add_option(
-            "-c",
-            "--config_log_file",
-            action="store",
-            type="string",
-            dest="config_log_file",
-            default="logging.yaml",
-            help="config file for logging",
-        )
-        parser.add_option(
-            "-d",
-            "--desktop_auto_update",
-            dest="dau",
-            type="choice",
-            choices=["disable", "enable"],
-            help="[disable, enable] an auto update of the background image on desktop",
-        )
-        parser.add_option(
-            "-f",
-            "--frame_tv",
-            dest="ftv",
-            type="choice",
-            choices=["disable", "enable"],
-            help="[disable, enable] an auto update of the background image on desktop",
-        )
-        (self.options, self._args) = parser.parse_args()
-
-        self._setup_logging()
-        self._logger.info(f"{self.options=}")
-        self._logger.info(f"{self._args=}")
-        self._logger.info(f"{self.options.verbose=}")
-        self._logger.info(f"{self.options.log_into_file=}")
-        self._logger.info(f"{__license__.__version__=}")
-
-    def _setup_logging(self) -> None:
-        try:
-            with open(self.options.config_log_file, "r") as stream:
-                config_yaml = yaml.load(stream, Loader=yaml.FullLoader)
-                logging.config.dictConfig(config_yaml)
-                logger_type = (LoggerType.CONSOLE_LOGGER.value, LoggerType.FILE_LOGGER.value)[
-                    self.options.log_into_file
-                ]
-                self._logger = logging.getLogger(logger_type)
-                self._logger.disabled = not self.options.verbose
-                self._logger.debug(f"{logger_type=}")
-        except ValueError:
-            raise ValueError(f"{self.options.config_log_file} is not a valid yaml format")
-        except IOError:
-            raise IOError(f"{self.options.config_log_file} does not exist.")
-        except Exception:
-            # print(f"ERROR: {exp=}, disabling logging")
-            self._logger = logging.getLogger(__name__)
-            self._logger.disabled = True
 
 
 if __name__ == "__main__":
