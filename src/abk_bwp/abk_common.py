@@ -15,7 +15,7 @@ from colorama import Fore, Style
 # Local application imports
 
 
-BWP_MAIN_FILE_NAME = "abk_bwp.py"
+BWP_MAIN_FILE_NAME = "abk_config.py"
 BWP_APP_NAME = "bingwallpaper"
 
 logger = logging.getLogger(__name__)

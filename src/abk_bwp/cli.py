@@ -1,4 +1,4 @@
-"""Cli - entry point to the abk_bwp."""
+"""Cli - entry point to the abk_bwp package."""
 
 from abk_bwp.bingwallpaper import bingwallpaper
 from abk_bwp import clo
