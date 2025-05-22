@@ -14,9 +14,9 @@ image_dir = "Pictures/BingWallpapers"
 store_jpg_quality = 89
 
 # -----------------------------------------------------------------------------
-# trim number of images collected always to this number: for me ~30 years: 30 * 365 = 10950
+# trim number of images collected always to this number: for me ~9 years: 9 * 365 = 3285
 # -----------------------------------------------------------------------------
-number_of_images_to_keep = 10950
+number_of_images_to_keep = 3285
 
 # -----------------------------------------------------------------------------
 # in case you want to uninstall the app, whether the you want to retain the images collected over time.
@@ -95,7 +95,7 @@ bing_url = "http://www.bing.com/HPImageArchive.aspx"
 # -----------------------------------------------------------------------------
 # if true, images for each day will be produced and pushed to Samsung Frame TV. This is still WIP, though!
 # -----------------------------------------------------------------------------
-enabled = true
+enabled = false
 
 # -----------------------------------------------------------------------------
 # 70-100. JPEG quality used when resizing to Samsung Frame TV size (3810x2160).
@@ -108,4 +108,4 @@ jpg_quality = 80
 # -----------------------------------------------------------------------------
 # frame tv secret data file in toml format. This file should not be committed to git
 # -----------------------------------------------------------------------------
-ftv_data = "ftv_secrets.toml"
+ftv_data = "ftv_data.toml"
