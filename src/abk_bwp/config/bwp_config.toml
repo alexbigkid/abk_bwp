@@ -1,0 +1,111 @@
+# -----------------------------------------------------------------------------
+# if you set the time too early in the day, the API might not have the image yet.
+# -----------------------------------------------------------------------------
+time_to_fetch = 12:08:09
+
+# -----------------------------------------------------------------------------
+# directory where in users home directory images will be stored
+# -----------------------------------------------------------------------------
+image_dir = "Pictures/BingWallpapers"
+
+# -----------------------------------------------------------------------------
+# resize jpeg quality % defines thew size of the resized image. higher number -> better image, greater file size
+# -----------------------------------------------------------------------------
+store_jpg_quality = 89
+
+# -----------------------------------------------------------------------------
+# trim number of images collected always to this number: for me ~30 years: 30 * 365 = 10950
+# -----------------------------------------------------------------------------
+number_of_images_to_keep = 10950
+
+# -----------------------------------------------------------------------------
+# in case you want to uninstall the app, whether the you want to retain the images collected over time.
+# -----------------------------------------------------------------------------
+retain_images = true
+
+# -----------------------------------------------------------------------------
+# peapix is prefered service, since it allows to download better images from different contries
+# -----------------------------------------------------------------------------
+dl_service = "peapix"
+
+# -----------------------------------------------------------------------------
+# region used to download the bing images of the day. Accaptable regions see below in alt_peapix_region
+# -----------------------------------------------------------------------------
+region = "us"
+
+
+
+# =============================================================================
+[desktop_img]
+# =============================================================================
+# -----------------------------------------------------------------------------
+# if enabled the app will try to set the image as desktop. If false the image just going to be downloaded but not set as desktop image
+# -----------------------------------------------------------------------------
+enabled = true
+
+# -----------------------------------------------------------------------------
+# if height or width is configured to not supported size, it will be defaulted to 4K resolution: 3840x2160
+# -----------------------------------------------------------------------------
+width = 3840
+height = 2160
+
+# -----------------------------------------------------------------------------
+# when downloaded the image will be resized to correct resolution of your screen. This is the jpeg quality setting when compressing by resizing.
+# -----------------------------------------------------------------------------
+jpg_quality = 80
+
+# -----------------------------------------------------------------------------
+# the alternative sizes are not configurable, there are here just for information what is supported
+# -----------------------------------------------------------------------------
+alt_dimention = [ {"width" = 640, "height" = 480}, {"width" = 1024, "height" = 768}, {"width" = 1600, "height" = 1200}, {"width" = 1920, "height" = 1080}, {"width" = 1920, "height" = 1200}, {"width" = 3840, "height" = 2160} ]
+
+
+
+# =============================================================================
+[constant]
+# =============================================================================
+# -----------------------------------------------------------------------------
+# alternative downlaod service. Peapix is preferred because it usually offers a better image quality.
+# -----------------------------------------------------------------------------
+alt_dl_service = ["bing", "peapix"]
+
+# -----------------------------------------------------------------------------
+# alternative regions for peapix service. Metadata will be also used from that region and added to the image.
+# -----------------------------------------------------------------------------
+alt_peapix_region = ["au", "br", "ca", "cn", "de", "fr", "in", "it", "jp", "es", "gb", "us"]
+# -----------------------------------------------------------------------------
+# Peapix API service URL
+# -----------------------------------------------------------------------------
+peapix_url = "https://peapix.com/bing/feed"
+
+# -----------------------------------------------------------------------------
+# alternative regions for peapix service. Metadata will be also used from that region and added to the image.
+# -----------------------------------------------------------------------------
+alt_bing_region = ["en-AU", "en-CA", "zh-CN", "de-DE", "fr-FR", "hi-IN", "ja-JP", "es-ES", "en-GB", "en-US"]
+# -----------------------------------------------------------------------------
+# Bing API service URL
+# -----------------------------------------------------------------------------
+bing_url = "http://www.bing.com/HPImageArchive.aspx"
+
+
+
+# =============================================================================
+[ftv]
+# =============================================================================
+# -----------------------------------------------------------------------------
+# if true, images for each day will be produced and pushed to Samsung Frame TV. This is still WIP, though!
+# -----------------------------------------------------------------------------
+enabled = true
+
+# -----------------------------------------------------------------------------
+# 70-100. JPEG quality used when resizing to Samsung Frame TV size (3810x2160).
+# Lower number - lower quality image butsmaller file size, larger number better quality larger file sizes
+# The image size for ftv is stored in the native 3840x2160 (4K) format.
+# This cannot be changed, because it is the native resilution for Frame TV
+# -----------------------------------------------------------------------------
+jpg_quality = 80
+
+# -----------------------------------------------------------------------------
+# frame tv secret data file in toml format. This file should not be committed to git
+# -----------------------------------------------------------------------------
+ftv_data = "ftv_secrets.toml"

@@ -1,0 +1,41 @@
+version: 1
+disable_existing_loggers: True
+
+formatters:
+    abkFormatterShort:
+        format: '[%(asctime)s]:[%(module)s.%(funcName)s]:[%(levelname)s]: %(message)s'
+        datefmt: '%Y%m%d %H:%M:%S'
+    abkFormatterLong:
+        format: '[%(asctime)s]:[%(thread)d]:[%(module)s.%(funcName)s]:[%(name)s][%(levelname)s]: %(message)s'
+        datefmt: '%Y%m%d %H:%M:%S'
+
+handlers:
+    consoleHandler:
+        class: logging.StreamHandler
+        level: DEBUG
+        formatter: abkFormatterShort
+        stream: ext://sys.stdout
+    fileHandler:
+        class: logging.FileHandler
+        level: DEBUG
+        formatter: abkFormatterLong
+        filename: logs/bingwallpaper.log
+
+loggers:
+    root:
+        level: DEBUG
+        handlers: [consoleHandler]
+    consoleLogger:
+        level: DEBUG
+        handlers: [consoleHandler]
+        qualname: consoleLogger
+        propagate: no
+    fileLogger:
+        level: DEBUG
+        handlers: [fileHandler]
+        qualname: fileLogger
+        propagate: no
+
+root:
+    level: DEBUG
+    handlers: [consoleHandler]
