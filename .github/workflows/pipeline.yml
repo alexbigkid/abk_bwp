@@ -28,7 +28,7 @@ jobs:
             matrix:
                 # os: [ubuntu-latest]
                 os: [ ubuntu, macOS, windows ]
-                py: [ "3.11", "3.12", "3.13"]
+                py: [ "3.12", "3.13"]
 
         steps:
             - name: checkout repo

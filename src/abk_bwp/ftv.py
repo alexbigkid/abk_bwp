@@ -9,10 +9,7 @@ import logging
 from typing import NamedTuple
 import wakeonlan
 
-try:  # for python 3.11 and up
-    import tomllib  # type: ignore
-except ModuleNotFoundError:  # for 3.7 <= python < 3.11
-    import tomli as tomllib  # type: ignore
+import tomllib  # type: ignore
 
 # Third party imports
 from jsonschema import validate, exceptions

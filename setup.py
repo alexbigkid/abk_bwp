@@ -30,10 +30,8 @@ setup(
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate you support Python 3. These classifiers are *not*
         # checked by 'pip install'. See instead 'python_requires' below.
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3..13",
         "Programming Language :: Python :: 3 :: Only",
     ],
     python_requires=">=3.8, <4",
@@ -49,9 +47,8 @@ setup(
         "PyYAML",
         "requests",
         "samsungtvws[async,encrypted]",
-        "tomli>=1.1.0; python_version<'3.11'",
         "tomlkit",
-        "urllib3[secure]",
+        "urllib3",
     ],
     extras_require={  # Optional
         "dev": [
