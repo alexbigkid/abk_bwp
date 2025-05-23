@@ -6,5 +6,5 @@ PyYAML
 requests
 samsungtvws[async,encrypted]
 tomlkit
-urllib3[secure]
+urllib3
 wakeonlan

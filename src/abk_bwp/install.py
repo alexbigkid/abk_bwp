@@ -23,13 +23,14 @@ from datetime import datetime, time
 from sys import platform as _platform
 from typing import Union
 
-import abk_common
 
 # Third party imports
 from colorama import Fore, Style
 
+
 # local imports
-from config import ROOT_KW, bwp_config
+from abk_bwp import abk_common
+from abk_bwp.config import ROOT_KW, bwp_config
 
 
 class IInstallBase(metaclass=ABCMeta):

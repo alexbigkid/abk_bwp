@@ -9,7 +9,7 @@ import unittest
 from unittest.mock import patch
 
 # local imports
-from context import ftv
+from abk_bwp import ftv
 
 TEST_FTV_SECRET_CONFIG_FILE = "tests/test_ftv_secret_config.toml"
 

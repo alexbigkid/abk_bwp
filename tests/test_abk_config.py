@@ -9,8 +9,7 @@ from unittest.mock import patch
 from parameterized import parameterized
 
 # local  modules imports
-from context import config
-from context import abk_config
+from abk_bwp import config, abk_config
 
 
 class TestAbkBwp(unittest.TestCase):
@@ -40,7 +39,7 @@ class TestAbkBwp(unittest.TestCase):
         """
         with patch.dict(config.bwp_config, {"ftv": {"enabled": ftv_enabled}}):
             with patch(
-                "abk_config.update_enable_field_in_toml_file"
+                "abk_bwp.abk_config.update_enable_field_in_toml_file"
             ) as mock_update_enable_field_in_toml_file:
                 abk_config.handle_ftv_option(ftv_input)
         mock_update_enable_field_in_toml_file.assert_called_once_with(
@@ -73,7 +72,7 @@ class TestAbkBwp(unittest.TestCase):
         """
         with patch.dict(config.bwp_config, {"ftv": {"enabled": ftv_enabled}}):
             with patch(
-                "abk_config.update_enable_field_in_toml_file"
+                "abk_bwp.abk_config.update_enable_field_in_toml_file"
             ) as mock_update_enable_field_in_toml_file:
                 abk_config.handle_ftv_option(ftv_input)
         mock_update_enable_field_in_toml_file.assert_not_called()
@@ -101,8 +100,8 @@ class TestAbkBwp(unittest.TestCase):
         """
         func_to_call = ("uninstall", "install")[exp_desktop_img_enabled]
         with patch.dict(config.bwp_config, {"desktop_img": {"enabled": desktop_img_enabled}}):
-            with patch("abk_config.update_enable_field_in_toml_file") as mock_update_enable_field:
-                with patch(f"{func_to_call}.bwp_{func_to_call}") as mock_bwp_install_uninstall:
+            with patch("abk_bwp.abk_config.update_enable_field_in_toml_file") as mock_update_enable_field:
+                with patch(f"abk_bwp.{func_to_call}.bwp_{func_to_call}") as mock_bwp_install_uninstall:
                     abk_config.handle_desktop_auto_update_option(desktop_img_input)
         mock_update_enable_field.assert_called_once_with(
             key_to_update=config.DESKTOP_IMG_KW.DESKTOP_IMG.value,
@@ -138,7 +137,7 @@ class TestAbkBwp(unittest.TestCase):
             exp_desktop_img_enabled (bool): expected desktop image enabled
         """
         with patch.dict(config.bwp_config, {"desktop_img": {"enabled": desktop_img_enabled}}):
-            with patch("abk_config.update_enable_field_in_toml_file") as mock_update_enable_field:
+            with patch("abk_bwp.abk_config.update_enable_field_in_toml_file") as mock_update_enable_field:
                 abk_config.handle_desktop_auto_update_option(desktop_img_input)
         mock_update_enable_field.assert_not_called()
         self.assertTrue(desktop_img_enabled == exp_desktop_img_enabled)

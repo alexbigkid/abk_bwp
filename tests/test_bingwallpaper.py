@@ -9,8 +9,7 @@ from unittest.mock import patch
 from parameterized import parameterized
 
 # Own modules imports
-from context import config
-from context import bingwallpaper
+from abk_bwp import bingwallpaper, config
 
 
 class TestBingwallpaper(unittest.TestCase):

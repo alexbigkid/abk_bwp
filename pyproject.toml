@@ -3,7 +3,7 @@ name = "abk_bwp"
 version = "0.1.0"
 description = "Downloads daily Bing images and sets them as desktop wallpaper"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 license = { text = "MIT" }
 authors = [
     { name = "ABK", email = "alexbigkid@users.noreply.github.com"}
@@ -67,7 +67,6 @@ build-backend = "hatchling.build"
 [tool.unittest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
-
 
 [tool.ruff]
 line-length = 98

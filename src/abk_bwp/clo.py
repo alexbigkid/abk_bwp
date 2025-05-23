@@ -94,6 +94,12 @@ class CommandLineOptions(object):
 
     def _setup_logging(self):
         try:
+            if self.options.quiet:
+                logging.disable(logging.CRITICAL)  # disables all log output
+                self.logger = logging.getLogger()  # dummy fallback
+                self.logger.disabled = True
+                return
+
             root_dir = self._find_project_root()
 
             if self.options.log_into_file:
@@ -104,16 +110,18 @@ class CommandLineOptions(object):
                 config_yaml = yaml.load(stream, Loader=yaml.FullLoader)
                 logging.config.dictConfig(config_yaml)
 
-            if self.options.quiet:
-                logging.disable(logging.CRITICAL)  # disables all log output
-                self.logger = logging.getLogger()  # dummy fallback
-                return
-
             logger_name = "fileLogger" if self.options.log_into_file else "consoleLogger"
             self.logger = logging.getLogger(logger_name)
+
+            # queue_handler = logging.getHandlerByName("queueHandler")
+            # if queue_handler is not None:
+            #     queue_handler.listener.start()
+            #     atexit.register(queue_handler.listener.stop)
+
         except FileNotFoundError as exc:
             raise FileNotFoundError(f"{config_path} does not exist.") from exc
         except Exception as e:
-            print(f"Logging disabled due to error: {e}")
+            # print(f"Logging disabled due to error: {e}")
             self.logger = logging.getLogger(__name__)
             self.logger.disabled = True
+            self.logger.exception(f"Logging disabled due to error: {e}")

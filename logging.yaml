@@ -23,24 +23,33 @@ handlers:
         maxBytes: 10485760
         backupCount: 5
         encoding: utf-8
-        delay: false
+        delay: true
         mode: a
+    queueHandler:
+        class: logging.handlers.QueueHandler
+        handlers:
+          - consoleHandler
+          - fileHandler
+        queue: ext://queue.Queue
+        respect_handler_level: true
 
 loggers:
     root:
         level: DEBUG
-        handlers: [consoleHandler]
+        handlers:
+          - consoleHandler
     consoleLogger:
         level: DEBUG
-        handlers: [consoleHandler]
-        qualname: consoleLogger
+        handlers:
+          - consoleHandler
         propagate: no
     fileLogger:
         level: DEBUG
-        handlers: [fileHandler]
-        qualname: fileLogger
+        handlers:
+          - fileHandler
         propagate: no
 
 root:
     level: DEBUG
-    handlers: [consoleHandler]
+    handlers:
+      - consoleHandler

@@ -10,11 +10,9 @@
         2.3.1. NOT READY YET.
 """  # noqa: D205, D208, D210
 
-import logging
-import logging.config
-
 # Standard lib imports
 import os
+import logging
 import shutil
 import subprocess
 import sys
@@ -22,13 +20,14 @@ from abc import ABCMeta, abstractmethod
 from sys import platform as _platform
 from typing import Tuple, Union
 
-import abk_common
 
 # Third party imports
 from colorama import Fore, Style
 
+
 # Local imports
-from config import ROOT_KW, bwp_config
+from abk_bwp import abk_common
+from abk_bwp.config import ROOT_KW, bwp_config
 
 
 class IUninstallBase(metaclass=ABCMeta):
