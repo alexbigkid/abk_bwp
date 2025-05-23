@@ -37,72 +37,28 @@ class CommandLineOptions(object):
     def handle_options(self) -> None:
         """Handles user specified options and arguments."""
         usage_string = "usage: %prog [options]"
-        # parser = OptionParser(usage=usage_string, version=version_string)
         parser = ArgumentParser(
             prog="bwp",
-            usage=usage_string,
             description="Downloads daily Bing images and sets them as desktop wallpaper",
         )
         parser.add_argument("--version", action="store_true", help="Show version info and exit")
         parser.add_argument("--about", action="store_true", help="Show detailed project metadata")
-        # parser.add_option(
-        #     "-v",
-        #     "--verbose",
-        #     action="store_true",
-        #     dest="verbose",
-        #     default=False,
-        #     help="verbose execution",
-        # )
         parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose logging")
-        # parser.add_option(
-        #     "-l",
-        #     "--log_into_file",
-        #     action="store_true",
-        #     dest="log_into_file",
-        #     default=False,
-        #     help="log into file bingwallpaper.log if True, otherwise log into console",
-        # )
         parser.add_argument(
             "-l", "--log_into_file", action="store_true", help="Log into file instead of console"
         )
-        # parser.add_option(
-        #     "-c",
-        #     "--config_log_file",
-        #     action="store",
-        #     type="string",
-        #     dest="config_log_file",
-        #     default="logging.yaml",
-        #     help="config file for logging",
-        # )
         parser.add_argument(
             "-c",
             "--config_log_file",
             default="logging.yaml",
             help="Path to logging config YAML file",
         )
-        # parser.add_option(
-        #     "-d",
-        #     "--desktop_auto_update",
-        #     dest="dau",
-        #     type="choice",
-        #     choices=["disable", "enable"],
-        #     help="[disable, enable] an auto update of the background image on desktop",
-        # )
         parser.add_argument(
             "-d",
             "--desktop_auto_update",
             choices=["enable", "disable"],
             help="[enable, disable] desktop auto update",
         )
-        # parser.add_option(
-        #     "-f",
-        #     "--frame_tv",
-        #     dest="ftv",
-        #     type="choice",
-        #     choices=["disable", "enable"],
-        #     help="[disable, enable] an auto update of the background image on desktop",
-        # )
-        # (self.options, self._args) = parser.parse_args()
         parser.add_argument(
             "-f",
             "--frame_tv",
