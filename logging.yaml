@@ -16,10 +16,15 @@ handlers:
         formatter: abkFormatterShort
         stream: ext://sys.stdout
     fileHandler:
-        class: logging.FileHandler
+        class: logging.handlers.RotatingFileHandler
         level: DEBUG
         formatter: abkFormatterLong
         filename: logs/bingwallpaper.log
+        maxBytes: 10485760
+        backupCount: 5
+        encoding: utf-8
+        delay: false
+        mode: a
 
 loggers:
     root:
