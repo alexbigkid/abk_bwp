@@ -59,7 +59,8 @@ test_1:
 	uv run python -m unittest "tests.$(filter-out $@,$(MAKECMDGOALS))"
 
 coverage:
-	coverage run --source $(BWP_HOME) --omit ./tests/*,./src/abk_bwp/config/*,./src/abk_bwp/fonts,./samsung-tv-ws-api/*  -m unittest discover --start-directory tests
+	uv sync && source .venv/bin/activate
+	uv run coverage run --source $(BWP_HOME) --omit ./tests/*,./src/abk_bwp/config/*,./src/abk_bwp/fonts,./samsung-tv-ws-api/*  -m unittest discover --start-directory tests
 	@echo
 	coverage report
 	coverage xml
