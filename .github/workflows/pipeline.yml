@@ -53,8 +53,8 @@ jobs:
                 python3 --version
             - name: install dependencies
               run: make install
-            - name: install tox-gh
-              run: python -m pip install tox-gh
+            # - name: install tox-gh
+            #   run: python -m pip install tox-gh
             - name: run unit tests
               run: make test_ff
             # coverage has a problem with windows so not running it if windows OS
