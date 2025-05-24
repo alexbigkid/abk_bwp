@@ -483,7 +483,7 @@ class TestPerformanceTimer(unittest.TestCase):
         mock_logger = mock.Mock()
         with (
             mock.patch("timeit.default_timer", side_effect=[1.0, 2.0]),
-            self.abk_common.PerformanceTimer("test_task", mock_logger)
+            self.abk_common.PerformanceTimer("test_task", mock_logger),
         ):
             pass  # Simulate task
 

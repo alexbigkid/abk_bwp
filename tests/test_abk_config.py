@@ -172,11 +172,10 @@ class TestAbkBwp(unittest.TestCase):
 
         self.abk_config = abk_config
 
-
-    @patch('abk_bwp.abk_config.sys.exit')
-    @patch('abk_bwp.abk_config.handle_desktop_auto_update_option')
-    @patch('abk_bwp.abk_config.handle_ftv_option')
-    @patch('abk_bwp.abk_config.logger')
+    @patch("abk_bwp.abk_config.sys.exit")
+    @patch("abk_bwp.abk_config.handle_desktop_auto_update_option")
+    @patch("abk_bwp.abk_config.handle_ftv_option")
+    @patch("abk_bwp.abk_config.logger")
     def test_abk_bwp_success(self, mock_logger, mock_ftv, mock_desktop, mock_exit):
         """Test normal execution path."""
         self.abk_config.abk_bwp(self.mock_clo)
@@ -186,10 +185,10 @@ class TestAbkBwp(unittest.TestCase):
         mock_exit.assert_called_once_with(0)
         mock_logger.error.assert_not_called()
 
-    @patch('abk_bwp.abk_config.sys.exit')
-    @patch('abk_bwp.abk_config.handle_desktop_auto_update_option')
-    @patch('abk_bwp.abk_config.handle_ftv_option')
-    @patch('abk_bwp.abk_config.logger')
+    @patch("abk_bwp.abk_config.sys.exit")
+    @patch("abk_bwp.abk_config.handle_desktop_auto_update_option")
+    @patch("abk_bwp.abk_config.handle_ftv_option")
+    @patch("abk_bwp.abk_config.logger")
     def test_abk_bwp_exception(self, mock_logger, mock_ftv, mock_desktop, mock_exit):
         """Simulate exception in one of the handlers."""
         mock_desktop.side_effect = Exception("fail desktop")
@@ -202,17 +201,17 @@ class TestAbkBwp(unittest.TestCase):
         mock_logger.error.assert_called()
         mock_logger.exception.assert_called()
 
-
     @patch("abk_bwp.abk_config.tomlkit.load")
     @patch("abk_bwp.abk_config.tomlkit.dump")
-    @patch("builtins.open", new_callable=mock_open, read_data="[desktop_img]\nenabled = false\n[ftv]\nenabled = false\n")
+    @patch(
+        "builtins.open",
+        new_callable=mock_open,
+        read_data="[desktop_img]\nenabled = false\n[ftv]\nenabled = false\n",
+    )
     def test_update_enable_field(self, mock_file, mock_dump, mock_load):
         """Test update enable filed in toml file."""
         # Prepare fake config data returned by tomlkit.load
-        config_data = {
-            "desktop_img": {"enabled": False},
-            "ftv": {"enabled": False}
-        }
+        config_data = {"desktop_img": {"enabled": False}, "ftv": {"enabled": False}}
         mock_load.return_value = config_data
         # Call the function to update desktop_img.enabled to True
         self.abk_config.update_enable_field_in_toml_file("desktop_img", True)
@@ -228,16 +227,16 @@ class TestAbkBwp(unittest.TestCase):
         # Check open was called twice: once for reading, once for writing
         self.assertEqual(mock_file.call_count, 2)
 
-
     @patch("abk_bwp.abk_config.tomlkit.load")
     @patch("abk_bwp.abk_config.tomlkit.dump")
-    @patch("builtins.open", new_callable=mock_open, read_data="[desktop_img]\nenabled = true\n[ftv]\nenabled = true\n")
+    @patch(
+        "builtins.open",
+        new_callable=mock_open,
+        read_data="[desktop_img]\nenabled = true\n[ftv]\nenabled = true\n",
+    )
     def test_update_ftv_disable(self, mock_file, mock_dump, mock_load):
         """Test update disable filed in toml file."""
-        config_data = {
-            "desktop_img": {"enabled": True},
-            "ftv": {"enabled": True}
-        }
+        config_data = {"desktop_img": {"enabled": True}, "ftv": {"enabled": True}}
         mock_load.return_value = config_data
 
         self.abk_config.update_enable_field_in_toml_file("ftv", False)
