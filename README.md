@@ -11,8 +11,8 @@ Please do not download or use any image that violates its copyright terms.
 ## Installation
 
 ### Prerequisites
-In order successfully run <code>abk_bwp</code> app, you would need:
-- MacOS
+In order to successfully run <code>abk_bwp</code> app, you would need:
+- MacOS computer
 - Python >=3.12
 - Install python dependencies
 
