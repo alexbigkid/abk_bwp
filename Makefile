@@ -5,26 +5,26 @@ BWP_HOME = src/abk_bwp
 # -----------------------------------------------------------------------------
 # BingWallPaper Makefile rules
 # -----------------------------------------------------------------------------
-bwp_ftv_enable:
-	cd $(BWP_HOME) && uv run abk_bwp.py -c logging.yaml -v -f enable
+ftv_enable:
+	cd $(BWP_HOME) && uv run abk_config.py -f enable
 
-bwp_ftv_disable:
-	cd $(BWP_HOME) && uv run abk_bwp.py -c logging.yaml -v -f disable
+ftv_disable:
+	cd $(BWP_HOME) && uv run abk_config.py -f disable
 
-bwp_desktop_enable:
-	cd $(BWP_HOME) && uv run abk_bwp.py -c logging.yaml -v -d enable
+desktop_enable:
+	cd $(BWP_HOME) && uv run abk_config.py -d enable
 
-bwp_desktop_disable:
-	cd $(BWP_HOME) && uv run abk_bwp.py -c logging.yaml -v -d disable
+desktop_disable:
+	cd $(BWP_HOME) && uv run abk_config.py -d disable
+
+quiet:
+	uv run bwp -q
+
+log:
+	uv run bwp -l
 
 bwp:
-	cd $(BWP_HOME) && uv run bingwallpaper.py
-
-bwp_log:
-	cd $(BWP_HOME) && uv run bingwallpaper.py -c logging.yaml -l bingwallpaper.log -v
-
-bwp_trace:
-	cd $(BWP_HOME) && uv run bingwallpaper.py -c logging.yaml -v
+	uv run bwp
 
 
 # -----------------------------------------------------------------------------
@@ -150,13 +150,13 @@ settings:
 help:
 	@echo "Targets:"
 	@echo "--------------------------------------------------------------------------------"
-	@echo "  bwp                - executes the abk_bwp program"
-	@echo "  bwp_log            - executes the abk_bwp program with logging into a file"
-	@echo "  bwp_trace          - executes the abk_bwp program with traces in console"
-	@echo "  bwp_desktop_enable - executes the abk_bwp program, enables auto download (time configured in bwp_config.toml)"
-	@echo "  bwp_desktop_disable- executes the abk_bwp program, disables auto download (time configured in bwp_config.toml)"
-	@echo "  bwp_ftv_enable     - WIP: executes the abk_bwp program, enables Samsung frame TV support (Not working yet)"
-	@echo "  bwp_ftv_disable    - WIP: executes the abk_bwp program, disables Samsung frame TV support (Not working yet)"
+	@echo "  bwp                - executes the abk_bwp with traces in console"
+	@echo "  quiet              - executes the abk_bwp in quiet mode (no logs)"
+	@echo "  log                - executes the abk_bwp with logging into a file: logs/bingwallpaper.log"
+	@echo "  desktop_enable     - enables auto download (time configured in bwp_config.toml)"
+	@echo "  desktop_disable    - disables auto download (time configured in bwp_config.toml)"
+	@echo "  ftv_enable         - WIP: enables Samsung frame TV support (Not working yet)"
+	@echo "  ftv_disable        - WIP: disables Samsung frame TV support (Not working yet)"
 	@echo "  install            - installs required packages"
 	@echo "  install_debug      - installs required packages for debug session"
 	@echo "  test               - runs test"

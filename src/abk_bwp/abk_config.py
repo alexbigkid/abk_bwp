@@ -96,11 +96,11 @@ def abk_bwp(clo: clo.CommandLineOptions) -> None:
     try:
         abk_bwp_logger.debug(f"{clo.options=}")
         abk_bwp_logger.debug(f"{clo._args=}")
-        handle_desktop_auto_update_option(clo.options.dau)
-        handle_ftv_option(clo.options.ftv)
+        handle_desktop_auto_update_option(clo.options.desktop_auto_update)
+        handle_ftv_option(clo.options.frame_tv)
     except Exception as exception:
         abk_bwp_logger.error(f"{Fore.RED}ERROR: executing bingwallpaper")
-        abk_bwp_logger.error(f"EXCEPTION: {exception}{Style.RESET_ALL}")
+        abk_bwp_logger.exception(f"EXCEPTION: {exception}{Style.RESET_ALL}")
         exit_code = 1
     finally:
         sys.exit(exit_code)
