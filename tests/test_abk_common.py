@@ -412,7 +412,9 @@ class TestReadJsonFile(unittest.TestCase):
 
         self.abk_common = abk_common
 
-    @mock.patch("abk_bwp.abk_common.open", new_callable=mock.mock_open, read_data='{"key": "value"}')
+    @mock.patch(
+        "abk_bwp.abk_common.open", new_callable=mock.mock_open, read_data='{"key": "value"}'
+    )
     @mock.patch("abk_bwp.abk_common.os.path.isfile", return_value=True)
     @mock.patch("abk_bwp.abk_common.os.path.exists", return_value=True)
     def test_reads_valid_json_file(self, mock_exists, mock_isfile, mock_open_file):
@@ -448,13 +450,62 @@ class TestReadJsonFile(unittest.TestCase):
     ):
         """Test that read_json_file logs an error when JSON parsing fails."""
         mock_open_file.return_value.__enter__.return_value.read.return_value = "bad json"
-        mock_open_file.return_value.__enter__.return_value.read.side_effect = json.JSONDecodeError("Expecting value", "", 0)
-        with mock.patch("abk_bwp.abk_common.json.load", side_effect=json.JSONDecodeError("Expecting value", "", 0)):
+        mock_open_file.return_value.__enter__.return_value.read.side_effect = (
+            json.JSONDecodeError("Expecting value", "", 0)
+        )
+        with mock.patch(
+            "abk_bwp.abk_common.json.load",
+            side_effect=json.JSONDecodeError("Expecting value", "", 0),
+        ):
             result = self.abk_common.read_json_file("bad.json")
             self.assertEqual(result, {})
             mock_logger.error.assert_called()
         mock_exists.assert_called_once_with("bad.json")
         mock_isfile.assert_called_once_with("bad.json")
+
+
+class TestPerformanceTimer(unittest.TestCase):
+    """Tests for PerformanceTimer context manager."""
+
+    def setUp(self):
+        """Patch the resolve method used by lazy_logger."""
+        patcher = mock.patch("abk_bwp.abk_common.logger._resolve", return_value=mock.MagicMock())
+        self.mock_resolve = patcher.start()
+        self.addCleanup(patcher.stop)
+
+        # Import abk_common after patch
+        import abk_bwp.abk_common as abk_common
+
+        self.abk_common = abk_common
+
+    def test_timer_logs_duration_with_custom_logger(self):
+        """Test that PerformanceTimer logs duration with provided logger."""
+        mock_logger = mock.Mock()
+        with (
+            mock.patch("timeit.default_timer", side_effect=[1.0, 2.0]),
+            self.abk_common.PerformanceTimer("test_task", mock_logger)
+        ):
+            pass  # Simulate task
+
+        mock_logger.info.assert_called_once()
+        log_call_arg = mock_logger.info.call_args[0][0]
+        self.assertIn("Executing test_task took", log_call_arg)
+
+    def test_timer_uses_fallback_logger_if_none_provided(self):
+        """Test that PerformanceTimer uses fallback logger if none provided."""
+        with (
+            mock.patch("abk_bwp.abk_common.logging.getLogger") as mock_get_logger,
+            mock.patch("timeit.default_timer", side_effect=[1.0, 2.0]),
+        ):
+            logger_instance = mock.Mock()
+            mock_get_logger.return_value = logger_instance
+
+            with self.abk_common.PerformanceTimer("fallback_task", pt_logger=None):
+                pass
+
+        logger_instance.info.assert_called_once()
+        self.assertIn("Executing fallback_task took", logger_instance.info.call_args[0][0])
+
 
 class TestGetHomeDir(unittest.TestCase):
     """Tests for GetHomeDir function."""
