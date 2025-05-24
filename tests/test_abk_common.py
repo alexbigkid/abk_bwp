@@ -338,6 +338,65 @@ class TestDeleteDir(unittest.TestCase):
         mock_isdir.assert_called_once_with("/not/a/dir")
 
 
+class TestDeleteFile(unittest.TestCase):
+    """Unit tests for delete_file function."""
+
+    def setUp(self):
+        """Patch the resolve method used by lazy_logger."""
+        patcher = mock.patch("abk_bwp.abk_common.logger._resolve", return_value=mock.MagicMock())
+        self.mock_resolve = patcher.start()
+        self.addCleanup(patcher.stop)
+
+        # Import abk_common after patch
+        import abk_bwp.abk_common as abk_common
+
+        self.abk_common = abk_common
+
+    @mock.patch("abk_bwp.abk_common.os.remove")
+    @mock.patch("abk_bwp.abk_common.os.path.isfile", return_value=True)
+    @mock.patch("abk_bwp.abk_common.os.path.exists", return_value=True)
+    def test_deletes_existing_file(self, mock_exists, mock_isfile, mock_remove):
+        """Test that delete_file deletes an existing file."""
+        self.abk_common.delete_file("/mock/file.txt")
+        mock_remove.assert_called_once_with("/mock/file.txt")
+        mock_exists.assert_called_once_with("/mock/file.txt")
+        mock_isfile.assert_called_once_with("/mock/file.txt")
+
+    @mock.patch("abk_bwp.abk_common.os.remove")
+    @mock.patch("abk_bwp.abk_common.os.path.isfile", return_value=False)
+    @mock.patch("abk_bwp.abk_common.os.path.exists", return_value=True)
+    def test_does_not_delete_if_not_a_file(self, mock_exists, mock_isfile, mock_remove):
+        """Test that delete_file does not delete if the path is not a file."""
+        self.abk_common.delete_file("/mock/not_a_file")
+        mock_remove.assert_not_called()
+        mock_exists.assert_called_once_with("/mock/not_a_file")
+        mock_isfile.assert_called_once_with("/mock/not_a_file")
+
+    @mock.patch("abk_bwp.abk_common.os.remove")
+    @mock.patch("abk_bwp.abk_common.os.path.exists", return_value=False)
+    def test_does_not_delete_if_file_does_not_exist(self, mock_exists, mock_remove):
+        """Test that delete_file does not delete if the file does not exist."""
+        self.abk_common.delete_file("/mock/missing.txt")
+        mock_remove.assert_not_called()
+        mock_exists.assert_called_once_with("/mock/missing.txt")
+
+    @mock.patch("abk_bwp.abk_common.logger")
+    @mock.patch("abk_bwp.abk_common.os.remove", side_effect=OSError("delete failed"))
+    @mock.patch("abk_bwp.abk_common.os.path.isfile", return_value=True)
+    @mock.patch("abk_bwp.abk_common.os.path.exists", return_value=True)
+    def test_logs_error_on_remove_exception(
+        self, mock_exists, mock_isfile, mock_remove, mock_logger
+    ):
+        """Test that delete_file logs an error if an OSError occurs during file deletion."""
+        mock_remove.side_effect = OSError("delete failed")
+        self.abk_common.delete_file("/mock/bad_file.txt")
+        mock_logger.error.assert_called()
+        args = mock_logger.error.call_args[0][0]
+        self.assertIn("ERROR:delete_file:", args)
+        mock_exists.assert_called_once_with("/mock/bad_file.txt")
+        mock_isfile.assert_called_once_with("/mock/bad_file.txt")
+
+
 class TestGetHomeDir(unittest.TestCase):
     """Tests for GetHomeDir function."""
 
