@@ -1,4 +1,4 @@
-# Bing Wallpaper ![Tests](https://github.com/alexbigkid/abk_bwp/actions/workflows/pipeline.yml/badge.svg) [![codecov](https://codecov.io/gh/alexbigkid/abk_bwp/branch/master/graph/badge.svg)](https://codecov.io/gh/alexbigkid/abk_bwp)
+# ABK BingWallpaper ![Tests](https://github.com/alexbigkid/abk_bwp/actions/workflows/pipeline.yml/badge.svg) [![codecov](https://codecov.io/gh/alexbigkid/abk_bwp/branch/master/graph/badge.svg)](https://codecov.io/gh/alexbigkid/abk_bwp)
 Downloads daily Bing images and sets them as desktop wallpaper on MacOS
 
 [TOC]
