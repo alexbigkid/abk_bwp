@@ -168,6 +168,59 @@ class TestEnsureDir(unittest.TestCase):
         except Exception:
             self.fail("ensure_dir should not raise if OSError is EEXIST")
 
+class TestEnsureLinkExists(unittest.TestCase):
+    """Unit tests for ensure_link_exists function."""
+
+    def setUp(self):
+        """Patch the resolve method used by lazy_logger."""
+        patcher = mock.patch("abk_bwp.abk_common.logger._resolve", return_value=mock.MagicMock())
+        self.mock_resolve = patcher.start()
+        self.addCleanup(patcher.stop)
+
+        # Import abk_common after patch
+        import abk_bwp.abk_common as abk_common
+
+        self.abk_common = abk_common
+
+    @mock.patch("abk_bwp.abk_common.os.symlink")
+    @mock.patch("abk_bwp.abk_common.os.path.islink", return_value=False)
+    def test_creates_symlink_if_not_exists(self, mock_islink, mock_symlink):
+        self.abk_common.ensure_link_exists("source.txt", "link.txt")
+        mock_islink.assert_called_once_with("link.txt")
+        mock_symlink.assert_called_once_with("source.txt", "link.txt")
+
+    @mock.patch("abk_bwp.abk_common.os.symlink")
+    @mock.patch("abk_bwp.abk_common.os.path.islink", return_value=True)
+    def test_does_nothing_if_symlink_exists(self, mock_islink, mock_symlink):
+        self.abk_common.ensure_link_exists("source.txt", "link.txt")
+        mock_islink.assert_called_once_with("link.txt")
+        mock_symlink.assert_not_called()
+
+    @mock.patch("abk_bwp.abk_common.os.symlink")
+    @mock.patch("abk_bwp.abk_common.os.path.islink", return_value=False)
+    def test_ignores_eexist_oserror(self, mock_islink, mock_symlink):
+        error = OSError("already exists")
+        error.errno = errno.EEXIST
+        mock_symlink.side_effect = error
+
+        try:
+            self.abk_common.ensure_link_exists("source.txt", "link1.txt")
+        except Exception:
+            self.fail("Should not raise if errno is EEXIST")
+        mock_islink.assert_called_once_with("link1.txt")
+
+    @mock.patch("abk_bwp.abk_common.os.symlink")
+    @mock.patch("abk_bwp.abk_common.os.path.islink", return_value=False)
+    def test_raises_for_non_eexist_oserror(self, mock_islink, mock_symlink):
+        error = OSError("boom")
+        error.errno = errno.EPERM
+        mock_symlink.side_effect = error
+
+        with self.assertRaises(OSError):
+            self.abk_common.ensure_link_exists("source.txt", "link2.txt")
+        mock_islink.assert_called_once_with("link2.txt")
+
+
 class TestGetHomeDir(unittest.TestCase):
     """Tests for GetHomeDir function."""
 
