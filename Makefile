@@ -58,18 +58,17 @@ test_vff:
 test_1:
 	uv run python -m unittest "tests.$(filter-out $@,$(MAKECMDGOALS))"
 
-coverage:
-	uv venv exec coverage run --source src/abk_bwp \
-		--omit "tests/*,src/abk_bwp/config/*,src/abk_bwp/fonts,external/*" \
-		-m unittest discover -s tests
-	uv venv exec coverage report
-	uv venv exec coverage xml
 # coverage:
-# 	uv sync && source .venv/bin/activate
-# 	uv run coverage run --source $(BWP_HOME) --omit ./tests/*,./src/abk_bwp/config/*,./src/abk_bwp/fonts,./samsung-tv-ws-api/*  -m unittest discover --start-directory tests
-# 	@echo
-# 	coverage report
-# 	coverage xml
+# 	uv venv exec coverage run --source src/abk_bwp \
+# 		--omit "tests/*,src/abk_bwp/config/*,src/abk_bwp/fonts,external/*" \
+# 		-m unittest discover -s tests
+# 	uv venv exec coverage report
+# 	uv venv exec coverage xml
+coverage:
+	uv run coverage run --source $(BWP_HOME) --omit ./tests/*,./src/abk_bwp/config/*,./src/abk_bwp/fonts,./samsung-tv-ws-api/*  -m unittest discover --start-directory tests
+	@echo
+	uv run coverage report
+	uv run coverage xml
 
 
 # -----------------------------------------------------------------------------
