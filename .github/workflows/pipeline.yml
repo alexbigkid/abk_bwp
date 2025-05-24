@@ -18,7 +18,7 @@ jobs:
               uses: astral-sh/ruff-action@v3
               with:
                 args: check
-                src: "./src/abk_bwp"
+                # src: "./src/abk_bwp"
 
     build:
         name: Run on ${{ matrix.py }} - ${{ matrix.os }}
@@ -52,7 +52,7 @@ jobs:
                 echo "------------------------"
                 python3 --version
             - name: install dependencies
-              run: make install
+              run: uv sync
             # - name: install tox-gh
             #   run: python -m pip install tox-gh
             - name: run unit tests
