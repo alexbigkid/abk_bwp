@@ -1,4 +1,4 @@
-"""Font init."""
+"""Font initialization to get font name."""
 
 import os
 import random

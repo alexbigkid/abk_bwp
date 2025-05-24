@@ -160,26 +160,23 @@ class TestLoggerManager(unittest.TestCase):
             self.assertTrue(logger_mgr._configured)
             self.assertTrue(logger_mgr.get_logger().disabled)
 
-    @patch("abk_bwp.logger_manager.yaml.safe_load", return_value={
-        "version": 1,
-        "formatters": {
-            "simple": {"format": "%(message)s"}
+    @patch(
+        "abk_bwp.logger_manager.yaml.safe_load",
+        return_value={
+            "version": 1,
+            "formatters": {"simple": {"format": "%(message)s"}},
+            "handlers": {
+                "console": {
+                    "class": "logging.StreamHandler",
+                    "formatter": "simple",
+                    "level": "DEBUG",
+                }
+            },
+            "loggers": {
+                "fileLogger": {"level": "DEBUG", "handlers": ["console"], "propagate": False}
+            },
         },
-        "handlers": {
-            "console": {
-                "class": "logging.StreamHandler",
-                "formatter": "simple",
-                "level": "DEBUG",
-            }
-        },
-        "loggers": {
-            "fileLogger": {
-                "level": "DEBUG",
-                "handlers": ["console"],
-                "propagate": False,
-            }
-        }
-    })
+    )
     @patch("abk_bwp.logger_manager.logging.config.dictConfig")
     @patch("abk_bwp.logger_manager.Path.open", new_callable=mock_open, read_data="version: 1")
     @patch("abk_bwp.logger_manager.Path.exists", return_value=True)

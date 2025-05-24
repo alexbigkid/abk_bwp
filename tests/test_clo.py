@@ -78,9 +78,7 @@ class TestCommandLineOptions(unittest.TestCase):
             self.assertEqual(self.cmd.options.frame_tv, "disable")
             self.assertTrue(self.cmd.options.log_into_file)
             self.assertFalse(self.cmd.options.quiet)
-            mock_configure.assert_called_once_with(
-                log_into_file=True, quiet=False
-            )
+            mock_configure.assert_called_once_with(log_into_file=True, quiet=False)
             mock_get_logger.assert_called_once_with("abk_bwp.clo")
 
 

@@ -9,16 +9,19 @@ import os
 import timeit
 from enum import Enum
 
+
 # Third party imports
 from colorama import Fore, Style
 
 # Local application imports
+from abk_bwp.lazy_logger import LazyLoggerProxy
 
 
 BWP_MAIN_FILE_NAME = "abk_config.py"
 BWP_APP_NAME = "bingwallpaper"
 
-logger = logging.getLogger(__name__)
+
+logger = LazyLoggerProxy(__name__)
 
 
 class OsType(Enum):
