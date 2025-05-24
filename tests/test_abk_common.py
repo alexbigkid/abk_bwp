@@ -2,6 +2,7 @@
 
 # Standard library imports
 import errno
+import json
 import os
 import sys
 import unittest
@@ -396,6 +397,64 @@ class TestDeleteFile(unittest.TestCase):
         mock_exists.assert_called_once_with("/mock/bad_file.txt")
         mock_isfile.assert_called_once_with("/mock/bad_file.txt")
 
+
+class TestReadJsonFile(unittest.TestCase):
+    """Unit tests for read_json_file function."""
+
+    def setUp(self):
+        """Patch the resolve method used by lazy_logger."""
+        patcher = mock.patch("abk_bwp.abk_common.logger._resolve", return_value=mock.MagicMock())
+        self.mock_resolve = patcher.start()
+        self.addCleanup(patcher.stop)
+
+        # Import abk_common after patch
+        import abk_bwp.abk_common as abk_common
+
+        self.abk_common = abk_common
+
+    @mock.patch("abk_bwp.abk_common.open", new_callable=mock.mock_open, read_data='{"key": "value"}')
+    @mock.patch("abk_bwp.abk_common.os.path.isfile", return_value=True)
+    @mock.patch("abk_bwp.abk_common.os.path.exists", return_value=True)
+    def test_reads_valid_json_file(self, mock_exists, mock_isfile, mock_open_file):
+        """Test that read_json_file reads a valid JSON file."""
+        result = self.abk_common.read_json_file("fake.json")
+        self.assertEqual(result, {"key": "value"})
+        mock_exists.assert_called_once_with("fake.json")
+        mock_isfile.assert_called_once_with("fake.json")
+        mock_open_file.assert_called_once_with("fake.json")
+
+    @mock.patch("abk_bwp.abk_common.os.path.exists", return_value=False)
+    def test_returns_empty_dict_when_file_does_not_exist(self, mock_exists):
+        """Test that read_json_file returns an empty dict when file does not exist."""
+        result = self.abk_common.read_json_file("nonexistent.json")
+        self.assertEqual(result, {})
+        mock_exists.assert_called_once_with("nonexistent.json")
+
+    @mock.patch("abk_bwp.abk_common.os.path.exists", return_value=True)
+    @mock.patch("abk_bwp.abk_common.os.path.isfile", return_value=False)
+    def test_returns_empty_dict_when_path_is_not_file(self, mock_isfile, mock_exists):
+        """Test that read_json_file returns an empty dict when path is not a file."""
+        result = self.abk_common.read_json_file("notafile.json")
+        self.assertEqual(result, {})
+        mock_exists.assert_called_once_with("notafile.json")
+        mock_isfile.assert_called_once_with("notafile.json")
+
+    @mock.patch("abk_bwp.abk_common.logger")
+    @mock.patch("abk_bwp.abk_common.open", new_callable=mock.mock_open)
+    @mock.patch("abk_bwp.abk_common.os.path.isfile", return_value=True)
+    @mock.patch("abk_bwp.abk_common.os.path.exists", return_value=True)
+    def test_logs_error_on_json_parse_exception(
+        self, mock_exists, mock_isfile, mock_open_file, mock_logger
+    ):
+        """Test that read_json_file logs an error when JSON parsing fails."""
+        mock_open_file.return_value.__enter__.return_value.read.return_value = "bad json"
+        mock_open_file.return_value.__enter__.return_value.read.side_effect = json.JSONDecodeError("Expecting value", "", 0)
+        with mock.patch("abk_bwp.abk_common.json.load", side_effect=json.JSONDecodeError("Expecting value", "", 0)):
+            result = self.abk_common.read_json_file("bad.json")
+            self.assertEqual(result, {})
+            mock_logger.error.assert_called()
+        mock_exists.assert_called_once_with("bad.json")
+        mock_isfile.assert_called_once_with("bad.json")
 
 class TestGetHomeDir(unittest.TestCase):
     """Tests for GetHomeDir function."""
