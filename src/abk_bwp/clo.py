@@ -2,17 +2,15 @@
 
 # Standard library imports
 import logging
-import logging.config
 from enum import Enum
 from argparse import ArgumentParser, Namespace
+import sys
 
 # Third party imports
-from pathlib import Path
-import sys
-import yaml
 
 # Local application imports
 from abk_bwp.constants import CONST
+from abk_bwp.logger_manager import LoggerManager
 
 
 class LoggerType(Enum):
@@ -81,51 +79,12 @@ class CommandLineOptions:
                 print(f"  - {m.get('name', '?')} <{m.get('email', '?')}>")
             sys.exit(0)
 
-        self._setup_logging()
+        LoggerManager().configure(
+            log_into_file=self.options.log_into_file, quiet=self.options.quiet
+        )
+        self.logger = LoggerManager().get_logger(__name__)
         self.logger.info(f"{self.options=}")
         self.logger.info(f"{self._args=}")
         self.logger.info(f"{self.options.log_into_file=}")
         self.logger.info(f"{self.options.quiet=}")
         self.logger.info(f"{CONST.VERSION=}")
-
-    def _find_project_root(self, start=None) -> Path:
-        if start is None:
-            start = Path.cwd()
-        for parent in [start, *start.parents]:
-            if (parent / "pyproject.toml").exists():
-                return parent
-        raise FileNotFoundError("pyproject.toml not found")
-
-    def _setup_logging(self):
-        try:
-            if self.options.quiet:
-                logging.disable(logging.CRITICAL)  # disables all log output
-                self.logger = logging.getLogger()  # dummy fallback
-                self.logger.disabled = True
-                return
-
-            root_dir = self._find_project_root()
-
-            if self.options.log_into_file:
-                (root_dir / "logs").mkdir(parents=True, exist_ok=True)
-
-            config_path = root_dir / "logging.yaml"
-            with config_path.open("r", encoding="utf-8") as stream:
-                config_yaml = yaml.safe_load(stream)
-                logging.config.dictConfig(config_yaml)
-
-            logger_name = "fileLogger" if self.options.log_into_file else "consoleLogger"
-            self.logger = logging.getLogger(logger_name)
-
-            # queue_handler = logging.getHandlerByName("queueHandler")
-            # if queue_handler is not None:
-            #     queue_handler.listener.start()
-            #     atexit.register(queue_handler.listener.stop)
-
-        except FileNotFoundError as exc:
-            raise FileNotFoundError(f"{config_path} does not exist.") from exc
-        except Exception as e:
-            # print(f"Logging disabled due to error: {e}")
-            self.logger = logging.getLogger(__name__)
-            self.logger.disabled = True
-            self.logger.exception(f"Logging disabled due to error: {e}")
