@@ -294,6 +294,7 @@ class TestDeleteDir(unittest.TestCase):
     @mock.patch("abk_bwp.abk_common.os.listdir", return_value=[])
     @mock.patch("abk_bwp.abk_common.os.path.isdir", return_value=True)
     def test_deletes_empty_directory(self, mock_isdir, mock_listdir, mock_rmdir):
+        """Test that delete_dir deletes an empty directory."""
         self.abk_common.delete_dir("/mock/empty_dir")
         mock_isdir.assert_called_once_with("/mock/empty_dir")
         mock_listdir.assert_called_once_with("/mock/empty_dir")
@@ -303,29 +304,36 @@ class TestDeleteDir(unittest.TestCase):
     @mock.patch("abk_bwp.abk_common.os.listdir", return_value=["file1", "file2"])
     @mock.patch("abk_bwp.abk_common.os.path.isdir", return_value=True)
     def test_does_not_delete_non_empty_directory(self, mock_isdir, mock_listdir, mock_logger):
+        """Test that delete_dir does not delete a non-empty directory and logs debug info."""
         self.abk_common.delete_dir("/mock/non_empty_dir")
         mock_logger.debug.assert_any_call("dir /mock/non_empty_dir is not empty")
         mock_logger.debug.assert_any_call("fileName='file1'")
         mock_logger.debug.assert_any_call("fileName='file2'")
         mock_isdir.assert_called_once_with("/mock/non_empty_dir")
         self.assertEqual(mock_listdir.call_count, 2)
-        mock_listdir.assert_has_calls([
-            mock.call("/mock/non_empty_dir"),
-            mock.call("/mock/non_empty_dir")
-        ])
+        mock_listdir.assert_has_calls(
+            [mock.call("/mock/non_empty_dir"), mock.call("/mock/non_empty_dir")]
+        )
 
     @mock.patch("abk_bwp.abk_common.logger")
     @mock.patch("abk_bwp.abk_common.os.rmdir", side_effect=OSError(errno.ENOTEMPTY, "not empty"))
     @mock.patch("abk_bwp.abk_common.os.listdir", return_value=[])
     @mock.patch("abk_bwp.abk_common.os.path.isdir", return_value=True)
-    def test_logs_error_if_rmdir_fails_due_to_not_empty(self, mock_isdir, mock_listdir, mock_rmdir, mock_logger):
+    def test_logs_error_if_rmdir_fails_due_to_not_empty(
+        self, mock_isdir, mock_listdir, mock_rmdir, mock_logger
+    ):
+        """Test that delete_dir logs an error if rmdir fails due to directory not being empty."""
         self.abk_common.delete_dir("/mock/failure_dir")
         mock_logger.error.assert_called_with(
             "ERROR:delete_dir: directory /mock/failure_dir is not empty"
         )
+        mock_isdir.assert_called_once_with("/mock/failure_dir")
+        mock_listdir.assert_called_once_with("/mock/failure_dir")
+        mock_rmdir.assert_called_once_with("/mock/failure_dir")
 
     @mock.patch("abk_bwp.abk_common.os.path.isdir", return_value=False)
     def test_does_nothing_if_not_a_directory(self, mock_isdir):
+        """Test that delete_dir does nothing if the path is not a directory."""
         self.abk_common.delete_dir("/not/a/dir")
         mock_isdir.assert_called_once_with("/not/a/dir")
 
