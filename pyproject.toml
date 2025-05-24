@@ -95,8 +95,7 @@ select = [
     "E302",
     "F401"
 ]
-extend-ignore = ["D203", "E231", "E202", "S108"]
-
+extend-ignore = ["D203", "E231", "E202", "S108", "E301"]
 
 
 [tool.ruff.lint.pydocstyle]
@@ -113,3 +112,4 @@ docstring-code-format = true
 
 [tool.ruff.lint.isort]
 lines-after-imports = 2
+
