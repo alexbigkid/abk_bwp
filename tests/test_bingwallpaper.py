@@ -1,7 +1,6 @@
 """Unit tests for bingwallpaper.py."""
 
 # Standard library imports
-from typing import Tuple
 import unittest
 from unittest.mock import patch
 
@@ -24,7 +23,7 @@ class TestBingwallpaper(unittest.TestCase):
 
     def tearDown(self) -> None:
         """Tear down."""
-        # cache needs to be cleared after each test for the next test to be able to set different mocks
+        # cache needs to be cleared after each test for the next to be able to set different mocks
         # print(f"ABK: cache_info: {bingwallpaper.normalize_jpg_quality.cache_info()}")
         bingwallpaper.normalize_jpg_quality.cache_clear()
         # print(f"ABK: cache_info: {bingwallpaper.get_img_region.cache_info()}")
@@ -167,7 +166,7 @@ class TestBingwallpaper(unittest.TestCase):
         ]
     )
     def test__get_config_background_img_size__corrects_to_correct_size(
-        self, cnf_width: int, cnf_height: int, exp_size: Tuple[int, int]
+        self, cnf_width: int, cnf_height: int, exp_size: tuple[int, int]
     ) -> None:
         """test__get_config_background_img_size__corrects_to_correct_size.
 

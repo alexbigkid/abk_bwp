@@ -22,7 +22,7 @@ class LoggerType(Enum):
     FILE_LOGGER = "fileLogger"
 
 
-class CommandLineOptions(object):
+class CommandLineOptions:
     """CommandLineOptions module handles all parameters passed in to the python script."""
 
     _args: list = None  # type: ignore
@@ -40,7 +40,9 @@ class CommandLineOptions(object):
             prog="bwp",
             description="Downloads daily Bing images and sets them as desktop wallpaper",
         )
-        parser.add_argument("-a", "--about", action="store_true", help="Show detailed project metadata")
+        parser.add_argument(
+            "-a", "--about", action="store_true", help="Show detailed project metadata"
+        )
         parser.add_argument(
             "-d",
             "--desktop_auto_update",
@@ -57,7 +59,9 @@ class CommandLineOptions(object):
             "-l", "--log_into_file", action="store_true", help="Log into logs/bingwallpaper.log"
         )
         parser.add_argument("-q", "--quiet", action="store_true", help="Suppresses all logs")
-        parser.add_argument("-v", "--version", action="store_true", help="Show version info and exit")
+        parser.add_argument(
+            "-v", "--version", action="store_true", help="Show version info and exit"
+        )
         self.options = parser.parse_args()
 
         if self.options.version:
@@ -84,13 +88,13 @@ class CommandLineOptions(object):
         self.logger.info(f"{self.options.quiet=}")
         self.logger.info(f"{CONST.VERSION=}")
 
-
-    def _find_project_root(self, start=Path.cwd()) -> Path:
+    def _find_project_root(self, start=None) -> Path:
+        if start is None:
+            start = Path.cwd()
         for parent in [start, *start.parents]:
             if (parent / "pyproject.toml").exists():
                 return parent
         raise FileNotFoundError("pyproject.toml not found")
-
 
     def _setup_logging(self):
         try:
@@ -107,7 +111,7 @@ class CommandLineOptions(object):
 
             config_path = root_dir / "logging.yaml"
             with config_path.open("r", encoding="utf-8") as stream:
-                config_yaml = yaml.load(stream, Loader=yaml.FullLoader)
+                config_yaml = yaml.safe_load(stream)
                 logging.config.dictConfig(config_yaml)
 
             logger_name = "fileLogger" if self.options.log_into_file else "consoleLogger"

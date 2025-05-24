@@ -71,15 +71,32 @@ testpaths = ["tests"]
 [tool.ruff]
 line-length = 98
 indent-width = 4
-exclude = ["E231", "E202"]
 src = ["src", "tests"]
-# extend-ignore = ["E501", "E722", "F401", "F841", "F403", "F405", "F841"]
 
 
 [tool.ruff.lint]
 preview = true
-select = ["D", "F401", "E302"]  # Enable specific Flake8-compatible rules
-# extend-select = ["E", "W"]
+select = [
+    # pycodestyle
+    "E",
+    "W",
+    # pydocstyle
+    "D",
+    # Pyflakes
+    "F",
+    # pyupgrade
+    "UP",
+    # flake8-bandit
+    "S",
+    # flake8-bugbear
+    "B",
+    # flake8-simplify
+    "SIM",
+    "E302",
+    "F401"
+]
+extend-ignore = ["D203", "E231", "E202", "S108"]
+
 
 
 [tool.ruff.lint.pydocstyle]

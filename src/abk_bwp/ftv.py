@@ -57,7 +57,7 @@ class FTVSetting:
 class FTV_DATA_KW(Enum):
     """FTV - Frame TV data keywords."""
 
-    API_TOKEN_FILE = "api_token_file"
+    API_TOKEN_FILE = "api_token_file"  # noqa: S105
     IP_ADDR = "ip_addr"
     IMG_RATE = "img_rate"
     MAC_ADDR = "mac_addr"
@@ -98,7 +98,7 @@ FTV_UPLOADED_IMAGE_FILES_SCHEMA = {
 # -----------------------------------------------------------------------------
 # FTV
 # -----------------------------------------------------------------------------
-class FTV(object):
+class FTV:
     """FTV - Frame TV class."""
 
     @abk_common.function_trace
@@ -135,7 +135,7 @@ class FTV(object):
         Returns:
             str: the value of the variable
         """
-        return os.environ[env_variable] if env_variable in os.environ else ""
+        return os.environ.get(env_variable, "")
 
     @staticmethod
     @abk_common.function_trace
@@ -163,10 +163,9 @@ class FTV(object):
             return ""
         # try to get api_token from environment variable
         api_token_str = os.environ.get(api_token_holder, None)
-        if api_token_str is None:
-            if os.path.isfile(api_token_holder):
-                with open(api_token_holder, "r") as file_handler:
-                    api_token_str = file_handler.read().strip()
+        if api_token_str is None and os.path.isfile(api_token_holder):
+            with open(api_token_holder) as file_handler:
+                api_token_str = file_handler.read().strip()
         if api_token_str is None:
             api_token_str = api_token_holder
         return api_token_str
@@ -201,7 +200,7 @@ class FTV(object):
                 # ftv = SamsungTVWS(ip_addr)
                 # ftv = SamsungTVWS(host=ip_addr, port=port, token_file=api_token_full_file_name)
                 ftv = SamsungTVWS(host=ip_addr, port=8002)
-                # ftv = SamsungTVWS(host=ip_addr, token=api_token, port=8002, timeout=10, key_press_delay=2, name=ftv_name)
+                # ftv = SamsungTVWS(host=ip_addr, token=api_token, port=8002, timeout=10, key_press_delay=2, name=ftv_name)  # noqa: E501
                 ftv_settings[ftv_name] = FTVSetting(ftv=ftv, img_rate=img_rate, mac_addr=mac_addr)
         except Exception as exc:
             self._logger.error(
@@ -493,7 +492,7 @@ class FTV(object):
                             with open(matching_file_path, "rb") as fh:
                                 data = fh.read()
                             self._logger.error(
-                                f"[uploading to {tv_name = }]: {file_to_upload = }, {matching_file_path = }"
+                                f"[uploading to {tv_name = }]: {file_to_upload = }, {matching_file_path = }"  # noqa: E501
                             )
                             ftv_setting.ftv.art().upload(
                                 data, file_type=file_type.value, matte="none"
@@ -571,7 +570,8 @@ class FTV(object):
         Args:
             tv_name (str): TV name
             file_name (str): name of the image file to apply filter to
-            filter_name (FTVImageFilters): filter to apply to the image file. See FTVImageFilters for available filters.
+            filter_name (FTVImageFilters): filter to apply to the image file.
+                                          See FTVImageFilters for available filters.
         """
         ftv_setting = self.ftvs.get(tv_name, None)
         if ftv_setting:
@@ -603,17 +603,14 @@ class FTV(object):
         """Read uploaded image files from file."""
         uploaded_image_list = []
         ftv_setting = self.ftvs.get(tv_name, None)
-        if ftv_setting:
-            if os.path.isfile(FTV_UPLOADED_IMAGE_FILES):
-                with open(FTV_UPLOADED_IMAGE_FILES, "r") as img_data_file:
-                    uploaded_images_json = json.load(img_data_file)
-                try:
-                    validate(
-                        instance=uploaded_images_json, schema=FTV_UPLOADED_IMAGE_FILES_SCHEMA
-                    )
-                    uploaded_image_list = uploaded_images_json.get(tv_name, [])
-                except exceptions.ValidationError as exp:
-                    self._logger.error(f"ERROR: {exp=}, validating uploaded image file")
+        if ftv_setting and os.path.isfile(FTV_UPLOADED_IMAGE_FILES):
+            with open(FTV_UPLOADED_IMAGE_FILES) as img_data_file:
+                uploaded_images_json = json.load(img_data_file)
+            try:
+                validate(instance=uploaded_images_json, schema=FTV_UPLOADED_IMAGE_FILES_SCHEMA)
+                uploaded_image_list = uploaded_images_json.get(tv_name, [])
+            except exceptions.ValidationError as exp:
+                self._logger.error(f"ERROR: {exp=}, validating uploaded image file")
         return uploaded_image_list
 
     @abk_common.function_trace
@@ -621,14 +618,13 @@ class FTV(object):
         """Read uploaded image files from file."""
         uploaded_image_files = {}
         ftv_setting = self.ftvs.get(tv_name, None)
-        if ftv_setting:
-            if os.path.isfile(FTV_UPLOADED_IMAGE_FILES):
-                with open(FTV_UPLOADED_IMAGE_FILES, "r") as img_data_file:
-                    uploaded_image_files = json.load(img_data_file)
-                uploaded_image_files[tv_name] = image_list
-                self._logger.debug(f"[{tv_name}]: {uploaded_image_files = }")
-                with open(FTV_UPLOADED_IMAGE_FILES, "w") as img_data_file:
-                    json.dump(uploaded_image_files, img_data_file, indent=4)
+        if ftv_setting and os.path.isfile(FTV_UPLOADED_IMAGE_FILES):
+            with open(FTV_UPLOADED_IMAGE_FILES) as img_data_file:
+                uploaded_image_files = json.load(img_data_file)
+            uploaded_image_files[tv_name] = image_list
+            self._logger.debug(f"[{tv_name}]: {uploaded_image_files = }")
+            with open(FTV_UPLOADED_IMAGE_FILES, "w") as img_data_file:
+                json.dump(uploaded_image_files, img_data_file, indent=4)
 
     @abk_common.function_trace
     def change_daily_images(self, image_list: list) -> bool:
@@ -639,12 +635,11 @@ class FTV(object):
         Returns:
             bool: True if the daily images were changed, False otherwise
         """
-        for tv_name, ftv_setting in self.ftvs.items():
+        for tv_name, ftv_setting in self.ftvs.items():  # noqa: B007
             if self._connect_to_tv(tv_name) and self._is_art_mode_supported(tv_name):
                 # self._toggle_power(tv_name)
                 self._delete_uploaded_images_from_tv(tv_name)
                 self._upload_image_list_to_tv(tv_name, image_list)
-
         return any(ftv_setting.reachable for ftv_setting in self.ftvs.values())
 
 

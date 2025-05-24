@@ -2,7 +2,8 @@
 2. Platform dependant operation - create platfrom dependent environment
     2.1. Mac
         2.1.1. create a plist file for scheduled job in current directory
-        2.1.2. create a link in ~/Library/LaunchAgents/com.<userName>.bingwallpaper.py.list to the plist in current directory
+        2.1.2. create a link in ~/Library/LaunchAgents/com.<userName>.bingwallpaper.py.list
+               to the plist in current directory
         2.1.3. stop, unload, load and start the job via plist file
     2.2 Linux
         2.2.1. NOT READY YET
@@ -16,12 +17,11 @@ import logging.config
 
 # Standard lib imports
 import os
-import subprocess
+import subprocess  # noqa: S404
 import sys
 from abc import ABCMeta, abstractmethod
 from datetime import datetime, time
 from sys import platform as _platform
-from typing import Union
 
 
 # Third party imports
@@ -57,18 +57,19 @@ class IInstallBase(metaclass=ABCMeta):
 
     # @abk_common.function_trace
     # def install_python_packages(self) -> None:
-    #     # TODO: 1. check whether pyenv is installed
-    #     #   TODO: 1.1. if pyenv is installed, check what versions of python are installed
-    #     #   TODO: 1.2. select the latest python 3 version
-    #     #   TODO: 1.3. check pyenv-virtualenv is installed
-    #     #       TODO: 1.3.1. if pyenv-virtualenv is installed create a new bingwallpaper ve if not available yet
-    #     #       TODO: 1.3.2. set the local virtual env to be bingwallpaper
-    #     #       TODO: 1.3.3. install all needed python packages into ve
-    #     #   TODO: 1.4. if ve is not installed, install packages into the latest installed python version
-    #     # TODO: 2. if pyenv is not installed, install packages into the whatever version is active (worst case)
-    #     # TODO: 3. create shell script to change to abk bingwall paper project and execute the download within the directory
-    #     # TODO: 4. use that script to create plist
-    #     # TODO: 5. don't forget to unwind the shole logic in the uninstall script!
+    # TODO: 1. check whether pyenv is installed
+    # TODO: 1.1. if pyenv is installed, check what versions of python are installed
+    # TODO: 1.2. select the latest python 3 version
+    # TODO: 1.3. check pyenv-virtualenv is installed
+    # TODO: 1.3.1. if pyenv-virtualenv is installed create a new bingwallpaper ve if not available
+    # TODO: 1.3.2. set the local virtual env to be bingwallpaper
+    # TODO: 1.3.3. install all needed python packages into ve
+    # TODO: 1.4. if ve is not installed, install packages to the latest installed python version
+    # TODO: 2. if pyenv is not installed,install packages into the any active version (worst case)
+    # TODO: 3. create shell script to change to abk bingwallpaper project
+    #          and execute the download within the directory
+    # TODO: 4. use that script to create plist
+    # TODO: 5. don't forget to unwind the whole logic in the uninstall script!
     #     # check pyenv is installed.
     #     pyenv_check = subprocess.run(["command", "-v", "pyenv"])
     #     python_check = subprocess.run(["python", "--version"])
@@ -173,7 +174,7 @@ class InstallOnMacOS(IInstallBase):
 
     @abk_common.function_trace
     def _create_plist_link(self, full_file_name: str) -> str:
-        """Creates link in the $HOME/Library/LaunchAgent to the real locacion of the app script.
+        """Creates link in the $HOME/Library/LaunchAgent to the real location of the app script.
 
         Args:
             full_file_name (str): full name + path of the app script
@@ -193,7 +194,9 @@ class InstallOnMacOS(IInstallBase):
 
     @abk_common.function_trace
     def _stop_and_unload_bingwallpaper_job(self, plist_name: str, plist_label: str) -> None:
-        """Stops and unloads bing wall paper job. Executes until the end. Can also exit with first error occurring. This is an expected behavior though.
+        """Stops and unloads bing wall paper job. Executes until the end.
+
+           Can also exit with first error occurring. This is an expected behavior though.
 
         Args:
             plist_name (str): full name (path + file name) of the link of the plist file
@@ -209,11 +212,11 @@ class InstallOnMacOS(IInstallBase):
         try:
             for cmd in cmd_list:
                 self._logger.info(f"about to execute command '{cmd}'")
-                retCode = subprocess.check_call(cmd, shell=True)
-                self._logger.info(f"command '{cmd}' succeeded, returned: {retCode}")
+                ret_code = subprocess.check_call(cmd, shell=True)  # noqa: S602
+                self._logger.info(f"command '{cmd}' succeeded, returned: {ret_code}")
         except subprocess.CalledProcessError as e:
             self._logger.info(
-                f"error: {e.returncode=}. It is expected though, since not all commands will execute successfully."
+                f"error: {e.returncode=}. It is expected though, not all cmds exec successfully."
             )
 
     @abk_common.function_trace
@@ -233,8 +236,8 @@ class InstallOnMacOS(IInstallBase):
         try:
             for cmd in cmd_list:
                 self._logger.info(f"about to execute command '{cmd}'")
-                retCode = subprocess.check_call(cmd, shell=True)
-                self._logger.info(f"command '{cmd}' succeeded, returned: {retCode}")
+                ret_code = subprocess.check_call(cmd, shell=True)  # noqa: S602
+                self._logger.info(f"command '{cmd}' succeeded, returned: {ret_code}")
         except subprocess.CalledProcessError as e:
             self._logger.critical(f"ERROR: returned: {e.returncode}")
         except Exception:
@@ -279,7 +282,7 @@ class InstallOnWindows(IInstallBase):
 
 
 @abk_common.function_trace
-def bwp_install(install_logger: Union[logging.Logger, None] = None) -> None:
+def bwp_install(install_logger: logging.Logger | None = None) -> None:
     """BingWallPaper install.
 
     Args:
@@ -304,7 +307,8 @@ def bwp_install(install_logger: Union[logging.Logger, None] = None) -> None:
         installation.setup_installation()
         # installation.install_python_packages()
         # installation.setup_installation()
-        # installation.setup_installation(bwp_config[ROOT_KW.TIME_TO_FETCH.value], bwp_config[ROOT_KW.APP_NAME.value])
+        # installation.setup_installation(bwp_config[ROOT_KW.TIME_TO_FETCH.value],
+        #                                 bwp_config[ROOT_KW.APP_NAME.value])
     except Exception as exception:
         _logger.error(f"{Fore.RED}ERROR: executing bingwallpaper")
         _logger.error(f"EXCEPTION: {exception}{Style.RESET_ALL}")

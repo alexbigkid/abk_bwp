@@ -7,14 +7,13 @@ import json
 import logging
 import os
 import shutil
-import subprocess
+import subprocess  # noqa: S404
 import sys
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 from functools import lru_cache
 from sys import platform as _platform
-from typing import Dict, List, Tuple, Union
 from xmlrpc.client import ResponseError
 from argparse import Namespace
 
@@ -126,7 +125,7 @@ def get_config_bing_img_region() -> str:
         str: region string for Bing
     """
     img_region: str = get_config_img_region()
-    img_alt_bing_region_list: List[str] = bwp_config.get(CONSTANT_KW.CONSTANT.value, {}).get(
+    img_alt_bing_region_list: list[str] = bwp_config.get(CONSTANT_KW.CONSTANT.value, {}).get(
         CONSTANT_KW.ALT_BING_REGION.value, []
     )
     for bing_region in img_alt_bing_region_list:
@@ -227,7 +226,7 @@ def get_config_ftv_data() -> str:
 
 
 @lru_cache(maxsize=1)
-def get_config_background_img_size() -> Tuple[int, int]:
+def get_config_background_img_size() -> tuple[int, int]:
     """Determines background image size dimension.
 
     Returns:
@@ -246,7 +245,7 @@ def get_config_background_img_size() -> Tuple[int, int]:
     return configured_size
 
 
-def delete_files_in_dir(df_log: logging.Logger, dir_name: str, file_list: List[str]) -> None:
+def delete_files_in_dir(df_log: logging.Logger, dir_name: str, file_list: list[str]) -> None:
     """Deletes files in given directory.
 
     Args:
@@ -286,7 +285,7 @@ def get_full_img_dir_from_file_name(img_file_name: str) -> str:
     return os.path.join(get_config_img_dir(), get_relative_img_dir(img_date))
 
 
-def get_date_from_img_file_name(img_file_name: str) -> Union[datetime.date, None]:
+def get_date_from_img_file_name(img_file_name: str) -> datetime.date | None:
     """Gets date from image file name.
 
     Args:
@@ -302,7 +301,7 @@ def get_date_from_img_file_name(img_file_name: str) -> Union[datetime.date, None
     return img_date
 
 
-def get_all_background_img_names(dir_name: str) -> List[str]:
+def get_all_background_img_names(dir_name: str) -> list[str]:
     """Gets all background image names.
 
     Args:
@@ -341,7 +340,7 @@ class ImageDownloadData:
     imageDate: datetime.date
     title: bytes
     copyright: bytes
-    imageUrl: List[str]
+    imageUrl: list[str]
     imagePath: str
     imageName: str
 
@@ -374,7 +373,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
     @staticmethod
     @abk_common.function_trace
     def convert_dir_structure_if_needed(cds_logger: logging.Logger) -> None:
-        """Converts the bing image data directory structure (YYYY/mm/YYYY-mm-dd_us.jpg) to frame TV directory structure (mm/dd/YYYY-mm-dd_us.jpg)."""
+        """Converts the bing image data directory structure (YYYY/mm/YYYY-mm-dd_us.jpg) to frame TV directory structure (mm/dd/YYYY-mm-dd_us.jpg)."""  # noqa: E501
         root_image_dir = get_config_img_dir()
         # get sub directory names from the defined picture directory
         dir_list = sorted(next(os.walk(root_image_dir))[BWP_DIRECTORIES])
@@ -409,7 +408,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
     @staticmethod
     @abk_common.function_trace
     def _convert_to_ftv_dir_structure(
-        fds_logger: logging.Logger, root_image_dir: str, year_list: List[str]
+        fds_logger: logging.Logger, root_image_dir: str, year_list: list[str]
     ) -> None:
         """Converts the bing image data directory structure (YYYY/mm/YYYY-mm-dd_us.jpg) to frame TV directory structure (mm/dd/YYYY-mm-dd_us.jpg).
 
@@ -417,7 +416,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
             fds_logger (logging.Logger): logger
             root_image_dir (str): directory where images are stored
             year_list (List[str]): year list directory names
-        """
+        """  # noqa: E501
         # FTV enabled conversion needed to use mm/dd directory format.
         # fds_logger.debug(f"{root_image_dir=}, {year_list=}")
         region_list = bwp_config.get(CONSTANT_KW.CONSTANT.value, {}).get(
@@ -446,8 +445,8 @@ class DownLoadServiceBase(metaclass=ABCMeta):
                                     img_date = datetime.datetime.strptime(
                                         img_date_part, "%Y-%m-%d"
                                     ).date()
-                                    # fds_logger.debug(f"---- ABK: {img_date.year=}, {img_date.month=}, {img_date.day=}, {img_region_part=}")
-                                    # looks like a legit file name -> move it the the new location mm/dd/YYYY-mm-dd_us.jpg
+                                    # fds_logger.debug(f"---- ABK: {img_date.year=}, {img_date.month=}, {img_date.day=}, {img_region_part=}")  # noqa: E501
+                                    # looks like a legit file name -> move it the the new location mm/dd/YYYY-mm-dd_us.jpg  # noqa: E501
                                     img_src = os.path.join(full_month_dir, img_file)
                                     img_dst = os.path.join(
                                         root_image_dir,
@@ -455,13 +454,14 @@ class DownLoadServiceBase(metaclass=ABCMeta):
                                         f"{img_date.day:02d}",
                                         img_file,
                                     )
-                                    # fds_logger.debug(f"---- ABK: moving [{img_src}] -> [{img_dst}]")
+                                    # fds_logger.debug(f"---- ABK: moving [{img_src}] -> [{img_dst}]")  # noqa: E501
                                     os.renames(img_src, img_dst)
                                 except Exception as exp:
                                     fds_logger.error(
-                                        f"{Fore.RED}ERROR: moving [{img_src=}] to [{img_dst=}] with EXCEPTION: {exp=}. INVESTIGATE!{Style.RESET_ALL}"
+                                        f"{Fore.RED}ERROR: moving [{img_src=}] to [{img_dst=}] with EXCEPTION: {exp=}. INVESTIGATE!{Style.RESET_ALL}"  # noqa: E501
                                     )  # type: ignore
-                                    # we don't want to move on here. since there is something wrong, we just re-throw end exit.
+                                    # we don't want to move on here.
+                                    # since there is something wrong, we just re-throw end exit.
                                     raise
                 # if no errors and move was successful delete the old directory structure
                 shutil.rmtree(full_year_dir, ignore_errors=True)
@@ -469,7 +469,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
     @staticmethod
     @abk_common.function_trace
     def _convert_to_date_dir_structure(
-        dds_logger: logging.Logger, root_image_dir: str, month_list: List[str]
+        dds_logger: logging.Logger, root_image_dir: str, month_list: list[str]
     ) -> None:
         """Converts the bing image frame TV directory structure (mm/dd/YYYY-mm-dd_us.jpg) to data directory structure (YYYY/mm/YYYY-mm-dd_us.jpg).
 
@@ -477,7 +477,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
             dds_logger (logging.Logger): logger
             root_image_dir (str): directory where images are stored
             month_list (List[str]): month list directory names
-        """
+        """  # noqa: E501
         dds_logger.debug(f"{root_image_dir=}, {month_list=}")
         region_list = bwp_config.get(CONSTANT_KW.CONSTANT.value, {}).get(
             CONSTANT_KW.ALT_PEAPIX_REGION.value, []
@@ -495,7 +495,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
                     if len(day_dir) == BWP_DIGITS_IN_A_DAY and day_dir.isdigit():
                         full_day_dir = os.path.join(full_month_dir, day_dir)
                         img_file_list = sorted(next(os.walk(full_day_dir))[BWP_FILES])
-                        # dds_logger.debug(f"\n---- ABK: {month_dir=}, {day_dir=}, {img_file_list=}")
+                        # dds_logger.debug(f"\n---- ABK: {month_dir=}, {day_dir=}, {img_file_list=}")  # noqa: E501
                         for img_file in img_file_list:
                             file_name, file_ext = os.path.splitext(img_file)
                             # dds_logger.debug(f"---- ABK: {file_name=}, {file_ext=}")
@@ -505,8 +505,8 @@ class DownLoadServiceBase(metaclass=ABCMeta):
                                     img_date = datetime.datetime.strptime(
                                         img_date_part, "%Y-%m-%d"
                                     ).date()
-                                    # dds_logger.debug(f"---- ABK: {img_date.year=}, {img_date.month=}, {img_date.day=}, {img_region_part=}")
-                                    # looks like a legit file name -> move it the the new location YYYY/mm/YYYY-mm-dd_us.jpg
+                                    # dds_logger.debug(f"---- ABK: {img_date.year=}, {img_date.month=}, {img_date.day=}, {img_region_part=}")  # noqa: E501
+                                    # looks like a legit file name -> move it the the new location YYYY/mm/YYYY-mm-dd_us.jpg  # noqa: E501
                                     img_src = os.path.join(full_day_dir, img_file)
                                     img_dst = os.path.join(
                                         root_image_dir,
@@ -514,19 +514,22 @@ class DownLoadServiceBase(metaclass=ABCMeta):
                                         f"{img_date.month:02d}",
                                         img_file,
                                     )
-                                    # dds_logger.debug(f"---- ABK: moving [{img_src}] -> [{img_dst}]")
+                                    # dds_logger.debug(f"---- ABK: moving [{img_src}] -> [{img_dst}]")  # noqa: E501
                                     os.renames(img_src, img_dst)
                                 except Exception as exp:
                                     dds_logger.error(
-                                        f"{Fore.RED}ERROR: moving [{img_src=}] to [{img_dst=}] with EXCEPTION: {exp=}. INVESTIGATE!{Style.RESET_ALL}"
+                                        f"{Fore.RED}ERROR: moving [{img_src=}] to [{img_dst=}] \
+                                            with EXCEPTION: {exp=}. INVESTIGATE!{Style.RESET_ALL}"
                                     )  # type: ignore
-                                    # we don't want to move on here. since there is something wrong, we just re-throw end exit.
+                                    # we don't want to move on here.
+                                    # since there is something wrong,
+                                    # we just re-throw end exit.
                                     raise
                 # if no errors and move was successful delete the old directory structure
                 shutil.rmtree(full_month_dir, ignore_errors=True)
 
     @abk_common.function_trace
-    def _download_images(self, img_dl_data_list: List[ImageDownloadData]) -> None:
+    def _download_images(self, img_dl_data_list: list[ImageDownloadData]) -> None:
         """Downloads new images.
 
         Args:
@@ -601,10 +604,10 @@ class BingDownloadService(DownLoadServiceBase):
             self._download_images(dl_img_data)
         else:
             raise ResponseError(
-                f"ERROR: getting bing image return error code: {resp.status_code}. Cannot proceed."
+                f"ERROR: getting bing image return error code: {resp.status_code}. Cannot proceed"
             )
 
-    def _process_bing_api_data(self, metadata_list: list) -> List[ImageDownloadData]:
+    def _process_bing_api_data(self, metadata_list: list) -> list[ImageDownloadData]:
         """Processes Bing Service API data.
 
         Args:
@@ -612,7 +615,7 @@ class BingDownloadService(DownLoadServiceBase):
         Returns:
             List[ImageDownloadData]: Processed data
         """
-        return_list: List[ImageDownloadData] = []
+        return_list: list[ImageDownloadData] = []
         self._logger.debug(f"Received from API: {json.dumps(metadata_list, indent=4)}")
         img_root_dir = get_config_img_dir()
         self._logger.debug(f"{img_root_dir=}")
@@ -643,7 +646,9 @@ class BingDownloadService(DownLoadServiceBase):
                         )
                     )
             except Exception:
-                pass  # nothing to be done, next
+                self._logger.exception(
+                    f"ERROR: processing image data: {img_data=}. EXCEPTION: {sys.exc_info()}"
+                )
 
         self._logger.debug(f"Number if images to download: {len(return_list)}")
         self._logger.debug(f"Images to download: {return_list=}")
@@ -679,22 +684,22 @@ class PeapixDownloadService(DownLoadServiceBase):
             self._download_images(dl_img_data)
         else:
             raise ResponseError(
-                f"ERROR: getting bing image return error code: {resp.status_code}. Cannot proceed."
+                f"ERROR: getting bing image return error code: {resp.status_code}. Cannot proceed"
             )
 
     @abk_common.function_trace
     def _process_peapix_api_data(
-        self, metadata_list: List[Dict[str, str]]
-    ) -> List[ImageDownloadData]:
-        """Processes the received meta data from the peapix API and keeps only data about images which needs to be downloaded. Filters out data about images we already have.
+        self, metadata_list: list[dict[str, str]]
+    ) -> list[ImageDownloadData]:
+        """Processes received meta data from the peapix API and keeps only data about images which needs to be downloaded. Filters out data about images we already have.
 
         Args:
             metadata_list (List[Dict[str, str]]): metadata to be processed
         Returns:
             List[Dict[str, str]]: metadata about images to download
-        """
+        """  # noqa: E501
         self._logger.debug(f"Received from API: {json.dumps(metadata_list, indent=4)}")
-        return_list: List[ImageDownloadData] = []
+        return_list: list[ImageDownloadData] = []
         img_region = get_config_img_region()
         self._logger.debug(f"{img_region=}")
 
@@ -722,7 +727,9 @@ class PeapixDownloadService(DownLoadServiceBase):
                         )
                     )
             except Exception:
-                pass  # nothing to be done, next
+                self._logger.exception(
+                    f"ERROR: processing image data: {img_data=}. EXCEPTION: {sys.exc_info()}"
+                )
 
         self._logger.debug(f"Number if images to download: {len(return_list)}")
         self._logger.debug(f"Images to download: {return_list=}")
@@ -774,7 +781,7 @@ tell application "Finder"
 set desktop picture to POSIX file "%s"
 end tell
 END"""
-        subprocess.call(SCRIPT_MAC % file_name, shell=True)
+        subprocess.call(SCRIPT_MAC % file_name, shell=True)  # noqa: S602
         self._logger.info(f"({self.os_type.value}) Set background to {file_name}")
 
 
@@ -845,7 +852,7 @@ class WindowsDependent(IOsDependentBase):
 # -----------------------------------------------------------------------------
 # Bing Wallpaper
 # -----------------------------------------------------------------------------
-class BingWallPaper(object):
+class BingWallPaper:
     """BingWallPaper downloads images from bing.com and sets it as a wallpaper."""
 
     @abk_common.function_trace
@@ -932,7 +939,7 @@ class BingWallPaper(object):
 
     @staticmethod
     @abk_common.function_trace
-    def _calculate_image_resizing(img_size: Tuple[int, int]) -> Tuple[int, int]:
+    def _calculate_image_resizing(img_size: tuple[int, int]) -> tuple[int, int]:
         """Calculates image re-sizing.
 
         Args:
@@ -942,16 +949,15 @@ class BingWallPaper(object):
         """
         WIDTH = 0
         HEIGHT = 1
-        if img_size == BWP_RESIZE_MIN_IMG_SIZE or img_size == BWP_DEFAULT_IMG_SIZE:
+        if img_size in (BWP_RESIZE_MIN_IMG_SIZE, BWP_DEFAULT_IMG_SIZE):
             return img_size
-        # if we are over mid threshold scale to default image size BWP_DEFAULT_IMG_SIZE (3840x2160)
-        elif (
+        # if we are over mid threshold scale to default image size BWP_DEFAULT_IMG_SIZE(3840x2160)
+        if (
             img_size[WIDTH] > BWP_RESIZE_MID_IMG_SIZE[WIDTH]
             or img_size[HEIGHT] > BWP_RESIZE_MID_IMG_SIZE[HEIGHT]
         ):
             return BWP_DEFAULT_IMG_SIZE
-        else:
-            return BWP_RESIZE_MIN_IMG_SIZE
+        return BWP_RESIZE_MIN_IMG_SIZE
 
     @abk_common.function_trace
     def update_current_background_image(self) -> None:
@@ -959,7 +965,7 @@ class BingWallPaper(object):
         config_img_dir = get_config_img_dir()
         today = datetime.date.today()
         today_img_path = get_full_img_dir_from_date(today)
-        todays_img_name = f"{today.year:04d}-{today.month:02d}-{today.day:02d}_{get_config_img_region()}{BWP_IMG_FILE_EXT}"
+        todays_img_name = f"{today.year:04d}-{today.month:02d}-{today.day:02d}_{get_config_img_region()}{BWP_IMG_FILE_EXT}"  # noqa: E501
         src_img = os.path.join(today_img_path, todays_img_name)
         if os.path.exists(src_img):
             dst_img_size = get_config_background_img_size()
@@ -983,7 +989,7 @@ class BingWallPaper(object):
         rbi_logger: logging.Logger,
         src_img_name: str,
         dst_img_name: str,
-        dst_img_size: Tuple[int, int],
+        dst_img_size: tuple[int, int],
     ) -> bool:
         """Re0sizes background image."""
         rbi_logger.debug(f"{src_img_name=}, {dst_img_name=}, {dst_img_size=}")
@@ -999,34 +1005,34 @@ class BingWallPaper(object):
                     resized_img = src_img.resize(dst_img_size, Image.Resampling.LANCZOS).convert(
                         "RGB"
                     )
-                # resized_img = src_img if src_img.size == dst_img_size else src_img.resize(dst_img_size, Image.Resampling.LANCZOS)
+                # resized_img = src_img if src_img.size == dst_img_size else src_img.resize(dst_img_size, Image.Resampling.LANCZOS)  # noqa: E501
                 # check if image title available and it can be written as overlay
-                if (exif_data := src_img.getexif()) is not None:
+                if (exif_data := src_img.getexif()) is not None and (
+                    title_value := exif_data.get(BWP_EXIF_IMAGE_DESCRIPTION_FIELD, None)
+                ) is not None:
+                    # title_bytes = title_value.encode('latin-1').split(b'\x00', 1)[0]
+                    title_bytes = title_value.encode("ISO-8859-1").split(b"\x00", 1)[0]
+                    title_txt = title_bytes.decode("utf-8", errors="ignore")
+                    rbi_logger.debug(f"_resize_background_image: {title_txt = }")
+
+                    copyright_txt = ""
                     if (
-                        title_value := exif_data.get(BWP_EXIF_IMAGE_DESCRIPTION_FIELD, None)
-                    ) is not None:
-                        # title_bytes = title_value.encode('latin-1').split(b'\x00', 1)[0]
-                        title_bytes = title_value.encode("ISO-8859-1").split(b"\x00", 1)[0]
-                        title_txt = title_bytes.decode("utf-8", errors="ignore")
-                        rbi_logger.debug(f"_resize_background_image: {title_txt = }")
+                        copyright_value := exif_data.get(BWP_EXIF_IMAGE_COPYRIGHT_FIELD, "")
+                    ) != "":
+                        copyright_bytes = copyright_value.encode("ISO-8859-1").split(b"\x00", 1)[
+                            0
+                        ]
+                        copyright_txt = copyright_bytes.decode("utf-8", errors="ignore")
+                    rbi_logger.debug(f"_resize_background_image: {copyright_txt = }")
 
-                        copyright_txt = ""
-                        if (
-                            copyright_value := exif_data.get(BWP_EXIF_IMAGE_COPYRIGHT_FIELD, "")
-                        ) != "":
-                            copyright_bytes = copyright_value.encode("ISO-8859-1").split(
-                                b"\x00", 1
-                            )[0]
-                            copyright_txt = copyright_bytes.decode("utf-8", errors="ignore")
-                        rbi_logger.debug(f"_resize_background_image: {copyright_txt = }")
-
-                        BingWallPaper.add_outline_text(resized_img, title_txt, copyright_txt)
-                        resized_img.save(
-                            dst_img_name, optimize=True, quality=get_config_desktop_jpg_quality()
-                        )
+                    BingWallPaper.add_outline_text(resized_img, title_txt, copyright_txt)
+                    resized_img.save(
+                        dst_img_name, optimize=True, quality=get_config_desktop_jpg_quality()
+                    )
         except Exception as exp:
             rbi_logger.error(
-                f"ERROR:_resize_background_image: {exp=}, resizing file: {src_img_name=} to {dst_img_name=} with {dst_img_size=}"
+                f"ERROR:_resize_background_image: {exp=}, resizing file: {src_img_name=} to \
+                    {dst_img_name=} with {dst_img_size=}"
             )
             return False
         return True
@@ -1088,7 +1094,8 @@ class BingWallPaper(object):
     def trim_number_of_images(tni_logger: logging.Logger) -> None:
         """Deletes some images if it reaches max number to keep.
 
-        The max number of images to retain to be defined in the abk_bwp/config/bwp_config.toml file config parameter number_of_images_to_keep.
+        The max number of images to retain to be defined in the abk_bwp/config/bwp_config.toml
+        file config parameter number_of_images_to_keep.
         """
         img_dir = get_config_img_dir()
         background_img_file_list = get_all_background_img_names(img_dir)

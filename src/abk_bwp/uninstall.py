@@ -1,8 +1,9 @@
 """1. delete a link bingwallpaper.py in home_dir/abkBin directory to current dir
-2. Platform dependant operation - create platfrom dependent environment
+2. Platform dependant operation - create platform dependent environment
     2.1. Mac
         2.1.1. stop and unload the job via plist file
-        2.1.2. delete a link in ~/Library/LaunchAgents/com.<userName>.bingwallpaper.py.list to the plist in current directory
+        2.1.2. delete a link in ~/Library/LaunchAgents/com.<userName>.bingwallpaper.py.list
+               to the plist in current directory
         2.1.3. delete a plist file for scheduled job in current directory
     2.2 Linux
         2.2.1. NOT READY YET
@@ -14,11 +15,10 @@
 import os
 import logging
 import shutil
-import subprocess
+import subprocess  # noqa: S404
 import sys
 from abc import ABCMeta, abstractmethod
 from sys import platform as _platform
-from typing import Tuple, Union
 
 
 # Third party imports
@@ -26,7 +26,7 @@ from colorama import Fore, Style
 
 
 # Local imports
-from abk_bwp import abk_common
+from abk_bwp import abk_common, clo
 from abk_bwp.config import ROOT_KW, bwp_config
 
 
@@ -130,7 +130,7 @@ class UninstallOnMacOS(IUninstallBase):
 
     # TODO: remove tuple
     @abk_common.function_trace
-    def _get_plist_names(self, script_name: str) -> Tuple[str, str]:
+    def _get_plist_names(self, script_name: str) -> tuple[str, str]:
         """Gets plist names. Plist label and plist file name.
 
         Args:
@@ -163,7 +163,7 @@ class UninstallOnMacOS(IUninstallBase):
         try:
             for cmd in cmdList:
                 self._logger.info(f"about to execute command '{cmd}'")
-                return_code = subprocess.check_call(cmd, shell=True)
+                return_code = subprocess.check_call(cmd, shell=True)  # noqa: S602
                 self._logger.info(f"command '{cmd}' succeeded, returned: {return_code}")
         except subprocess.CalledProcessError as e:
             self._logger.error(f"ERROR: returned: {e.returncode}")
@@ -249,7 +249,7 @@ class UninstallOnWindows(IUninstallBase):
 
 
 @abk_common.function_trace
-def bwp_uninstall(uninstall_logger: Union[logging.Logger, None] = None) -> None:
+def bwp_uninstall(uninstall_logger: logging.Logger | None = None) -> None:
     """BingWallPaper uninstall.
 
     Args:
@@ -283,7 +283,7 @@ def bwp_uninstall(uninstall_logger: Union[logging.Logger, None] = None) -> None:
 
 
 if __name__ == "__main__":
-    command_line_options = abk_common.CommandLineOptions()
+    command_line_options = clo.CommandLineOptions()
     command_line_options.handle_options()
     uninstall_logger = command_line_options.logger
     bwp_uninstall(uninstall_logger)

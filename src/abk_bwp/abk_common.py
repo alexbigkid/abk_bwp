@@ -191,7 +191,7 @@ def delete_file(file_to_delete: str) -> None:
     try:
         if os.path.exists(file_to_delete) and os.path.isfile(file_to_delete):
             os.remove(file_to_delete)
-    except IOError as exp:
+    except OSError as exp:
         logger.error(f"ERROR:delete_file: {exp=}, deleting file: {file_to_delete}")
 
 
@@ -213,7 +213,7 @@ def read_json_file(json_file_name: str) -> dict:
     return json_data
 
 
-class PerformanceTimer(object):
+class PerformanceTimer:
     """Performance Times class."""
 
     def __init__(self, timer_name: str, pt_logger: logging.Logger):

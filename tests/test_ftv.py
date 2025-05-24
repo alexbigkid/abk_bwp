@@ -11,7 +11,7 @@ from unittest.mock import patch
 # local imports
 from abk_bwp import ftv
 
-TEST_FTV_SECRET_CONFIG_FILE = "tests/test_ftv_secret_config.toml"
+TEST_FTV_FAKE_CONFIG_FILE = "tests/test_ftv_fake_config.toml"
 
 
 class TestFTV(unittest.TestCase):
@@ -20,7 +20,7 @@ class TestFTV(unittest.TestCase):
     def setUp(self):
         """Set up tests fro FTV."""
         self._ftv = ftv.FTV(
-            logger=logging.Logger(__name__), ftv_data_file=TEST_FTV_SECRET_CONFIG_FILE
+            logger=logging.Logger(__name__), ftv_data_file=TEST_FTV_FAKE_CONFIG_FILE
         )
 
     # -------------------------------------------------------------------------
@@ -36,14 +36,14 @@ class TestFTV(unittest.TestCase):
     def test_get_environment_variable_value_should_return_empty_given_env_var_value_is_empty(
         self,
     ) -> None:
-        """get_environment_variable_value returns empty string, given environment variable is set to empty string."""
+        """get_environment_variable_value returns empty str, given env var is set to empty str."""
         actual_value = self._ftv._get_environment_variable_value("ABK_TEST_ENV_VAR")
         self.assertEqual(actual_value, "")
 
     def test_get_environment_variable_value_should_return_empty_given_env_var_undefined(
         self,
     ) -> None:
-        """get_environment_variable_value returns empty string, given environment variable is not set."""
+        """get_environment_variable_value returns empty string, given env variable is not set."""
         actual_value = self._ftv._get_environment_variable_value("ABK_TEST_ENV_VAR")
         self.assertEqual(actual_value, "")
 
