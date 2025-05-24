@@ -7,7 +7,7 @@ from abk_bwp.logger_manager import LoggerManager
 
 
 class TestLoggerManager(unittest.TestCase):
-    """UNit tests for LoggerManager."""
+    """Unit tests for LoggerManager."""
 
     def setUp(self):
         """Set up the test environment."""
