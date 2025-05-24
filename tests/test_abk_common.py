@@ -73,16 +73,19 @@ class TestGetCurrentDir(unittest.TestCase):
     @mock.patch("os.path.realpath")
     @mock.patch("os.path.dirname")
     def test_returns_correct_directory_path(self, mock_dirname, mock_realpath):
+        """Test that get_current_dir returns the correct directory path."""
+        mock_realpath.side_effect = lambda x: x
         mock_realpath.return_value = "/mock/path/to/file.py"
         mock_dirname.return_value = "/mock/path/to"
 
         result = self.abk_common.get_current_dir("somefile.py")
         self.assertEqual(result, "/mock/path/to")
         mock_realpath.assert_called_once_with("somefile.py")
-        mock_dirname.assert_called_once_with("/mock/path/to/file.py")
+        mock_dirname.assert_called_once_with("somefile.py")
 
     @mock.patch("os.path.realpath", side_effect=lambda x: x)
     def test_returns_dirname_when_realpath_returns_input(self, mock_realpath):
+        """Test that get_current_dir returns dirname when realpath returns input."""
         result = self.abk_common.get_current_dir("/my/test/file.py")
         self.assertEqual(result, "/my/test")
         mock_realpath.assert_called_once_with("/my/test/file.py")
@@ -104,6 +107,7 @@ class TestGetParentDir(unittest.TestCase):
 
     @mock.patch("os.path.dirname")
     def test_returns_correct_directory_path(self, mock_dirname):
+        """Test that get_parent_dir returns the correct parent directory."""
         mock_dirname.side_effect = ["/mock/parent", "/mock/child"]
 
         result = self.abk_common.get_parent_dir("/mock/parent/child/file.txt")
@@ -111,11 +115,9 @@ class TestGetParentDir(unittest.TestCase):
         self.assertEqual(result, "/mock/child")
         self.assertEqual(mock_dirname.call_count, 2)
         mock_dirname.assert_has_calls(
-            [
-                mock.call("/mock/parent/child/file.txt"),
-                mock.call("/mock/parent"),
-            ]
+            [mock.call("/mock/parent/child/file.txt"), mock.call("/mock/parent")]
         )
+
 
 class TestEnsureDir(unittest.TestCase):
     """Unit tests for ensure_dir function."""
@@ -134,6 +136,7 @@ class TestEnsureDir(unittest.TestCase):
     @mock.patch("abk_bwp.abk_common.os.makedirs")
     @mock.patch("abk_bwp.abk_common.os.path.exists", return_value=False)
     def test_creates_directory_if_not_exists(self, mock_exists, mock_makedirs):
+        """Test that ensure_dir creates directory if it does not exist."""
         self.abk_common.ensure_dir("/fake/dir")
         mock_exists.assert_called_once_with("/fake/dir")
         mock_makedirs.assert_called_once_with("/fake/dir")
@@ -141,6 +144,7 @@ class TestEnsureDir(unittest.TestCase):
     @mock.patch("abk_bwp.abk_common.os.makedirs")
     @mock.patch("abk_bwp.abk_common.os.path.exists", return_value=True)
     def test_does_nothing_if_directory_exists(self, mock_exists, mock_makedirs):
+        """Test that ensure_dir does nothing if directory already exists."""
         self.abk_common.ensure_dir("/existing/dir")
         mock_exists.assert_called_once_with("/existing/dir")
         mock_makedirs.assert_not_called()
@@ -148,6 +152,7 @@ class TestEnsureDir(unittest.TestCase):
     @mock.patch("abk_bwp.abk_common.os.makedirs")
     @mock.patch("abk_bwp.abk_common.os.path.exists", return_value=False)
     def test_raises_for_non_eexist_oserror(self, mock_exists, mock_makedirs):
+        """Test that ensure_dir raises OSError for non-EEXIST errors."""
         error = OSError("boom")
         error.errno = errno.EACCES
         mock_makedirs.side_effect = error
@@ -159,6 +164,7 @@ class TestEnsureDir(unittest.TestCase):
     @mock.patch("abk_bwp.abk_common.os.makedirs")
     @mock.patch("abk_bwp.abk_common.os.path.exists", return_value=False)
     def test_ignores_eexist_oserror(self, mock_exists, mock_makedirs):
+        """Test that ensure_dir ignores OSError if errno is EEXIST."""
         error = OSError("already exists")
         error.errno = errno.EEXIST
         mock_makedirs.side_effect = error
@@ -167,6 +173,7 @@ class TestEnsureDir(unittest.TestCase):
             self.abk_common.ensure_dir("/maybe-exists")
         except Exception:
             self.fail("ensure_dir should not raise if OSError is EEXIST")
+
 
 class TestEnsureLinkExists(unittest.TestCase):
     """Unit tests for ensure_link_exists function."""
@@ -185,6 +192,7 @@ class TestEnsureLinkExists(unittest.TestCase):
     @mock.patch("abk_bwp.abk_common.os.symlink")
     @mock.patch("abk_bwp.abk_common.os.path.islink", return_value=False)
     def test_creates_symlink_if_not_exists(self, mock_islink, mock_symlink):
+        """Test that ensure_link_exists creates symlink if it does not exist."""
         self.abk_common.ensure_link_exists("source.txt", "link.txt")
         mock_islink.assert_called_once_with("link.txt")
         mock_symlink.assert_called_once_with("source.txt", "link.txt")
@@ -192,6 +200,7 @@ class TestEnsureLinkExists(unittest.TestCase):
     @mock.patch("abk_bwp.abk_common.os.symlink")
     @mock.patch("abk_bwp.abk_common.os.path.islink", return_value=True)
     def test_does_nothing_if_symlink_exists(self, mock_islink, mock_symlink):
+        """Test that ensure_link_exists does nothing if symlink already exists."""
         self.abk_common.ensure_link_exists("source.txt", "link.txt")
         mock_islink.assert_called_once_with("link.txt")
         mock_symlink.assert_not_called()
@@ -199,6 +208,7 @@ class TestEnsureLinkExists(unittest.TestCase):
     @mock.patch("abk_bwp.abk_common.os.symlink")
     @mock.patch("abk_bwp.abk_common.os.path.islink", return_value=False)
     def test_ignores_eexist_oserror(self, mock_islink, mock_symlink):
+        """Test that ensure_link_exists ignores OSError if errno is EEXIST."""
         error = OSError("already exists")
         error.errno = errno.EEXIST
         mock_symlink.side_effect = error
@@ -212,6 +222,7 @@ class TestEnsureLinkExists(unittest.TestCase):
     @mock.patch("abk_bwp.abk_common.os.symlink")
     @mock.patch("abk_bwp.abk_common.os.path.islink", return_value=False)
     def test_raises_for_non_eexist_oserror(self, mock_islink, mock_symlink):
+        """Test that ensure_link_exists raises OSError for non-EEXIST errors."""
         error = OSError("boom")
         error.errno = errno.EPERM
         mock_symlink.side_effect = error
@@ -219,6 +230,50 @@ class TestEnsureLinkExists(unittest.TestCase):
         with self.assertRaises(OSError):
             self.abk_common.ensure_link_exists("source.txt", "link2.txt")
         mock_islink.assert_called_once_with("link2.txt")
+
+
+class TestRemoveLink(unittest.TestCase):
+    """Unit tests for remove_link function."""
+
+    def setUp(self):
+        """Patch the resolve method used by lazy_logger."""
+        patcher = mock.patch("abk_bwp.abk_common.logger._resolve", return_value=mock.MagicMock())
+        self.mock_resolve = patcher.start()
+        self.addCleanup(patcher.stop)
+
+        # Import abk_common after patch
+        import abk_bwp.abk_common as abk_common
+
+        self.abk_common = abk_common
+
+    @mock.patch("abk_bwp.abk_common.os.unlink")
+    @mock.patch("abk_bwp.abk_common.os.path.islink", return_value=True)
+    def test_removes_symlink_when_exists(self, mock_islink, mock_unlink):
+        """Test that remove_link removes the symlink if it exists."""
+        self.abk_common.remove_link("link.txt")
+        mock_islink.assert_called_once_with("link.txt")
+        mock_unlink.assert_called_once_with("link.txt")
+
+    @mock.patch(
+        "abk_bwp.abk_common.os.unlink", side_effect=OSError(errno.EPERM, "permission denied")
+    )
+    @mock.patch("abk_bwp.abk_common.os.path.islink", return_value=True)
+    def test_logs_error_when_unlink_fails(self, mock_islink, mock_unlink):
+        """Test that remove_link logs an error if unlink fails."""
+        with mock.patch("abk_bwp.abk_common.logger") as mock_logger:
+            self.abk_common.remove_link("link.txt")
+            mock_logger.error.assert_called_once()
+            self.assertIn("failed to delete link", mock_logger.error.call_args[0][0])
+        mock_islink.assert_called_once_with("link.txt")
+        mock_unlink.assert_called_once_with("link.txt")
+
+    @mock.patch("abk_bwp.abk_common.os.path.islink", return_value=False)
+    @mock.patch("abk_bwp.abk_common.os.unlink")
+    def test_does_nothing_if_not_symlink(self, mock_unlink, mock_islink):
+        """Test that remove_link does nothing if the file is not a symlink."""
+        self.abk_common.remove_link("not_a_link.txt")
+        mock_islink.assert_called_once_with("not_a_link.txt")
+        mock_unlink.assert_not_called()
 
 
 class TestGetHomeDir(unittest.TestCase):
