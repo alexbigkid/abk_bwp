@@ -1,7 +1,6 @@
 """Main function or entry module for the ABK BingWallPaper (abk_bwp) package."""
 
 # Standard lib imports
-import logging
 import os
 import sys
 
@@ -12,6 +11,7 @@ from colorama import Fore, Style
 # Local imports
 from abk_bwp import abk_common, clo, install, uninstall
 from abk_bwp.config import DESKTOP_IMG_KW, FTV_KW, bwp_config
+from abk_bwp.lazy_logger import LazyLoggerProxy
 
 
 BWP_ENABLE = "enable"
@@ -21,8 +21,7 @@ BWP_FTV_OPTION = "ftv"
 BWP_CONFIG_RELATIVE_PATH = "config/bwp_config.toml"
 
 
-abk_bwp_logger = logging.getLogger(__name__)
-abk_bwp_logger.disabled = True
+logger = LazyLoggerProxy(__name__)
 
 
 @abk_common.function_trace
@@ -45,7 +44,7 @@ def update_enable_field_in_toml_file(key_to_update: str, update_to: bool) -> Non
         key_to_update (str): desktop_img or ftv
         update_to (bool): True to enable, False to disable
     """
-    abk_bwp_logger.debug(f"{key_to_update=}: {update_to=}")
+    logger.debug(f"{key_to_update=}: {update_to=}")
     config_toml_file_name = os.path.join(os.path.dirname(__file__), BWP_CONFIG_RELATIVE_PATH)
     with open(config_toml_file_name, encoding="utf-8") as read_fh:
         config_data = tomlkit.load(read_fh)
@@ -94,13 +93,13 @@ def abk_bwp(clo: clo.CommandLineOptions) -> None:
     """Basically the main function of the package."""
     exit_code = 0
     try:
-        abk_bwp_logger.debug(f"{clo.options=}")
-        abk_bwp_logger.debug(f"{clo._args=}")
+        logger.debug(f"{clo.options=}")
+        logger.debug(f"{clo._args=}")
         handle_desktop_auto_update_option(clo.options.desktop_auto_update)
         handle_ftv_option(clo.options.frame_tv)
     except Exception as exception:
-        abk_bwp_logger.error(f"{Fore.RED}ERROR: executing bingwallpaper")
-        abk_bwp_logger.exception(f"EXCEPTION: {exception}{Style.RESET_ALL}")
+        logger.error(f"{Fore.RED}ERROR: executing bingwallpaper")
+        logger.exception(f"EXCEPTION: {exception}{Style.RESET_ALL}")
         exit_code = 1
     finally:
         sys.exit(exit_code)
@@ -109,5 +108,4 @@ def abk_bwp(clo: clo.CommandLineOptions) -> None:
 if __name__ == "__main__":
     command_line_options = clo.CommandLineOptions()
     command_line_options.handle_options()
-    abk_bwp_logger = command_line_options.logger
     abk_bwp(command_line_options)
