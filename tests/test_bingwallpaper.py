@@ -782,7 +782,12 @@ class TestDownLoadServiceBase(unittest.TestCase):
         # Setup image data list
         img_data_list = [
             bingwallpaper.ImageDownloadData(
-                datetime.date(2025, 1, 1), b"title1", b"copy1", ["url1"], "img/path", "img1.jpg"
+                datetime.date(2025, 1, 1),
+                b"title1",
+                b"copy1",
+                ["url1"],
+                os.path.join("img", "path"),
+                "img1.jpg",
             )
         ]
 
@@ -806,7 +811,8 @@ class TestDownLoadServiceBase(unittest.TestCase):
     @mock.patch("requests.get")
     @mock.patch("abk_bwp.abk_common.ensure_dir")
     @mock.patch(
-        "abk_bwp.bingwallpaper.get_full_img_dir_from_file_name", return_value="mocked/path"
+        "abk_bwp.bingwallpaper.get_full_img_dir_from_file_name",
+        return_value=os.path.join("mocked", "path"),
     )
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
     def test_process_and_download_image_success(
@@ -839,7 +845,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
             title=b"My Title",
             copyright=b"My Copyright",
             imageUrl=["http://example.com/image.jpg"],
-            imagePath="mocked/path",
+            imagePath=os.path.join("mocked", "path"),
             imageName="test.jpg",
         )
 
@@ -851,7 +857,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
         # Asserts
         # ----------------------------------
         mock_get_path.assert_called_once_with("test.jpg")
-        mock_ensure_dir.assert_called_once_with("mocked/path")
+        mock_ensure_dir.assert_called_once_with(os.path.join("mocked", "path"))
         mock_requests_get.assert_called_once_with(
             "http://example.com/image.jpg", stream=True, timeout=mock.ANY
         )
@@ -868,7 +874,8 @@ class TestDownLoadServiceBase(unittest.TestCase):
     @mock.patch("requests.get", return_value=mock.Mock(status_code=404))
     @mock.patch("abk_bwp.abk_common.ensure_dir")
     @mock.patch(
-        "abk_bwp.bingwallpaper.get_full_img_dir_from_file_name", return_value="mocked/path"
+        "abk_bwp.bingwallpaper.get_full_img_dir_from_file_name",
+        return_value=os.path.join("mocked", "path"),
     )
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
     def test_process_and_download_image_http_error(
@@ -892,7 +899,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
             title=b"",
             copyright=b"",
             imageUrl=["http://example.com/bad.jpg"],
-            imagePath="mocked/path",
+            imagePath=os.path.join("mocked", "path"),
             imageName="test.jpg",
         )
 
@@ -904,7 +911,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
         # Assert
         # ----------------------------------
         mock_get_path.assert_called_once_with("test.jpg")
-        mock_ensure_dir.assert_called_once_with("mocked/path")
+        mock_ensure_dir.assert_called_once_with(os.path.join("mocked", "path"))
         mock_requests_get.assert_called_once()
         mock_image_open.assert_not_called()
         mock_get_quality.assert_not_called()
@@ -915,7 +922,8 @@ class TestDownLoadServiceBase(unittest.TestCase):
     @mock.patch("requests.get")
     @mock.patch("abk_bwp.abk_common.ensure_dir")
     @mock.patch(
-        "abk_bwp.bingwallpaper.get_full_img_dir_from_file_name", return_value="mocked/path"
+        "abk_bwp.bingwallpaper.get_full_img_dir_from_file_name",
+        return_value=os.path.join("mocked", "path"),
     )
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
     def test_process_and_download_image_raises_exception(
@@ -942,7 +950,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
             title=b"",
             copyright=b"",
             imageUrl=["http://example.com/corrupt.jpg"],
-            imagePath="mocked/path",
+            imagePath=os.path.join("mocked", "path"),
             imageName="test.jpg",
         )
 
