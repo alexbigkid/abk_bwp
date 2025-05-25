@@ -17,11 +17,12 @@ dependencies = [
     "jsonschema",
     "pillow",
     "PyYAML",
+    "reactivex>=4.0.4",
     "requests",
     "samsungtvws[async,encrypted]",
     "tomlkit",
     "urllib3",
-    "wakeonlan"
+    "wakeonlan",
 ]
 
 
@@ -95,7 +96,7 @@ select = [
     "E302",
     "F401"
 ]
-extend-ignore = ["D203", "E231", "E202", "S108", "E301"]
+extend-ignore = ["D203", "E231", "E202", "S108"]
 
 
 [tool.ruff.lint.pydocstyle]
@@ -112,4 +113,3 @@ docstring-code-format = true
 
 [tool.ruff.lint.isort]
 lines-after-imports = 2
-

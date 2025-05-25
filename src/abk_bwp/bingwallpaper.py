@@ -5,6 +5,8 @@ import datetime
 import io
 import json
 import logging
+import multiprocessing
+import threading
 import os
 import shutil
 import subprocess  # noqa: S404
@@ -21,6 +23,9 @@ from argparse import Namespace
 import requests
 from colorama import Fore, Style
 from PIL import Image, ImageDraw, ImageFont
+import reactivex as rx
+from reactivex import operators as ops
+from reactivex.scheduler import ThreadPoolScheduler
 
 # Local imports
 from abk_bwp import abk_common, clo
@@ -526,49 +531,83 @@ class DownLoadServiceBase(metaclass=ABCMeta):
 
     @abk_common.function_trace
     def _download_images(self, img_dl_data_list: list[ImageDownloadData]) -> None:
-        """Downloads new images.
+        """Downloads images using RxPy observer pattern and multithreading.
 
         Args:
             img_dl_data_list (List[ImageDownloadData]): list of images to download
         """
-        for img_dl_data in img_dl_data_list:
-            full_img_path = get_full_img_dir_from_file_name(img_dl_data.imageName)
-            full_img_name = os.path.join(full_img_path, img_dl_data.imageName)
-            self._logger.debug(f"{full_img_name=}")
-            try:
-                abk_common.ensure_dir(full_img_path)
-                for image_url in img_dl_data.imageUrl:
-                    self._logger.info(f"{image_url = }")
-                    resp = requests.get(image_url, stream=True, timeout=BWP_REQUEST_TIMEOUT)
-                    if resp.status_code == 200:
-                        with Image.open(io.BytesIO(resp.content)) as img:
-                            resized_img = img.resize(
-                                BWP_DEFAULT_IMG_SIZE, Image.Resampling.LANCZOS
+        thread_count = multiprocessing.cpu_count()
+        scheduler = ThreadPoolScheduler(thread_count)
+
+        total = len(img_dl_data_list)
+        completed = 0
+        lock = threading.Lock()
+
+        def log_progress(_):
+            nonlocal completed
+            with lock:
+                completed += 1
+                self._logger.info(f"Downloaded {completed} / {total} images")
+
+        def process_img(img_data):
+            self._process_and_download_image(img_data)
+
+        rx.from_iterable(img_dl_data_list).pipe(
+            ops.flat_map(lambda data:
+                rx.of(data).pipe(
+                    ops.subscribe_on(scheduler),
+                    ops.do_action(process_img),
+                    ops.retry(3),  # retry up to 3 times
+                    ops.do_action(on_next=log_progress)
+                )
+            )
+        ).subscribe(
+            on_completed=lambda: self._logger.info("✅ All image downloads completed."),
+            on_error=lambda e: self._logger.error(f"❌ Stream error: {e}")
+        )
+
+    def _process_and_download_image(self, img_dl_data: ImageDownloadData):
+        """Process and download image.
+
+        Args:
+            img_dl_data (ImageDownloadData): Image download data
+        """
+        full_img_path = get_full_img_dir_from_file_name(img_dl_data.imageName)
+        full_img_name = os.path.join(full_img_path, img_dl_data.imageName)
+        self._logger.debug(f"{full_img_name=}")
+        try:
+            abk_common.ensure_dir(full_img_path)
+            for image_url in img_dl_data.imageUrl:
+                self._logger.info(f"{image_url = }")
+                resp = requests.get(image_url, stream=True, timeout=BWP_REQUEST_TIMEOUT)
+                if resp.status_code == 200:
+                    with Image.open(io.BytesIO(resp.content)) as img:
+                        resized_img = img.resize(
+                            BWP_DEFAULT_IMG_SIZE, Image.Resampling.LANCZOS
+                        )
+                        save_args = {
+                            "optimize": True,
+                            "quality": get_config_store_jpg_quality(),
+                        }
+
+                        if img_dl_data.title:
+                            exif_data = resized_img.getexif()
+                            exif_data.setdefault(
+                                BWP_EXIF_IMAGE_DESCRIPTION_FIELD, img_dl_data.title
                             )
-                            if img_dl_data.title:
-                                exif_data = resized_img.getexif()
-                                exif_data.setdefault(
-                                    BWP_EXIF_IMAGE_DESCRIPTION_FIELD, img_dl_data.title
-                                )
-                                exif_data.setdefault(
-                                    BWP_EXIF_IMAGE_COPYRIGHT_FIELD, img_dl_data.copyright
-                                )
-                                resized_img.save(
-                                    full_img_name,
-                                    exif=exif_data,
-                                    optimize=True,
-                                    quality=get_config_store_jpg_quality(),
-                                )
-                            else:
-                                resized_img.save(
-                                    full_img_name,
-                                    optimize=True,
-                                    quality=get_config_store_jpg_quality(),
-                                )
-                        break
-            except Exception as exp:
-                self._logger.error(f"ERROR: {exp=}, downloading image: {full_img_name}")
-        return
+                            exif_data.setdefault(
+                                BWP_EXIF_IMAGE_COPYRIGHT_FIELD, img_dl_data.copyright
+                            )
+                            save_args["exif"] = exif_data
+
+                        resized_img.save(full_img_name, **save_args)
+                    # we want to download only 1 image with highest quality,
+                    # however there were instances where higher quality image download has a
+                    # problem, so the next quality image should be downloaded. But once
+                    # successful we should exit the loop
+                    break
+        except Exception as exp:
+            self._logger.exception(f"ERROR: {exp=}, downloading image: {full_img_name}")
 
 
 # -----------------------------------------------------------------------------

@@ -1,20 +1,31 @@
 """Unit tests for bingwallpaper.py."""
 
 # Standard library imports
+import warnings
 import datetime
 import os
 from pathlib import Path
+import time
 import unittest
 from unittest import mock
+from xmlrpc.client import ResponseError
 
 # Third party imports
 from parameterized import parameterized
 import requests
+from PIL import Image
+
+
 
 # Own modules imports
 from abk_bwp import bingwallpaper, config
 
 
+
+
+# =============================================================================
+# Single functions in bingwallpaper.py
+# =============================================================================
 class TestBingwallpaper(unittest.TestCase):
     """Test BingWallPaper."""
 
@@ -37,6 +48,9 @@ class TestBingwallpaper(unittest.TestCase):
         bingwallpaper.get_config_background_img_size.cache_clear()
         return super().setUp()
 
+    # -------------------------------------------------------------------------
+    # get_config_img_dir
+    # -------------------------------------------------------------------------
     @mock.patch("abk_bwp.abk_common.ensure_dir")
     @mock.patch("abk_bwp.config.bwp_config", new_callable=dict)
     @mock.patch("abk_bwp.abk_common.get_home_dir")
@@ -51,6 +65,9 @@ class TestBingwallpaper(unittest.TestCase):
         self.assertEqual(result, expected_dir)
         mock_ensure_dir.assert_called_once_with(expected_dir)
 
+    # -------------------------------------------------------------------------
+    # get_config_img_region
+    # -------------------------------------------------------------------------
     @parameterized.expand(
         [["notValidReg", "bing"], ["notValidReg", "peapix"], ["NotValidReg", "NotValidService"]]
     )
@@ -70,6 +87,9 @@ class TestBingwallpaper(unittest.TestCase):
             act_region = bingwallpaper.get_config_img_region()
         self.assertEqual(act_region, exp_region)
 
+    # -------------------------------------------------------------------------
+    # get_full_img_dir_from_file_name
+    # -------------------------------------------------------------------------
     @mock.patch("abk_bwp.bingwallpaper.get_relative_img_dir")
     @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir")
     @mock.patch("abk_bwp.bingwallpaper.get_date_from_img_file_name")
@@ -93,17 +113,9 @@ class TestBingwallpaper(unittest.TestCase):
         mock_get_config_dir.assert_called_once()
         mock_get_relative_dir.assert_called_once_with(mock_get_date.return_value)
 
-    # @mock.patch('abk_bwp.bingwallpaper.datetime.datetime.strptime')
-    # def test_valid_date(self, mock_strptime):
-    #     """Test valid date time."""
-    #     mock_strptime.return_value = datetime.datetime(2025, 5, 24)
-    #     img_file_name = '2025-05-24_some_image.jpg'
-
-    #     result = bingwallpaper.get_date_from_img_file_name(img_file_name)
-
-    #     self.assertEqual(result, datetime.date(2025, 5, 24))
-    #     mock_strptime.assert_called_once_with('2025-05-24', '%Y-%m-%d')
-
+    # -------------------------------------------------------------------------
+    # get_date_from_img_file_name
+    # -------------------------------------------------------------------------
     def test_invalid_date_format(self):
         """Test invalid data format."""
         img_file_name = "2025/05/24_some_image.jpg"
@@ -116,11 +128,16 @@ class TestBingwallpaper(unittest.TestCase):
         result = bingwallpaper.get_date_from_img_file_name(img_file_name)
         self.assertIsNone(result)
 
+    # -------------------------------------------------------------------------
+    # get_all_background_img_names
+    # -------------------------------------------------------------------------
     @mock.patch("abk_bwp.bingwallpaper.get_date_from_img_file_name")
     @mock.patch("os.walk")
     @mock.patch("os.path.isdir")
     def test_get_all_background_img_names(self, mock_isdir, mock_walk, mock_get_date):
         """Test test_get_all_background_img_names."""
+        # Arrange
+        # ---------------------------------------------------------------------
         mock_isdir.return_value = True
         mock_walk.return_value = [
             ("/mocked/path", ["subdir"], ["2025-05-25_image.jpg", "invalid_file.txt"])
@@ -131,8 +148,11 @@ class TestBingwallpaper(unittest.TestCase):
 
         mock_get_date.side_effect = side_effect
 
+        # Act
         result = bingwallpaper.get_all_background_img_names("/mocked/path")
 
+        # Asserts
+        # ---------------------------------------------------------------------
         self.assertEqual(result, ["2025-05-25_image.jpg"])
 
     @mock.patch.dict(config.bwp_config, {config.ROOT_KW.NUMBER_OF_IMAGES_TO_KEEP.value: 5})
@@ -153,6 +173,9 @@ class TestBingwallpaper(unittest.TestCase):
         result = bingwallpaper.get_config_number_of_images_to_keep()
         self.assertEqual(result, 0)
 
+    # -------------------------------------------------------------------------
+    # get_config_img_region
+    # -------------------------------------------------------------------------
     @parameterized.expand(
         [
             ["au", "peapix"],
@@ -192,6 +215,9 @@ class TestBingwallpaper(unittest.TestCase):
             act_region = bingwallpaper.get_config_img_region()
         self.assertEqual(act_region, img_region)
 
+    # -------------------------------------------------------------------------
+    # get_config_bing_img_region
+    # -------------------------------------------------------------------------
     @parameterized.expand(
         [
             ["au", "bing", "en-AU"],
@@ -225,6 +251,9 @@ class TestBingwallpaper(unittest.TestCase):
             act_bing_region = bingwallpaper.get_config_bing_img_region()
         self.assertEqual(act_bing_region, exp_bing_region)
 
+    # -------------------------------------------------------------------------
+    # is_config_ftv_enabled
+    # -------------------------------------------------------------------------
     @mock.patch.dict(
         config.bwp_config,
         {bingwallpaper.FTV_KW.FTV.value: {bingwallpaper.FTV_KW.ENABLED.value: True}},
@@ -246,6 +275,9 @@ class TestBingwallpaper(unittest.TestCase):
         """Test FTV enabled missing."""
         self.assertFalse(bingwallpaper.is_config_ftv_enabled())
 
+    # -------------------------------------------------------------------------
+    # get_relative_img_dir
+    # -------------------------------------------------------------------------
     @mock.patch("abk_bwp.bingwallpaper.is_config_ftv_enabled", return_value=True)
     def test_ftv_enabled_path(self, mock_ftv_enabled):
         """Test FTV enabled."""
@@ -280,6 +312,9 @@ class TestBingwallpaper(unittest.TestCase):
         result = bingwallpaper.get_config_desktop_jpg_quality()
         self.assertEqual(result, 85)
 
+    # -------------------------------------------------------------------------
+    # get_config_ftv_jpg_quality
+    # -------------------------------------------------------------------------
     @mock.patch.dict(config.bwp_config, {"ftv": {"jpg_quality": 42}})
     def test_get_config_ftv_jpg_quality_little_value(self):
         """Test get_config_ftv_jpg_quality too little."""
@@ -298,6 +333,9 @@ class TestBingwallpaper(unittest.TestCase):
         result = bingwallpaper.get_config_ftv_jpg_quality()
         self.assertEqual(result, 89)
 
+    # -------------------------------------------------------------------------
+    # get_config_ftv_data
+    # -------------------------------------------------------------------------
     @mock.patch.dict(config.bwp_config, {"ftv": {"ftv_data": "custom_ftv_data.json"}})
     def test_get_config_ftv_data_custom(self):
         """Should return the custom Frame TV data file name."""
@@ -310,6 +348,9 @@ class TestBingwallpaper(unittest.TestCase):
         result = bingwallpaper.get_config_ftv_data()
         self.assertEqual(result, bingwallpaper.BWP_FTV_DATA_FILE_DEFAULT)
 
+    # -------------------------------------------------------------------------
+    # delete_files_in_dir
+    # -------------------------------------------------------------------------
     @mock.patch("abk_bwp.bingwallpaper.os.remove")
     def test_delete_files_successfully(self, mock_remove):
         """Test all files are attempted to be removed successfully."""
@@ -340,6 +381,9 @@ class TestBingwallpaper(unittest.TestCase):
         self.assertIn("x.txt", msg)
         mock_remove.assert_called_once_with(os.path.join(test_dir, "x.txt"))
 
+    # -------------------------------------------------------------------------
+    # get_full_img_dir_from_date
+    # -------------------------------------------------------------------------
     @mock.patch("abk_bwp.bingwallpaper.get_relative_img_dir")
     @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir")
     def test_get_full_img_dir_from_date(self, mock_get_config_img_dir, mock_get_relative_img_dir):
@@ -370,6 +414,9 @@ class TestBingwallpaper(unittest.TestCase):
         mock_get_config_img_dir.assert_called_once()
         mock_get_relative_img_dir.assert_called_once_with(img_date)
 
+    # -------------------------------------------------------------------------
+    # get_config_store_jpg_quality
+    # -------------------------------------------------------------------------
     @parameterized.expand(
         [
             # read_jpeg_quality    exp_jpeg_quality
@@ -399,6 +446,9 @@ class TestBingwallpaper(unittest.TestCase):
             act_jpeg_quality = bingwallpaper.get_config_store_jpg_quality()
         self.assertEqual(act_jpeg_quality, exp_jpeg_quality)
 
+    # -------------------------------------------------------------------------
+    # get_config_background_img_size
+    # -------------------------------------------------------------------------
     @parameterized.expand(
         [
             # width         height          # result size
@@ -431,9 +481,26 @@ class TestBingwallpaper(unittest.TestCase):
         self.assertEqual(act_size, exp_size)
 
 
+# =============================================================================
+# DownLoadServiceBase
+# =============================================================================
 class TestDownLoadServiceBase(unittest.TestCase):
     """Test DownLoadServiceBase."""
 
+    @classmethod
+    def setUpClass(cls):
+        """Test setup class."""
+        # Suppress only reactivex warnings
+        warnings.filterwarnings(
+            "ignore",
+            message="datetime.datetime.utcnow\\(\\) is deprecated",
+            category=DeprecationWarning,
+            module="reactivex.*"
+        )
+
+    # -------------------------------------------------------------------------
+    # convert_dir_structure_if_needed
+    # -------------------------------------------------------------------------
     @mock.patch("abk_bwp.bingwallpaper.DownLoadServiceBase._convert_to_ftv_dir_structure")
     @mock.patch("abk_bwp.bingwallpaper.is_config_ftv_enabled", return_value=True)
     @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir", return_value="/mocked/path")
@@ -486,6 +553,9 @@ class TestDownLoadServiceBase(unittest.TestCase):
         )
         mock_get_config_img_dir.assert_called_once()
 
+    # -------------------------------------------------------------------------
+    # _convert_to_ftv_dir_structure
+    # -------------------------------------------------------------------------
     @mock.patch("shutil.rmtree")
     @mock.patch("os.renames")
     @mock.patch("os.walk")
@@ -560,6 +630,9 @@ class TestDownLoadServiceBase(unittest.TestCase):
         mock_shutil_rmtree.assert_not_called()
         mock_os_renames.assert_called_once()
 
+    # -------------------------------------------------------------------------
+    # _convert_to_date_dir_structure
+    # -------------------------------------------------------------------------
     @mock.patch("abk_bwp.bingwallpaper.logger", new_callable=mock.MagicMock)
     @mock.patch("shutil.rmtree")
     @mock.patch("os.renames")
@@ -628,174 +701,345 @@ class TestDownLoadServiceBase(unittest.TestCase):
                 root_image_dir, month_list
             )
 
-    @mock.patch("abk_bwp.bingwallpaper.get_full_img_dir_from_file_name")
+    # -------------------------------------------------------------------------
+    # _download_images
+    # -------------------------------------------------------------------------
+    @mock.patch.object(bingwallpaper.BingDownloadService, "_process_and_download_image")
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
-    @mock.patch("abk_bwp.bingwallpaper.get_config_store_jpg_quality", return_value=85)
-    @mock.patch("abk_bwp.abk_common.ensure_dir")
-    @mock.patch("PIL.Image.open")
-    @mock.patch("requests.get")
-    def test_download_image_success(
-        self,
-        mock_get,
-        mock_open,
-        mock_ensure_dir,
-        mock_quality,
-        mock_get_logger,
-        mock_get_full_img_dir,
-    ):
-        """Test test_download_image_success."""
-        # Setup mock logger
-        mock_logger = mock.MagicMock()
-        mock_get_logger.return_value = mock_logger
-
-        # Setup mock response for requests.get
-        mock_response = mock.MagicMock()
-        mock_response.status_code = 200
-        mock_response.content = b"fake_image_data"
-        mock_get.return_value = mock_response
-
-        # Setup mock image and its methods
-        mock_image = mock.MagicMock()
-        mock_resized_image = mock.MagicMock()
-        mock_exif_data = {}
-
-        mock_image.resize.return_value = mock_resized_image
-        mock_resized_image.getexif.return_value = mock_exif_data
-
-        # Mock the context manager for Image.open
-        mock_open.return_value.__enter__.return_value = mock_image
-        mock_get_full_img_dir.return_value = "test/path"
-
-        # Create a sample ImageDownloadData instance
-        img_dl_data = bingwallpaper.ImageDownloadData(
-            imageDate=datetime.date.today(),
-            title=b"Test Title",
-            copyright=b"Test Copyright",
-            imageUrl=["http://example.com/image.jpg"],
-            imagePath="test/path",
-            imageName="test_image.jpg",
-        )
-
-        # Instantiate the class with the mock logger
-        downloader = bingwallpaper.BingDownloadService(logger=mock_logger)
-        downloader._download_images([img_dl_data])
-
-        # Assertions
-        mock_get.assert_called_with("http://example.com/image.jpg", stream=True, timeout=5)
-        mock_image.resize.assert_called_once()
-        self.assertIn(270, mock_exif_data)  # Assuming 270 is the EXIF tag for ImageDescription
-        self.assertIn(33432, mock_exif_data)  # Assuming 33432 is the EXIF tag for Copyright
-        mock_resized_image.save.assert_called_once()
-        mock_ensure_dir.assert_called_once_with("test/path")
-        mock_quality.assert_called_once()
-
-    @mock.patch("abk_bwp.bingwallpaper.get_full_img_dir_from_file_name")
-    @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
-    @mock.patch("abk_bwp.bingwallpaper.get_config_store_jpg_quality", return_value=85)
-    @mock.patch("abk_bwp.abk_common.ensure_dir")
-    @mock.patch("PIL.Image.open")
-    @mock.patch("requests.get")
-    def test_download_image_failure(
-        self,
-        mock_get,
-        mock_open,
-        mock_ensure_dir,
-        mock_quality,
-        mock_get_logger,
-        mock_get_full_img_dir,
-    ):
-        """Test test_download_image_failure."""
+    def test_download_images_success(self, mock_get_logger, mock_process_image):
+        """Test test_download_images_success."""
         # Arrange
-        # ----------------------------------------
-        # Setup mock logger
+        # ----------------------------------
+        # Setup logger mock
         mock_logger = mock.MagicMock()
         mock_get_logger.return_value = mock_logger
-        # Simulate an exception when requests.get is called
-        mock_get.side_effect = requests.exceptions.RequestException("Network error")
-        # Create a sample ImageDownloadData instance
-        img_dl_data = bingwallpaper.ImageDownloadData(
-            imageDate=datetime.date.today(),
-            title=b"Test Title",
-            copyright=b"Test Copyright",
-            imageUrl=["http://example.com/image.jpg"],
-            imagePath="test/path",
-            imageName="test_image.jpg",
-        )
-        # Instantiate the class with the mock logger
-        downloader = bingwallpaper.BingDownloadService(logger=mock_logger)
+        # Setup image data list
+        img_data_list = [
+            bingwallpaper.ImageDownloadData(
+                datetime.date(2025, 1, 2), b"title2", b"copy2", ["url2"], "img/path", "img2.jpg"
+            ),
+            bingwallpaper.ImageDownloadData(
+                datetime.date(2025, 1, 1), b"title1", b"copy1", ["url1"], "img/path", "img1.jpg"
+            )
+        ]
 
         # Act
-        # ----------------------------------------
-        # Call the method and assert that it handles the exception
-        try:
-            downloader._download_images([img_dl_data])
-        except Exception as e:
-            self.fail(f"_download_images raised an exception {e}")
+        # ----------------------------------
+        service = bingwallpaper.BingDownloadService(logger=mock_logger)
+        service._download_images(img_data_list)
+        time.sleep(1)  # Wait briefly for threads to complete
+
+        # Asserts
+        # ----------------------------------
+        # Each image should be processed
+        self.assertEqual(mock_process_image.call_count, len(img_data_list))
+        # Logs should show progress and completion
+        mock_logger.info.assert_any_call("Downloaded 1 / 2 images")
+        mock_logger.info.assert_any_call("Downloaded 2 / 2 images")
+        mock_logger.info.assert_any_call("✅ All image downloads completed.")
+
+    @mock.patch.object(bingwallpaper.BingDownloadService, "_process_and_download_image")
+    @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
+    def test_download_images_with_retry_success(self, mock_get_logger,mock_process_image):
+        """Test test_download_images_with_retry_success."""
+        # Arrange
+        # ----------------------------------
+        # Setup logger mock
+        mock_logger = mock.MagicMock()
+        mock_get_logger.return_value = mock_logger
+        # First call for img1 raises an exception twice, then succeeds
+        side_effects = [Exception("fail"), Exception("fail"), None]
+        mock_process_image.side_effect = side_effects + [None]  # img2 succeeds immediately
+        # Setup image data list
+        img_data_list = [
+            bingwallpaper.ImageDownloadData(
+                datetime.date(2025, 1, 2), b"title2", b"copy2", ["url2"], "img/path", "img2.jpg"
+            ),
+            bingwallpaper.ImageDownloadData(
+                datetime.date(2025, 1, 1), b"title1", b"copy1", ["url1"], "img/path", "img1.jpg"
+            )
+        ]
+
+        # Act
+        # ----------------------------------
+        service = bingwallpaper.BingDownloadService(logger=mock_logger)
+        service._download_images(img_data_list)
+        time.sleep(2)  # Wait briefly for threads to complete
+
+        # Asserts
+        # ----------------------------------
+        self.assertEqual(mock_process_image.call_count, 4)  # 3 (retries) + 1 (img2)
+        mock_logger.info.assert_any_call("✅ All image downloads completed.")
+
+    @mock.patch.object(bingwallpaper.BingDownloadService, "_process_and_download_image", side_effect=Exception("permanent failure"))
+    @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
+    def test_download_images_failure_after_retries(self, mock_get_logger, mock_process_image):
+        """Test test_download_images_failure_after_retries."""
+        # Arrange
+        # ----------------------------------
+        # Setup logger mock
+        mock_logger = mock.MagicMock()
+        mock_get_logger.return_value = mock_logger
+        # Setup image data list
+        img_data_list = [
+            bingwallpaper.ImageDownloadData(
+                datetime.date(2025, 1, 1), b"title1", b"copy1", ["url1"], "img/path", "img1.jpg"
+            )
+        ]
+
+        # Act
+        # ----------------------------------
+        service = bingwallpaper.BingDownloadService(logger=mock_logger)
+        service._download_images(img_data_list)
+        time.sleep(2)  # Wait briefly for threads to complete
+
+        # Asserts
+        # ----------------------------------
+        # Called 3 times due to retries
+        self.assertEqual(mock_process_image.call_count, 3)
+        mock_logger.error.assert_called_with(mock.ANY)  # Something like "❌ Stream error: ..."
+
+    # -------------------------------------------------------------------------
+    # _process_and_download_image
+    # -------------------------------------------------------------------------
+    @mock.patch("abk_bwp.bingwallpaper.get_config_store_jpg_quality", return_value=85)
+    @mock.patch("PIL.Image.open")
+    @mock.patch("requests.get")
+    @mock.patch("abk_bwp.abk_common.ensure_dir")
+    @mock.patch("abk_bwp.bingwallpaper.get_full_img_dir_from_file_name", return_value="mocked/path")
+    @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
+    def test_process_and_download_image_success(
+        self,
+        mock_get_logger,
+        mock_get_path,
+        mock_ensure_dir,
+        mock_requests_get,
+        mock_image_open,
+        mock_get_quality
+    ):
+        """Test test_process_and_download_image_success."""
+        # Arrange
+        # ----------------------------------
+        # Setup logger mock
+        mock_logger = mock.MagicMock()
+        mock_get_logger.return_value = mock_logger
+        # Setup mock image and response
+        mock_image = mock.MagicMock()
+        mock_image.resize.return_value = mock_image
+        mock_image.getexif.return_value = {}
+        mock_image.save = mock.MagicMock()
+        mock_image_open.return_value.__enter__.return_value = mock_image
+        # Setup request mock
+        mock_response = mock.Mock(status_code=200, content=b"fake_image_data")
+        mock_requests_get.return_value = mock_response
+        # Prepare image data
+        image_data = bingwallpaper.ImageDownloadData(
+            imageDate=datetime.date.today(),
+            title=b"My Title",
+            copyright=b"My Copyright",
+            imageUrl=["http://example.com/image.jpg"],
+            imagePath="mocked/path",
+            imageName="test.jpg",
+        )
+
+        # Act
+        # ----------------------------------
+        service = bingwallpaper.BingDownloadService(logger=mock_logger)
+        service._process_and_download_image(image_data)
+
+        # Asserts
+        # ----------------------------------
+        mock_get_path.assert_called_once_with("test.jpg")
+        mock_ensure_dir.assert_called_once_with("mocked/path")
+        mock_requests_get.assert_called_once_with(
+            "http://example.com/image.jpg", stream=True, timeout=mock.ANY
+        )
+        mock_image_open.assert_called_once()
+        mock_image.resize.assert_called_once_with(
+            bingwallpaper.BWP_DEFAULT_IMG_SIZE, Image.Resampling.LANCZOS
+        )
+        mock_get_quality.assert_called_once()
+        mock_image.save.assert_called_once()
+        mock_logger.exception.assert_not_called()
+
+    @mock.patch("abk_bwp.bingwallpaper.get_config_store_jpg_quality", return_value=85)
+    @mock.patch("PIL.Image.open")
+    @mock.patch("requests.get", return_value=mock.Mock(status_code=404))
+    @mock.patch("abk_bwp.abk_common.ensure_dir")
+    @mock.patch("abk_bwp.bingwallpaper.get_full_img_dir_from_file_name", return_value="mocked/path")
+    @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
+    def test_process_and_download_image_http_error(
+        self,
+        mock_get_logger,
+        mock_get_path,
+        mock_ensure_dir,
+        mock_requests_get,
+        mock_image_open,
+        mock_get_quality
+    ):
+        """Test image download error."""
+        # Arrange
+        # ----------------------------------
+        # Setup logger mock
+        mock_logger = mock.MagicMock()
+        mock_get_logger.return_value = mock_logger
+        # setup image data
+        image_data = bingwallpaper.ImageDownloadData(
+            imageDate=datetime.date.today(),
+            title=b"",
+            copyright=b"",
+            imageUrl=["http://example.com/bad.jpg"],
+            imagePath="mocked/path",
+            imageName="test.jpg",
+        )
+
+        # Act
+        # ----------------------------------
+        service = bingwallpaper.BingDownloadService(logger=mock_logger)
+        service._process_and_download_image(image_data)
 
         # Assert
-        # ----------------------------------------
-        mock_open.assert_not_called()
-        mock_ensure_dir.assert_called_once()
-        mock_quality.assert_not_called()
-        mock_get_full_img_dir.assert_called_once()
+        # ----------------------------------
+        mock_get_path.assert_called_once_with("test.jpg")
+        mock_ensure_dir.assert_called_once_with("mocked/path")
+        mock_requests_get.assert_called_once()
+        mock_image_open.assert_not_called()
+        mock_get_quality.assert_not_called()
+        mock_logger.exception.assert_not_called()  # No exception, just skipped save
 
-    @mock.patch("abk_bwp.bingwallpaper.get_full_img_dir_from_file_name")
-    @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
     @mock.patch("abk_bwp.bingwallpaper.get_config_store_jpg_quality", return_value=85)
-    @mock.patch("abk_bwp.abk_common.ensure_dir")
-    @mock.patch("PIL.Image.open")
+    @mock.patch("PIL.Image.open", side_effect=Exception("Image error"))
     @mock.patch("requests.get")
-    def test_download_image_without_title(
+    @mock.patch("abk_bwp.abk_common.ensure_dir")
+    @mock.patch("abk_bwp.bingwallpaper.get_full_img_dir_from_file_name", return_value="mocked/path")
+    @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
+    def test_process_and_download_image_raises_exception(
         self,
-        mock_get,
-        mock_open,
-        mock_ensure_dir,
-        mock_quality,
         mock_get_logger,
-        mock_get_full_img_dir,
+        mock_get_path,
+        mock_ensure_dir,
+        mock_requests_get,
+        mock_image_open,
+        mock_get_quality
     ):
-        """Test downloading an image when img_dl_data.title is falsy."""
+        """Test test_process_and_download_image_raises_exception."""
         # Arrange
-        # ----------------------------------------
-        # Setup mock logger
+        # ----------------------------------
+        # Setup logger mock
         mock_logger = mock.MagicMock()
         mock_get_logger.return_value = mock_logger
-        # Setup mock response for requests.get
-        mock_response = mock.MagicMock()
-        mock_response.status_code = 200
-        mock_response.content = b"fake_image_data"
-        mock_get.return_value = mock_response
-        # Setup mock image and its methods
-        mock_image = mock.MagicMock()
-        mock_resized_image = mock.MagicMock()
-        mock_image.resize.return_value = mock_resized_image
-        # Mock the context manager for Image.open
-        mock_open.return_value.__enter__.return_value = mock_image
-        mock_get_full_img_dir.return_value = "test/path"
-        # Create a sample ImageDownloadData instance with title as None
-        img_dl_data = bingwallpaper.ImageDownloadData(
+        # Setup request mock
+        mock_response = mock.Mock(status_code=200, content=b"bad_data")
+        mock_requests_get.return_value = mock_response
+        # Setup image data
+        image_data = bingwallpaper.ImageDownloadData(
             imageDate=datetime.date.today(),
-            title=None,
-            copyright=b"Test Copyright",
-            imageUrl=["http://example.com/image.jpg"],
-            imagePath="test/path",
-            imageName="test_image.jpg",
+            title=b"",
+            copyright=b"",
+            imageUrl=["http://example.com/corrupt.jpg"],
+            imagePath="mocked/path",
+            imageName="test.jpg",
         )
 
         # Act
-        # ----------------------------------------
-        # Instantiate the class with the mock logger
-        downloader = bingwallpaper.BingDownloadService(logger=mock_logger)
-        downloader._download_images([img_dl_data])
+        # ----------------------------------
+        service = bingwallpaper.BingDownloadService(logger=mock_logger)
+        service._process_and_download_image(image_data)
 
-        # Assertions
-        # ----------------------------------------
-        mock_get.assert_called_with("http://example.com/image.jpg", stream=True, timeout=5)
-        mock_image.resize.assert_called_once()
-        mock_resized_image.getexif.assert_not_called()  # EXIF should not be accessed
-        mock_resized_image.save.assert_called_once()
-        mock_ensure_dir.assert_called_once_with("test/path")
-        mock_quality.assert_called_once()
+        # Assert
+        # ----------------------------------
+        mock_get_path.assert_called_once_with("test.jpg")
+        mock_ensure_dir.assert_called_once_with("mocked/path")
+        mock_requests_get.assert_called_once()
+        mock_requests_get.assert_called_once_with(
+            "http://example.com/corrupt.jpg",
+            stream=True,
+            timeout=bingwallpaper.BWP_REQUEST_TIMEOUT
+        )
+        mock_image_open.assert_called_once()
+        mock_get_quality.assert_not_called()
+        mock_logger.exception.assert_called_once_with(
+            "ERROR: exp=Exception('Image error'), downloading image: mocked/path/test.jpg"
+        )
+
+
+# =============================================================================
+# BingDownloadService
+# =============================================================================
+# class TestBingDownloadService(unittest.TestCase):
+#     """Test BingDownloadService."""
+
+    # -------------------------------------------------------------------------
+    # download_new_images
+    # -------------------------------------------------------------------------
+#     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
+#     @mock.patch('requests.get')
+#     @mock.patch.object(bingwallpaper.BingDownloadService, '_download_images')
+#     def test_download_new_images_success(
+#         self, mock_download_images, mock_requests_get, mock_get_logger
+#     ):
+#         """Test test_download_new_images_success."""
+#         mock_logger = mock.MagicMock()
+#         mock_get_logger.return_value = mock_logger
+#         # Setup mock response
+#         mock_response = mock.Mock()
+#         mock_response.status_code = 200
+#         mock_response.json.return_value = {
+#             "images": [
+#                 {
+#                     "startdate": "20250525",
+#                     "title": "Sample Image",
+#                     "copyright": "Sample Copyright",
+#                     "url": "/sample.jpg"
+#                 }
+#             ]
+#         }
+#         mock_requests_get.return_value = mock_response
+
+#         # Instantiate the service and call the method
+#         service = bingwallpaper.BingDownloadService(logger=mock_logger)
+#         service.download_new_images()
+
+#         # Assertions
+#         mock_requests_get.assert_called_once()
+#         mock_download_images.assert_called_once()
+
+#     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
+#     @mock.patch('requests.get')
+#     def test_download_new_images_non_200_response(self, mock_requests_get, mock_get_logger):
+#         """Test test_download_new_images_non_200_response."""
+#         mock_logger = mock.MagicMock()
+#         mock_get_logger.return_value = mock_logger
+#         # Setup mock response
+#         mock_response = mock.Mock()
+#         mock_response.status_code = 404
+#         mock_requests_get.return_value = mock_response
+
+#         # Instantiate the service
+#         service = bingwallpaper.BingDownloadService(logger=mock_logger)
+
+#         # Assertions
+#         with self.assertRaises(ResponseError):
+#             service.download_new_images()
+
+
+#     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
+#     @mock.patch('requests.get')
+#     def test_download_new_images_exception(self, mock_requests_get, mock_get_logger):
+#         """Test test_download_new_images_exception."""
+#         mock_logger = mock.MagicMock()
+#         mock_get_logger.return_value = mock_logger
+#         # Setup mock to raise an exception
+#         mock_requests_get.side_effect = Exception("Simulated connection error")
+
+#         # Instantiate the service
+#         service = bingwallpaper.BingDownloadService(logger=mock_logger)
+
+#         # Assertions
+#         with self.assertRaises(Exception):
+#             service.download_new_images()
+
+#         # self.assertIn("Simulated connection error", str(context.exception))
 
 
 if __name__ == "__main__":
