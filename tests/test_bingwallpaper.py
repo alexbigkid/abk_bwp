@@ -559,6 +559,74 @@ class TestDownLoadServiceBase(unittest.TestCase):
         mock_shutil_rmtree.assert_not_called()
         mock_os_renames.assert_called_once()
 
+    @mock.patch("abk_bwp.bingwallpaper.logger", new_callable=mock.MagicMock)
+    @mock.patch("shutil.rmtree")
+    @mock.patch("os.renames")
+    @mock.patch("os.walk")
+    @mock.patch.dict("abk_bwp.bingwallpaper.bwp_config", {"alt_peapix_region": ["us"]})
+    def test_convert_to_date_dir_structure(
+        self, mock_os_walk, mock_os_renames, mock_shutil_rmtree, mock_logger
+    ):
+        """Test test_convert_to_date_dir_structure."""
+        root_image_dir = "/mocked/path"
+        month_list = ["01"]
+        day_list = ["01"]
+        image_files = ["2021-01-01_us.jpg"]
+
+        # Define side effects for os.walk
+        def os_walk_side_effect(path):
+            if path == os.path.join(root_image_dir, "01"):
+                return iter([(path, day_list, [])])
+            elif path == os.path.join(root_image_dir, "01", "01"):
+                return iter([(path, [], image_files)])
+            else:
+                return iter([])
+
+        mock_os_walk.side_effect = os_walk_side_effect
+
+        # Call the method under test
+        bingwallpaper.DownLoadServiceBase._convert_to_date_dir_structure(
+            root_image_dir, month_list
+        )
+
+        expected_src = os.path.join(root_image_dir, "01", "01", "2021-01-01_us.jpg")
+        expected_dst = os.path.join(root_image_dir, "2021", "01", "2021-01-01_us.jpg")
+        mock_os_renames.assert_called_once_with(expected_src, expected_dst)
+        mock_shutil_rmtree.assert_called_once_with(
+            os.path.join(root_image_dir, "01"), ignore_errors=True
+        )
+
+    @mock.patch("abk_bwp.bingwallpaper.logger._resolve")
+    @mock.patch("shutil.rmtree")
+    @mock.patch("os.renames", side_effect=OSError("Simulated error during renaming"))
+    @mock.patch("os.walk")
+    @mock.patch.dict("abk_bwp.bingwallpaper.bwp_config", {"alt_peapix_region": ["us"]})
+    def test_convert_to_date_dir_structure_exception(
+        self, mock_os_walk, mock_os_renames, mock_shutil_rmtree, mock_logger
+    ):
+        """Test test_convert_to_date_dir_structure_exception."""
+        root_image_dir = "/mocked/path"
+        month_list = ["01"]
+        day_list = ["01"]
+        image_files = ["2021-01-01_us.jpg"]
+
+        # Define side effects for os.walk
+        def os_walk_side_effect(path):
+            if path == os.path.join(root_image_dir, "01"):
+                return iter([(path, day_list, [])])
+            elif path == os.path.join(root_image_dir, "01", "01"):
+                return iter([(path, [], image_files)])
+            else:
+                return iter([])
+
+        mock_os_walk.side_effect = os_walk_side_effect
+
+        # Call the method under test and assert that it raises an exception
+        with self.assertRaises(OSError):
+            bingwallpaper.DownLoadServiceBase._convert_to_date_dir_structure(
+                root_image_dir, month_list
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
