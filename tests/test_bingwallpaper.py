@@ -69,6 +69,29 @@ class TestBingwallpaper(unittest.TestCase):
             act_region = bingwallpaper.get_config_img_region()
         self.assertEqual(act_region, exp_region)
 
+    @mock.patch("abk_bwp.bingwallpaper.get_relative_img_dir")
+    @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir")
+    @mock.patch("abk_bwp.bingwallpaper.get_date_from_img_file_name")
+    def test_get_full_img_dir_from_file_name(
+        self, mock_get_date, mock_get_config_dir, mock_get_relative_dir
+    ):
+        """Test get_full_img_dir_from_file_name returns correct path."""
+        mock_get_date.return_value = datetime.date(2025, 5, 24)
+        mock_get_config_dir.return_value = os.path.join(
+            "C:", os.sep, "Users", "runneradmin", "Pictures", "BingWallpapers"
+        )
+        mock_get_relative_dir.return_value = os.path.join("2025", "05", "24")
+        expected_path = os.path.join(
+            mock_get_config_dir.return_value, mock_get_relative_dir.return_value
+        )
+
+        result = bingwallpaper.get_full_img_dir_from_file_name("bing_20250524.jpg")
+
+        self.assertEqual(os.path.normpath(result), os.path.normpath(expected_path))
+        mock_get_date.assert_called_once_with("bing_20250524.jpg")
+        mock_get_config_dir.assert_called_once()
+        mock_get_relative_dir.assert_called_once_with(mock_get_date.return_value)
+
     @parameterized.expand(
         [
             ["au", "peapix"],
