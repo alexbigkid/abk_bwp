@@ -31,6 +31,7 @@ class TestBingwallpaper(unittest.TestCase):
         bingwallpaper.get_config_desktop_jpg_quality.cache_clear()
         bingwallpaper.get_config_ftv_jpg_quality.cache_clear()
         bingwallpaper.get_config_ftv_data.cache_clear()
+        bingwallpaper.get_full_img_dir_from_date.cache_clear()
         bingwallpaper.get_config_background_img_size.cache_clear()
         return super().setUp()
 
@@ -268,6 +269,37 @@ class TestBingwallpaper(unittest.TestCase):
         self.assertIn("ERROR", msg)
         self.assertIn("x.txt", msg)
         mock_remove.assert_called_once_with(os.path.join(test_dir, "x.txt"))
+
+
+    @mock.patch("abk_bwp.bingwallpaper.get_relative_img_dir")
+    @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir")
+    def test_get_full_img_dir_from_date(self, mock_get_config_img_dir, mock_get_relative_img_dir):
+        """Test test_get_full_img_dir_from_date."""
+        mock_get_config_img_dir.return_value = "/tmp/imgs"
+        mock_get_relative_img_dir.return_value = "2025/05/24"
+        img_date = datetime.date(2025, 5, 24)
+
+        result = bingwallpaper.get_full_img_dir_from_date(img_date)
+
+        self.assertEqual(result, "/tmp/imgs/2025/05/24")
+        mock_get_config_img_dir.assert_called_once()
+        mock_get_relative_img_dir.assert_called_once_with(img_date)
+
+    @mock.patch("abk_bwp.bingwallpaper.get_relative_img_dir")
+    @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir")
+    def test_lru_cache_is_used(self, mock_get_config_img_dir, mock_get_relative_img_dir):
+        """Test test_lru_cache_is_used."""
+        mock_get_config_img_dir.return_value = "/tmp/imgs"
+        mock_get_relative_img_dir.return_value = "2025/05/24"
+        img_date = datetime.date(2025, 5, 24)
+
+        result1 = bingwallpaper.get_full_img_dir_from_date(img_date)
+        result2 = bingwallpaper.get_full_img_dir_from_date(img_date)
+
+        self.assertEqual(result1, result2)
+        # Should only call these once due to caching
+        mock_get_config_img_dir.assert_called_once()
+        mock_get_relative_img_dir.assert_called_once_with(img_date)
 
     @parameterized.expand(
         [
