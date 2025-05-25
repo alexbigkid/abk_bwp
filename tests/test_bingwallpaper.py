@@ -134,6 +134,24 @@ class TestBingwallpaper(unittest.TestCase):
 
         self.assertEqual(result, ["2025-05-25_image.jpg"])
 
+    @mock.patch.dict(config.bwp_config, {config.ROOT_KW.NUMBER_OF_IMAGES_TO_KEEP.value: 5})
+    def test_positive_value(self):
+        """Test test_positive_value."""
+        result = bingwallpaper.get_config_number_of_images_to_keep()
+        self.assertEqual(result, 5)
+
+    @mock.patch.dict(config.bwp_config, {config.ROOT_KW.NUMBER_OF_IMAGES_TO_KEEP.value: -3})
+    def test_negative_value(self):
+        """Test test_negative_value."""
+        result = bingwallpaper.get_config_number_of_images_to_keep()
+        self.assertEqual(result, 0)
+
+    @mock.patch.dict(config.bwp_config, {}, clear=True)
+    def test_missing_key(self):
+        """Test test_missing_key."""
+        result = bingwallpaper.get_config_number_of_images_to_keep()
+        self.assertEqual(result, 0)
+
     @parameterized.expand(
         [
             ["au", "peapix"],
