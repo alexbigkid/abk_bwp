@@ -92,6 +92,29 @@ class TestBingwallpaper(unittest.TestCase):
         mock_get_config_dir.assert_called_once()
         mock_get_relative_dir.assert_called_once_with(mock_get_date.return_value)
 
+    # @mock.patch('abk_bwp.bingwallpaper.datetime.datetime.strptime')
+    # def test_valid_date(self, mock_strptime):
+    #     """Test valid date time."""
+    #     mock_strptime.return_value = datetime.datetime(2025, 5, 24)
+    #     img_file_name = '2025-05-24_some_image.jpg'
+
+    #     result = bingwallpaper.get_date_from_img_file_name(img_file_name)
+
+    #     self.assertEqual(result, datetime.date(2025, 5, 24))
+    #     mock_strptime.assert_called_once_with('2025-05-24', '%Y-%m-%d')
+
+    def test_invalid_date_format(self):
+        """Test invalid data format."""
+        img_file_name = "2025/05/24_some_image.jpg"
+        result = bingwallpaper.get_date_from_img_file_name(img_file_name)
+        self.assertIsNone(result)
+
+    def test_missing_date(self):
+        """Test missing date."""
+        img_file_name = "some_image.jpg"
+        result = bingwallpaper.get_date_from_img_file_name(img_file_name)
+        self.assertIsNone(result)
+
     @parameterized.expand(
         [
             ["au", "peapix"],
