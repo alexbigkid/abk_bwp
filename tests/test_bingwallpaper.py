@@ -48,7 +48,7 @@ class TestBingwallpaper(unittest.TestCase):
 
         self.assertEqual(os.path.normpath(result), os.path.normpath(expected_dir))
         mock_home_dir.assert_called_once()
-        mock_ensure_dir.assert_called_once_with(expected_dir)
+        mock_ensure_dir.assert_called_once_with(os.path.normpath(expected_dir))
 
     @mock.patch("abk_bwp.abk_common.ensure_dir")
     @mock.patch("abk_bwp.config.bwp_config", new_callable=dict)
@@ -62,7 +62,7 @@ class TestBingwallpaper(unittest.TestCase):
         result = bingwallpaper.get_config_img_dir()
 
         self.assertEqual(os.path.normpath(result), os.path.normpath(expected_dir))
-        mock_ensure_dir.assert_called_once_with(expected_dir)
+        mock_ensure_dir.assert_called_once_with(os.path.normpath(expected_dir))
 
     @parameterized.expand(
         [["notValidReg", "bing"], ["notValidReg", "peapix"], ["NotValidReg", "NotValidService"]]
