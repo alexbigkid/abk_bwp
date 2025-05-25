@@ -23,6 +23,7 @@ class TestBingwallpaper(unittest.TestCase):
         bingwallpaper.normalize_jpg_quality.cache_clear()
         bingwallpaper.get_config_img_region.cache_clear()
         bingwallpaper.get_config_bing_img_region.cache_clear()
+        bingwallpaper.is_config_ftv_enabled.cache_clear()
         bingwallpaper.get_config_store_jpg_quality.cache_clear()
         bingwallpaper.get_config_background_img_size.cache_clear()
         return super().setUp()
@@ -140,6 +141,21 @@ class TestBingwallpaper(unittest.TestCase):
         with patch.dict(config.bwp_config, {"region": img_region, "dl_service": img_dl_service}):
             act_bing_region = bingwallpaper.get_config_bing_img_region()
         self.assertEqual(act_bing_region, exp_bing_region)
+
+    @patch.dict(config.bwp_config, {bingwallpaper.FTV_KW.FTV.value: {bingwallpaper.FTV_KW.ENABLED.value: True}})
+    def test_ftv_enabled_true(self):
+        """Test FTV enabled true."""
+        self.assertTrue(bingwallpaper.is_config_ftv_enabled())
+
+    @patch.dict(config.bwp_config, {bingwallpaper.FTV_KW.FTV.value: {bingwallpaper.FTV_KW.ENABLED.value: False}})
+    def test_ftv_enabled_false(self):
+        """Test FTV enabled false."""
+        self.assertFalse(bingwallpaper.is_config_ftv_enabled())
+
+    @patch.dict(config.bwp_config, {}, clear=True)
+    def test_ftv_enabled_missing(self):
+        """Test FTV enabled missing."""
+        self.assertFalse(bingwallpaper.is_config_ftv_enabled())
 
     @parameterized.expand(
         [
