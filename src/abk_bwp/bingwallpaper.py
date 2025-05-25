@@ -260,7 +260,7 @@ def delete_files_in_dir(dir_name: str, file_list: list[str]) -> None:
         try:
             os.remove(os.path.join(dir_name, file_to_delete))
         except Exception as exp:
-            logger.error(f"ERROR: {exp=}, deleting file: {file_to_delete}")
+            logger.exception(f"ERROR: {exp=}, deleting file: {file_to_delete}")
 
 
 @lru_cache(maxsize=128)

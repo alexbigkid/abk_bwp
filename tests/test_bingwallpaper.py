@@ -2,8 +2,9 @@
 
 # Standard library imports
 import datetime
+import os
 import unittest
-from unittest.mock import patch
+from unittest import mock
 
 # Third party imports
 from parameterized import parameterized
@@ -29,12 +30,13 @@ class TestBingwallpaper(unittest.TestCase):
         bingwallpaper.get_config_store_jpg_quality.cache_clear()
         bingwallpaper.get_config_desktop_jpg_quality.cache_clear()
         bingwallpaper.get_config_ftv_jpg_quality.cache_clear()
+        bingwallpaper.get_config_ftv_data.cache_clear()
         bingwallpaper.get_config_background_img_size.cache_clear()
         return super().setUp()
 
-    @patch("abk_bwp.abk_common.ensure_dir")
-    @patch("abk_bwp.config.bwp_config", new_callable=dict)
-    @patch("abk_bwp.abk_common.get_home_dir")
+    @mock.patch("abk_bwp.abk_common.ensure_dir")
+    @mock.patch("abk_bwp.config.bwp_config", new_callable=dict)
+    @mock.patch("abk_bwp.abk_common.get_home_dir")
     def test_get_config_img_dir_default(self, mock_home_dir, mock_bwp_config, mock_ensure_dir):
         """Test test_get_config_img_dir_default."""
         mock_home_dir.return_value = "/home/user"
@@ -47,9 +49,9 @@ class TestBingwallpaper(unittest.TestCase):
         mock_home_dir.assert_called_once()
         mock_ensure_dir.assert_called_once_with(expected_dir)
 
-    @patch("abk_bwp.abk_common.ensure_dir")
-    @patch("abk_bwp.config.bwp_config", new_callable=dict)
-    @patch("abk_bwp.abk_common.get_home_dir")
+    @mock.patch("abk_bwp.abk_common.ensure_dir")
+    @mock.patch("abk_bwp.config.bwp_config", new_callable=dict)
+    @mock.patch("abk_bwp.abk_common.get_home_dir")
     def test_get_config_img_dir_custom(self, mock_home_dir, mock_bwp_config, mock_ensure_dir):
         """Test test_get_config_img_dir_custom."""
         mock_home_dir.return_value = "/custom/home"
@@ -74,7 +76,7 @@ class TestBingwallpaper(unittest.TestCase):
             img_dl_service (str): image download service
         """
         exp_region = "us"
-        with patch.dict(config.bwp_config, {"region": img_region, "dl_service": img_dl_service}):
+        with mock.patch.dict(config.bwp_config, {"region": img_region, "dl_service": img_dl_service}):
             act_region = bingwallpaper.get_config_img_region()
         self.assertEqual(act_region, exp_region)
 
@@ -111,7 +113,7 @@ class TestBingwallpaper(unittest.TestCase):
             img_region (str): image region
             img_dl_service (str): image download service
         """
-        with patch.dict(config.bwp_config, {"region": img_region, "dl_service": img_dl_service}):
+        with mock.patch.dict(config.bwp_config, {"region": img_region, "dl_service": img_dl_service}):
             act_region = bingwallpaper.get_config_img_region()
         self.assertEqual(act_region, img_region)
 
@@ -142,26 +144,26 @@ class TestBingwallpaper(unittest.TestCase):
             img_dl_service (str): image download service
             exp_bing_region (str): expected bing region
         """
-        with patch.dict(config.bwp_config, {"region": img_region, "dl_service": img_dl_service}):
+        with mock.patch.dict(config.bwp_config, {"region": img_region, "dl_service": img_dl_service}):
             act_bing_region = bingwallpaper.get_config_bing_img_region()
         self.assertEqual(act_bing_region, exp_bing_region)
 
-    @patch.dict(config.bwp_config, {bingwallpaper.FTV_KW.FTV.value: {bingwallpaper.FTV_KW.ENABLED.value: True}})
+    @mock.patch.dict(config.bwp_config, {bingwallpaper.FTV_KW.FTV.value: {bingwallpaper.FTV_KW.ENABLED.value: True}})
     def test_ftv_enabled_true(self):
         """Test FTV enabled true."""
         self.assertTrue(bingwallpaper.is_config_ftv_enabled())
 
-    @patch.dict(config.bwp_config, {bingwallpaper.FTV_KW.FTV.value: {bingwallpaper.FTV_KW.ENABLED.value: False}})
+    @mock.patch.dict(config.bwp_config, {bingwallpaper.FTV_KW.FTV.value: {bingwallpaper.FTV_KW.ENABLED.value: False}})
     def test_ftv_enabled_false(self):
         """Test FTV enabled false."""
         self.assertFalse(bingwallpaper.is_config_ftv_enabled())
 
-    @patch.dict(config.bwp_config, {}, clear=True)
+    @mock.patch.dict(config.bwp_config, {}, clear=True)
     def test_ftv_enabled_missing(self):
         """Test FTV enabled missing."""
         self.assertFalse(bingwallpaper.is_config_ftv_enabled())
 
-    @patch("abk_bwp.bingwallpaper.is_config_ftv_enabled", return_value=True)
+    @mock.patch("abk_bwp.bingwallpaper.is_config_ftv_enabled", return_value=True)
     def test_ftv_enabled_path(self, mock_ftv_enabled):
         """Test FTV enabled."""
         test_date = datetime.date(2024, 5, 24)
@@ -169,7 +171,7 @@ class TestBingwallpaper(unittest.TestCase):
         self.assertEqual(result, "05/24")
         mock_ftv_enabled.assert_called_once()
 
-    @patch("abk_bwp.bingwallpaper.is_config_ftv_enabled", return_value=False)
+    @mock.patch("abk_bwp.bingwallpaper.is_config_ftv_enabled", return_value=False)
     def test_ftv_disabled_path(self, mock_ftv_enabled):
         """Test FTV disabled."""
         test_date = datetime.date(2024, 5, 24)
@@ -177,41 +179,83 @@ class TestBingwallpaper(unittest.TestCase):
         self.assertEqual(result, "2024/05")
         mock_ftv_enabled.assert_called_once()
 
-    @patch.dict(config.bwp_config, {"desktop_img": {"jpg_quality": 18}})
+    @mock.patch.dict(config.bwp_config, {"desktop_img": {"jpg_quality": 18}})
     def test_get_config_desktop_jpg_quality_little_value(self):
         """Test get_config_desktop_jpg_quality too little."""
         result = bingwallpaper.get_config_desktop_jpg_quality()
         self.assertEqual(result, bingwallpaper.BWP_RESIZE_JPG_QUALITY_MIN)
 
-    @patch.dict(config.bwp_config, {"desktop_img": {"jpg_quality": 256}})
+    @mock.patch.dict(config.bwp_config, {"desktop_img": {"jpg_quality": 256}})
     def test_get_config_desktop_jpg_quality_big_value(self):
         """Test get_config_desktop_jpg_quality too big."""
         result = bingwallpaper.get_config_desktop_jpg_quality()
         self.assertEqual(result, bingwallpaper.BWP_RESIZE_JPG_QUALITY_MAX)
 
-    @patch.dict(config.bwp_config, {"desktop_img": {"jpg_quality": 85}})
+    @mock.patch.dict(config.bwp_config, {"desktop_img": {"jpg_quality": 85}})
     def test_get_config_desktop_jpg_quality_custom_value(self):
         """Test get_config_desktop_jpg_quality setting."""
         result = bingwallpaper.get_config_desktop_jpg_quality()
         self.assertEqual(result, 85)
 
-    @patch.dict(config.bwp_config, {"ftv": {"jpg_quality": 42}})
+    @mock.patch.dict(config.bwp_config, {"ftv": {"jpg_quality": 42}})
     def test_get_config_ftv_jpg_quality_little_value(self):
         """Test get_config_ftv_jpg_quality too little."""
         result = bingwallpaper.get_config_ftv_jpg_quality()
         self.assertEqual(result, bingwallpaper.BWP_RESIZE_JPG_QUALITY_MIN)
 
-    @patch.dict(config.bwp_config, {"ftv": {"jpg_quality": 181}})
+    @mock.patch.dict(config.bwp_config, {"ftv": {"jpg_quality": 181}})
     def test_get_config_ftv_jpg_quality_big_value(self):
         """Test get_config_ftv_jpg_quality too big."""
         result = bingwallpaper.get_config_ftv_jpg_quality()
         self.assertEqual(result, bingwallpaper.BWP_RESIZE_JPG_QUALITY_MAX)
 
-    @patch.dict(config.bwp_config, {"ftv": {"jpg_quality": 89}})
+    @mock.patch.dict(config.bwp_config, {"ftv": {"jpg_quality": 89}})
     def test_get_config_ftv_jpg_quality_custom_value(self):
         """Test get_config_ftv_jpg_quality setting."""
         result = bingwallpaper.get_config_ftv_jpg_quality()
         self.assertEqual(result, 89)
+
+    @mock.patch.dict(config.bwp_config, {"ftv": {"ftv_data": "custom_ftv_data.json"}})
+    def test_get_config_ftv_data_custom(self):
+        """Should return the custom Frame TV data file name."""
+        result = bingwallpaper.get_config_ftv_data()
+        self.assertEqual(result, "custom_ftv_data.json")
+
+    @mock.patch.dict(config.bwp_config, {}, clear=True)
+    def test_get_config_ftv_data_default(self):
+        """Should return the default Frame TV data file name when not configured."""
+        result = bingwallpaper.get_config_ftv_data()
+        self.assertEqual(result, bingwallpaper.BWP_FTV_DATA_FILE_DEFAULT)
+
+    @mock.patch("abk_bwp.bingwallpaper.os.remove")
+    def test_delete_files_successfully(self, mock_remove):
+        """Test all files are attempted to be removed successfully."""
+        test_dir = "/tmp/test"
+        test_files = ["a.txt", "b.txt"]
+
+        bingwallpaper.delete_files_in_dir(test_dir, test_files)
+
+        expected_calls = [mock.call(os.path.join(test_dir, f)) for f in test_files]
+        mock_remove.assert_has_calls(expected_calls, any_order=False)
+        self.assertEqual(mock_remove.call_count, 2)
+
+    @mock.patch("abk_bwp.bingwallpaper.os.remove", side_effect=OSError("Mock error"))
+    @mock.patch("abk_bwp.bingwallpaper.logger._resolve")
+    def test_delete_files_logs_error_on_exception(self, mock_resolve, mock_remove):
+        """Test test_delete_files_logs_error_on_exception."""
+        mock_logger = mock.Mock()
+        mock_resolve.return_value = mock_logger
+
+        test_dir = "/tmp/test"
+        test_files = ["x.txt"]
+
+        bingwallpaper.delete_files_in_dir(test_dir, test_files)
+
+        mock_logger.exception.assert_called_once()
+        msg = mock_logger.exception.call_args[0][0]
+        self.assertIn("ERROR", msg)
+        self.assertIn("x.txt", msg)
+        mock_remove.assert_called_once_with(os.path.join(test_dir, "x.txt"))
 
     @parameterized.expand(
         [
@@ -238,7 +282,7 @@ class TestBingwallpaper(unittest.TestCase):
             read_jpeg_quality (int): read JPEG quality
             exp_jpeg_quality (_type_): expected JPEG quality
         """
-        with patch.dict(config.bwp_config, {"store_jpg_quality": read_jpeg_quality}):
+        with mock.patch.dict(config.bwp_config, {"store_jpg_quality": read_jpeg_quality}):
             act_jpeg_quality = bingwallpaper.get_config_store_jpg_quality()
         self.assertEqual(act_jpeg_quality, exp_jpeg_quality)
 
@@ -267,7 +311,7 @@ class TestBingwallpaper(unittest.TestCase):
             cnf_height (int): config height
             exp_size (Tuple[int, int]): expected size
         """
-        with patch.dict(
+        with mock.patch.dict(
             config.bwp_config, {"desktop_img": {"width": cnf_width, "height": cnf_height}}
         ):
             act_size = bingwallpaper.get_config_background_img_size()
