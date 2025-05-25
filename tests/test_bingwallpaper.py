@@ -3,6 +3,7 @@
 # Standard library imports
 import datetime
 import os
+from pathlib import Path
 import unittest
 from unittest import mock
 
@@ -50,19 +51,20 @@ class TestBingwallpaper(unittest.TestCase):
         mock_home_dir.assert_called_once()
         mock_ensure_dir.assert_called_once_with(os.path.normpath(expected_dir))
 
+
     @mock.patch("abk_bwp.abk_common.ensure_dir")
     @mock.patch("abk_bwp.config.bwp_config", new_callable=dict)
     @mock.patch("abk_bwp.abk_common.get_home_dir")
     def test_get_config_img_dir_custom(self, mock_home_dir, mock_bwp_config, mock_ensure_dir):
         """Test test_get_config_img_dir_custom."""
-        mock_home_dir.return_value = "/custom/home"
+        mock_home_dir.return_value = str(Path.home())  # cross-platform home path
         mock_bwp_config[bingwallpaper.ROOT_KW.IMAGE_DIR.value] = bingwallpaper.BWP_DEFAULT_PIX_DIR
-        expected_dir = f"/custom/home/{bingwallpaper.BWP_DEFAULT_PIX_DIR}"
+        expected_dir = Path(mock_home_dir.return_value) / bingwallpaper.BWP_DEFAULT_PIX_DIR
 
         result = bingwallpaper.get_config_img_dir()
 
-        self.assertEqual(os.path.normpath(result), os.path.normpath(expected_dir))
-        mock_ensure_dir.assert_called_once_with(os.path.normpath(expected_dir))
+        self.assertEqual(Path(result), expected_dir)
+        mock_ensure_dir.assert_called_once_with(str(expected_dir))
 
     @parameterized.expand(
         [["notValidReg", "bing"], ["notValidReg", "peapix"], ["NotValidReg", "NotValidService"]]
