@@ -43,12 +43,12 @@ class TestBingwallpaper(unittest.TestCase):
         """Test test_get_config_img_dir_default."""
         mock_home_dir.return_value = str(Path.home())  # cross-platform home path
         mock_bwp_config[bingwallpaper.ROOT_KW.IMAGE_DIR.value] = bingwallpaper.BWP_DEFAULT_PIX_DIR
-        expected_dir = Path(mock_home_dir.return_value) / bingwallpaper.BWP_DEFAULT_PIX_DIR
+        expected_dir = os.path.join(mock_home_dir.return_value, bingwallpaper.BWP_DEFAULT_PIX_DIR)
 
         result = bingwallpaper.get_config_img_dir()
 
-        self.assertEqual(Path(result), expected_dir)
-        mock_ensure_dir.assert_called_once_with(str(expected_dir))
+        self.assertEqual(result, expected_dir)
+        mock_ensure_dir.assert_called_once_with(expected_dir)
 
     @parameterized.expand(
         [["notValidReg", "bing"], ["notValidReg", "peapix"], ["NotValidReg", "NotValidService"]]
