@@ -76,7 +76,9 @@ class TestBingwallpaper(unittest.TestCase):
             img_dl_service (str): image download service
         """
         exp_region = "us"
-        with mock.patch.dict(config.bwp_config, {"region": img_region, "dl_service": img_dl_service}):
+        with mock.patch.dict(
+            config.bwp_config, {"region": img_region, "dl_service": img_dl_service}
+        ):
             act_region = bingwallpaper.get_config_img_region()
         self.assertEqual(act_region, exp_region)
 
@@ -113,7 +115,9 @@ class TestBingwallpaper(unittest.TestCase):
             img_region (str): image region
             img_dl_service (str): image download service
         """
-        with mock.patch.dict(config.bwp_config, {"region": img_region, "dl_service": img_dl_service}):
+        with mock.patch.dict(
+            config.bwp_config, {"region": img_region, "dl_service": img_dl_service}
+        ):
             act_region = bingwallpaper.get_config_img_region()
         self.assertEqual(act_region, img_region)
 
@@ -144,16 +148,24 @@ class TestBingwallpaper(unittest.TestCase):
             img_dl_service (str): image download service
             exp_bing_region (str): expected bing region
         """
-        with mock.patch.dict(config.bwp_config, {"region": img_region, "dl_service": img_dl_service}):
+        with mock.patch.dict(
+            config.bwp_config, {"region": img_region, "dl_service": img_dl_service}
+        ):
             act_bing_region = bingwallpaper.get_config_bing_img_region()
         self.assertEqual(act_bing_region, exp_bing_region)
 
-    @mock.patch.dict(config.bwp_config, {bingwallpaper.FTV_KW.FTV.value: {bingwallpaper.FTV_KW.ENABLED.value: True}})
+    @mock.patch.dict(
+        config.bwp_config,
+        {bingwallpaper.FTV_KW.FTV.value: {bingwallpaper.FTV_KW.ENABLED.value: True}},
+    )
     def test_ftv_enabled_true(self):
         """Test FTV enabled true."""
         self.assertTrue(bingwallpaper.is_config_ftv_enabled())
 
-    @mock.patch.dict(config.bwp_config, {bingwallpaper.FTV_KW.FTV.value: {bingwallpaper.FTV_KW.ENABLED.value: False}})
+    @mock.patch.dict(
+        config.bwp_config,
+        {bingwallpaper.FTV_KW.FTV.value: {bingwallpaper.FTV_KW.ENABLED.value: False}},
+    )
     def test_ftv_enabled_false(self):
         """Test FTV enabled false."""
         self.assertFalse(bingwallpaper.is_config_ftv_enabled())
