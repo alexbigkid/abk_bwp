@@ -430,5 +430,56 @@ class TestBingwallpaper(unittest.TestCase):
         self.assertEqual(act_size, exp_size)
 
 
+class TestDownLoadServiceBase(unittest.TestCase):
+    """Test DownLoadServiceBase."""
+
+    @mock.patch("abk_bwp.bingwallpaper.DownLoadServiceBase._convert_to_ftv_dir_structure")
+    @mock.patch("abk_bwp.bingwallpaper.is_config_ftv_enabled", return_value=True)
+    @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir", return_value="/mocked/path")
+    @mock.patch("os.walk")
+    def test_convert_to_ftv_structure(
+        self, mock_walk, mock_get_config_img_dir, mock_is_config_ftv_enabled, mock_convert_to_ftv
+    ):
+        """Test convert_dir_structure_if_needed with FTV enabled."""
+        # Simulate os.walk returning an iterator with a single tuple
+        mock_walk.return_value = iter([("/mocked/path", ["2021", "2022"], [])])
+
+        bingwallpaper.DownLoadServiceBase.convert_dir_structure_if_needed()
+
+        mock_convert_to_ftv.assert_called_once_with("/mocked/path", ["2021", "2022"])
+
+    @mock.patch("abk_bwp.bingwallpaper.DownLoadServiceBase._convert_to_date_dir_structure")
+    @mock.patch("abk_bwp.bingwallpaper.is_config_ftv_enabled", return_value=False)
+    @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir", return_value="/mocked/path")
+    @mock.patch("os.walk")
+    def test_convert_to_date_structure(
+        self, mock_walk, mock_get_config_img_dir, mock_is_config_ftv_enabled, mock_convert_to_date
+    ):
+        """Test test_convert_to_date_structure."""
+        # Simulate os.walk returning a directory with month-named subdirectories
+        mock_walk.return_value = iter([("/mocked/path", ["01", "02"], [])])
+
+        bingwallpaper.DownLoadServiceBase.convert_dir_structure_if_needed()
+
+        mock_convert_to_date.assert_called_once_with("/mocked/path", ["01", "02"])
+
+    @mock.patch("builtins.open", new_callable=mock.mock_open)
+    @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir", return_value="/mocked/path")
+    @mock.patch("os.walk")
+    def test_empty_directory_creates_warning_file(
+        self, mock_walk, mock_get_config_img_dir, mock_open
+    ):
+        """Test test_empty_directory_creates_warning_file."""
+        # Simulate os.walk returning an empty directory
+        mock_walk.return_value = iter([("/mocked/path", [], [])])
+
+        bingwallpaper.DownLoadServiceBase.convert_dir_structure_if_needed()
+
+        mock_open.assert_called_once_with(
+            "/mocked/path/Please_do_not_modify_anything_in_this_directory.Handled_by_BingWallpaper_automagic",
+            "a",
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
