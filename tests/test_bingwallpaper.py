@@ -8,6 +8,7 @@ from pathlib import Path
 import time
 import unittest
 from unittest import mock
+from xmlrpc.client import ResponseError
 
 # Third party imports
 from parameterized import parameterized
@@ -980,80 +981,67 @@ class TestDownLoadServiceBase(unittest.TestCase):
 # =============================================================================
 # BingDownloadService
 # =============================================================================
-# class TestBingDownloadService(unittest.TestCase):
-#     """Test BingDownloadService."""
+class TestBingDownloadService(unittest.TestCase):
+    """Test BingDownloadService."""
 
-# -------------------------------------------------------------------------
-# download_new_images
-# -------------------------------------------------------------------------
-#     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
-#     @mock.patch('requests.get')
-#     @mock.patch.object(bingwallpaper.BingDownloadService, '_download_images')
-#     def test_download_new_images_success(
-#         self, mock_download_images, mock_requests_get, mock_get_logger
-#     ):
-#         """Test test_download_new_images_success."""
-#         mock_logger = mock.MagicMock()
-#         mock_get_logger.return_value = mock_logger
-#         # Setup mock response
-#         mock_response = mock.Mock()
-#         mock_response.status_code = 200
-#         mock_response.json.return_value = {
-#             "images": [
-#                 {
-#                     "startdate": "20250525",
-#                     "title": "Sample Image",
-#                     "copyright": "Sample Copyright",
-#                     "url": "/sample.jpg"
-#                 }
-#             ]
-#         }
-#         mock_requests_get.return_value = mock_response
+    # -------------------------------------------------------------------------
+    # download_new_images
+    # -------------------------------------------------------------------------
+    @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
+    @mock.patch('requests.get')
+    @mock.patch.object(bingwallpaper.BingDownloadService, '_download_images')
+    def test_download_new_images_success(
+        self, mock_download_images, mock_requests_get, mock_get_logger
+    ):
+        """Test test_download_new_images_success."""
+        # Arrange
+        # ----------------------------------
+        mock_logger = mock.MagicMock()
+        mock_get_logger.return_value = mock_logger
+        # Setup mock response
+        mock_response = mock.Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "images": [
+                {
+                    "startdate": "20250525",
+                    "title": "Sample Image",
+                    "copyright": "Sample Copyright",
+                    "url": "/sample.jpg"
+                }
+            ]
+        }
+        mock_requests_get.return_value = mock_response
 
-#         # Instantiate the service and call the method
-#         service = bingwallpaper.BingDownloadService(logger=mock_logger)
-#         service.download_new_images()
+        # Act
+        # ----------------------------------
+        service = bingwallpaper.BingDownloadService(logger=mock_logger)
+        service.download_new_images()
 
-#         # Assertions
-#         mock_requests_get.assert_called_once()
-#         mock_download_images.assert_called_once()
+        # Asserts
+        # ----------------------------------
+        mock_requests_get.assert_called_once()
+        mock_download_images.assert_called_once()
 
-#     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
-#     @mock.patch('requests.get')
-#     def test_download_new_images_non_200_response(self, mock_requests_get, mock_get_logger):
-#         """Test test_download_new_images_non_200_response."""
-#         mock_logger = mock.MagicMock()
-#         mock_get_logger.return_value = mock_logger
-#         # Setup mock response
-#         mock_response = mock.Mock()
-#         mock_response.status_code = 404
-#         mock_requests_get.return_value = mock_response
+    @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
+    @mock.patch('requests.get')
+    def test_download_new_images_non_200_response(self, mock_requests_get, mock_get_logger):
+        """Test test_download_new_images_non_200_response."""
+        # Arrange
+        # ----------------------------------
+        mock_logger = mock.MagicMock()
+        mock_get_logger.return_value = mock_logger
+        # Setup mock response
+        mock_response = mock.Mock()
+        mock_response.status_code = 404
+        mock_requests_get.return_value = mock_response
 
-#         # Instantiate the service
-#         service = bingwallpaper.BingDownloadService(logger=mock_logger)
-
-#         # Assertions
-#         with self.assertRaises(ResponseError):
-#             service.download_new_images()
-
-
-#     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
-#     @mock.patch('requests.get')
-#     def test_download_new_images_exception(self, mock_requests_get, mock_get_logger):
-#         """Test test_download_new_images_exception."""
-#         mock_logger = mock.MagicMock()
-#         mock_get_logger.return_value = mock_logger
-#         # Setup mock to raise an exception
-#         mock_requests_get.side_effect = Exception("Simulated connection error")
-
-#         # Instantiate the service
-#         service = bingwallpaper.BingDownloadService(logger=mock_logger)
-
-#         # Assertions
-#         with self.assertRaises(Exception):
-#             service.download_new_images()
-
-#         # self.assertIn("Simulated connection error", str(context.exception))
+        # Act
+        # Asserts
+        # ----------------------------------
+        service = bingwallpaper.BingDownloadService(logger=mock_logger)
+        with self.assertRaises(ResponseError):
+            service.download_new_images()
 
 
 if __name__ == "__main__":
