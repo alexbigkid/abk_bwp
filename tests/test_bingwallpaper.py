@@ -270,7 +270,6 @@ class TestBingwallpaper(unittest.TestCase):
         self.assertIn("x.txt", msg)
         mock_remove.assert_called_once_with(os.path.join(test_dir, "x.txt"))
 
-
     @mock.patch("abk_bwp.bingwallpaper.get_relative_img_dir")
     @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir")
     def test_get_full_img_dir_from_date(self, mock_get_config_img_dir, mock_get_relative_img_dir):
