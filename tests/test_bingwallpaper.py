@@ -988,8 +988,8 @@ class TestBingDownloadService(unittest.TestCase):
     # download_new_images
     # -------------------------------------------------------------------------
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
-    @mock.patch('requests.get')
-    @mock.patch.object(bingwallpaper.BingDownloadService, '_download_images')
+    @mock.patch("requests.get")
+    @mock.patch.object(bingwallpaper.BingDownloadService, "_download_images")
     def test_download_new_images_success(
         self, mock_download_images, mock_requests_get, mock_get_logger
     ):
@@ -1007,7 +1007,7 @@ class TestBingDownloadService(unittest.TestCase):
                     "startdate": "20250525",
                     "title": "Sample Image",
                     "copyright": "Sample Copyright",
-                    "url": "/sample.jpg"
+                    "url": "/sample.jpg",
                 }
             ]
         }
@@ -1024,7 +1024,7 @@ class TestBingDownloadService(unittest.TestCase):
         mock_download_images.assert_called_once()
 
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
-    @mock.patch('requests.get')
+    @mock.patch("requests.get")
     def test_download_new_images_non_200_response(self, mock_requests_get, mock_get_logger):
         """Test test_download_new_images_non_200_response."""
         # Arrange
