@@ -280,7 +280,7 @@ class TestBingwallpaper(unittest.TestCase):
 
         result = bingwallpaper.get_full_img_dir_from_date(img_date)
 
-        self.assertEqual(result, "/tmp/imgs/2025/05/24")
+        self.assertEqual(os.path.normpath(result), os.path.normpath("/tmp/imgs/2025/05/24"))
         mock_get_config_img_dir.assert_called_once()
         mock_get_relative_img_dir.assert_called_once_with(img_date)
 
