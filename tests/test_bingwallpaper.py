@@ -42,7 +42,7 @@ class TestBingwallpaper(unittest.TestCase):
         """Test test_get_config_img_dir_default."""
         mock_home_dir.return_value = "/home/user"
         mock_bwp_config[bingwallpaper.ROOT_KW.IMAGE_DIR.value] = bingwallpaper.BWP_DEFAULT_PIX_DIR
-        expected_dir = "/home/user/" + bingwallpaper.BWP_DEFAULT_PIX_DIR
+        expected_dir = f"/home/user/{bingwallpaper.BWP_DEFAULT_PIX_DIR}"
 
         result = bingwallpaper.get_config_img_dir()
 
@@ -57,7 +57,7 @@ class TestBingwallpaper(unittest.TestCase):
         """Test test_get_config_img_dir_custom."""
         mock_home_dir.return_value = "/custom/home"
         mock_bwp_config[bingwallpaper.ROOT_KW.IMAGE_DIR.value] = bingwallpaper.BWP_DEFAULT_PIX_DIR
-        expected_dir = "/custom/home/" + bingwallpaper.BWP_DEFAULT_PIX_DIR
+        expected_dir = f"/custom/home/{bingwallpaper.BWP_DEFAULT_PIX_DIR}"
 
         result = bingwallpaper.get_config_img_dir()
 
