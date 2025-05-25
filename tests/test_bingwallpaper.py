@@ -115,6 +115,25 @@ class TestBingwallpaper(unittest.TestCase):
         result = bingwallpaper.get_date_from_img_file_name(img_file_name)
         self.assertIsNone(result)
 
+
+    @mock.patch('abk_bwp.bingwallpaper.get_date_from_img_file_name')
+    @mock.patch('os.walk')
+    @mock.patch('os.path.isdir')
+    def test_get_all_background_img_names(self, mock_isdir, mock_walk, mock_get_date):
+        """Test test_get_all_background_img_names."""
+        mock_isdir.return_value = True
+        mock_walk.return_value = [
+            ('/mocked/path', ['subdir'], ['2025-05-25_image.jpg', 'invalid_file.txt'])
+        ]
+
+        def side_effect(filename):
+            return filename == '2025-05-25_image.jpg'
+        mock_get_date.side_effect = side_effect
+
+        result = bingwallpaper.get_all_background_img_names('/mocked/path')
+
+        self.assertEqual(result, ['2025-05-25_image.jpg'])
+
     @parameterized.expand(
         [
             ["au", "peapix"],
