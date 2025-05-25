@@ -38,7 +38,7 @@ logger = LazyLoggerProxy(__name__)
 # -----------------------------------------------------------------------------
 BWP_DIRECTORIES = 1
 BWP_FILES = 2
-BWP_DEFAULT_PIX_DIR = "Pictures/BWP"
+BWP_DEFAULT_PIX_DIR = "Pictures/BingWallpapers"
 BWP_FTV_IMAGES_TODAY_DIR = "ftv_images_today"
 BWP_FILE_NAME_WARNING = (
     "Please_do_not_modify_anything_in_this_directory.Handled_by_BingWallpaper_automagic"

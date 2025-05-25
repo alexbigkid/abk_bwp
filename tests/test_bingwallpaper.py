@@ -19,22 +19,42 @@ class TestBingwallpaper(unittest.TestCase):
     def setUp(self) -> None:
         """Set up."""
         self.maxDiff = None
+        bingwallpaper.get_config_img_dir.cache_clear()
+        bingwallpaper.normalize_jpg_quality.cache_clear()
+        bingwallpaper.get_config_img_region.cache_clear()
+        bingwallpaper.get_config_bing_img_region.cache_clear()
+        bingwallpaper.get_config_store_jpg_quality.cache_clear()
+        bingwallpaper.get_config_background_img_size.cache_clear()
         return super().setUp()
 
-    def tearDown(self) -> None:
-        """Tear down."""
-        # cache needs to be cleared after each test for the next to be able to set different mocks
-        # print(f"ABK: cache_info: {bingwallpaper.normalize_jpg_quality.cache_info()}")
-        bingwallpaper.normalize_jpg_quality.cache_clear()
-        # print(f"ABK: cache_info: {bingwallpaper.get_img_region.cache_info()}")
-        bingwallpaper.get_config_img_region.cache_clear()
-        # print(f"ABK: cache_info: {bingwallpaper.get_config_bing_img_region.cache_info()}")
-        bingwallpaper.get_config_bing_img_region.cache_clear()
-        # print(f"ABK: cache_info: {bingwallpaper.get_resize_jpeg_quality.cache_info()}")
-        bingwallpaper.get_config_store_jpg_quality.cache_clear()
-        # print(f"ABK: cache_info: {bingwallpaper.get_config_background_img_size.cache_info()}")
-        bingwallpaper.get_config_background_img_size.cache_clear()
-        return super().tearDown()
+    @patch("abk_bwp.abk_common.ensure_dir")
+    @patch("abk_bwp.config.bwp_config", new_callable=dict)
+    @patch("abk_bwp.abk_common.get_home_dir")
+    def test_get_config_img_dir_default(self, mock_home_dir, mock_bwp_config, mock_ensure_dir):
+        """Test test_get_config_img_dir_default."""
+        mock_home_dir.return_value = "/home/user"
+        mock_bwp_config[bingwallpaper.ROOT_KW.IMAGE_DIR.value] = bingwallpaper.BWP_DEFAULT_PIX_DIR
+        expected_dir = "/home/user/" + bingwallpaper.BWP_DEFAULT_PIX_DIR
+
+        result = bingwallpaper.get_config_img_dir()
+
+        self.assertEqual(result, expected_dir)
+        mock_home_dir.assert_called_once()
+        mock_ensure_dir.assert_called_once_with(expected_dir)
+
+    @patch("abk_bwp.abk_common.ensure_dir")
+    @patch("abk_bwp.config.bwp_config", new_callable=dict)
+    @patch("abk_bwp.abk_common.get_home_dir")
+    def test_get_config_img_dir_custom(self, mock_home_dir, mock_bwp_config, mock_ensure_dir):
+        """Test test_get_config_img_dir_custom."""
+        mock_home_dir.return_value = "/custom/home"
+        mock_bwp_config[bingwallpaper.ROOT_KW.IMAGE_DIR.value] = bingwallpaper.BWP_DEFAULT_PIX_DIR
+        expected_dir = "/custom/home/" + bingwallpaper.BWP_DEFAULT_PIX_DIR
+
+        result = bingwallpaper.get_config_img_dir()
+
+        self.assertEqual(result, expected_dir)
+        mock_ensure_dir.assert_called_once_with(expected_dir)
 
     @parameterized.expand(
         [["notValidReg", "bing"], ["notValidReg", "peapix"], ["NotValidReg", "NotValidService"]]
