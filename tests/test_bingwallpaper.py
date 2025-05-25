@@ -963,8 +963,9 @@ class TestDownLoadServiceBase(unittest.TestCase):
         )
         mock_image_open.assert_called_once()
         mock_get_quality.assert_not_called()
+        expected_path = os.path.join("mocked", "path", "test.jpg")
         mock_logger.exception.assert_called_once_with(
-            "ERROR: exp=Exception('Image error'), downloading image: mocked/path/test.jpg"
+            f"ERROR: exp=Exception('Image error'), downloading image: {expected_path}"
         )
 
 
