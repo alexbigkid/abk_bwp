@@ -553,17 +553,17 @@ class DownLoadServiceBase(metaclass=ABCMeta):
             self._process_and_download_image(img_data)
 
         rx.from_iterable(img_dl_data_list).pipe(
-            ops.flat_map(lambda data:
-                rx.of(data).pipe(
+            ops.flat_map(
+                lambda data: rx.of(data).pipe(
                     ops.subscribe_on(scheduler),
                     ops.do_action(process_img),
                     ops.retry(3),  # retry up to 3 times
-                    ops.do_action(on_next=log_progress)
+                    ops.do_action(on_next=log_progress),
                 )
             )
         ).subscribe(
             on_completed=lambda: self._logger.info("✅ All image downloads completed."),
-            on_error=lambda e: self._logger.error(f"❌ Stream error: {e}")
+            on_error=lambda e: self._logger.error(f"❌ Stream error: {e}"),
         )
 
     def _process_and_download_image(self, img_dl_data: ImageDownloadData):
@@ -582,13 +582,8 @@ class DownLoadServiceBase(metaclass=ABCMeta):
                 resp = requests.get(image_url, stream=True, timeout=BWP_REQUEST_TIMEOUT)
                 if resp.status_code == 200:
                     with Image.open(io.BytesIO(resp.content)) as img:
-                        resized_img = img.resize(
-                            BWP_DEFAULT_IMG_SIZE, Image.Resampling.LANCZOS
-                        )
-                        save_args = {
-                            "optimize": True,
-                            "quality": get_config_store_jpg_quality(),
-                        }
+                        resized_img = img.resize(BWP_DEFAULT_IMG_SIZE, Image.Resampling.LANCZOS)
+                        save_args = {"optimize": True, "quality": get_config_store_jpg_quality()}
 
                         if img_dl_data.title:
                             exif_data = resized_img.getexif()

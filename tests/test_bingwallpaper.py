@@ -8,19 +8,14 @@ from pathlib import Path
 import time
 import unittest
 from unittest import mock
-from xmlrpc.client import ResponseError
 
 # Third party imports
 from parameterized import parameterized
-import requests
 from PIL import Image
-
 
 
 # Own modules imports
 from abk_bwp import bingwallpaper, config
-
-
 
 
 # =============================================================================
@@ -495,7 +490,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
             "ignore",
             message="datetime.datetime.utcnow\\(\\) is deprecated",
             category=DeprecationWarning,
-            module="reactivex.*"
+            module="reactivex.*",
         )
 
     # -------------------------------------------------------------------------
@@ -720,7 +715,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
             ),
             bingwallpaper.ImageDownloadData(
                 datetime.date(2025, 1, 1), b"title1", b"copy1", ["url1"], "img/path", "img1.jpg"
-            )
+            ),
         ]
 
         # Act
@@ -740,7 +735,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
 
     @mock.patch.object(bingwallpaper.BingDownloadService, "_process_and_download_image")
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
-    def test_download_images_with_retry_success(self, mock_get_logger,mock_process_image):
+    def test_download_images_with_retry_success(self, mock_get_logger, mock_process_image):
         """Test test_download_images_with_retry_success."""
         # Arrange
         # ----------------------------------
@@ -757,7 +752,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
             ),
             bingwallpaper.ImageDownloadData(
                 datetime.date(2025, 1, 1), b"title1", b"copy1", ["url1"], "img/path", "img1.jpg"
-            )
+            ),
         ]
 
         # Act
@@ -771,7 +766,11 @@ class TestDownLoadServiceBase(unittest.TestCase):
         self.assertEqual(mock_process_image.call_count, 4)  # 3 (retries) + 1 (img2)
         mock_logger.info.assert_any_call("✅ All image downloads completed.")
 
-    @mock.patch.object(bingwallpaper.BingDownloadService, "_process_and_download_image", side_effect=Exception("permanent failure"))
+    @mock.patch.object(
+        bingwallpaper.BingDownloadService,
+        "_process_and_download_image",
+        side_effect=Exception("permanent failure"),
+    )
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
     def test_download_images_failure_after_retries(self, mock_get_logger, mock_process_image):
         """Test test_download_images_failure_after_retries."""
@@ -806,7 +805,9 @@ class TestDownLoadServiceBase(unittest.TestCase):
     @mock.patch("PIL.Image.open")
     @mock.patch("requests.get")
     @mock.patch("abk_bwp.abk_common.ensure_dir")
-    @mock.patch("abk_bwp.bingwallpaper.get_full_img_dir_from_file_name", return_value="mocked/path")
+    @mock.patch(
+        "abk_bwp.bingwallpaper.get_full_img_dir_from_file_name", return_value="mocked/path"
+    )
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
     def test_process_and_download_image_success(
         self,
@@ -815,7 +816,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
         mock_ensure_dir,
         mock_requests_get,
         mock_image_open,
-        mock_get_quality
+        mock_get_quality,
     ):
         """Test test_process_and_download_image_success."""
         # Arrange
@@ -866,7 +867,9 @@ class TestDownLoadServiceBase(unittest.TestCase):
     @mock.patch("PIL.Image.open")
     @mock.patch("requests.get", return_value=mock.Mock(status_code=404))
     @mock.patch("abk_bwp.abk_common.ensure_dir")
-    @mock.patch("abk_bwp.bingwallpaper.get_full_img_dir_from_file_name", return_value="mocked/path")
+    @mock.patch(
+        "abk_bwp.bingwallpaper.get_full_img_dir_from_file_name", return_value="mocked/path"
+    )
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
     def test_process_and_download_image_http_error(
         self,
@@ -875,7 +878,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
         mock_ensure_dir,
         mock_requests_get,
         mock_image_open,
-        mock_get_quality
+        mock_get_quality,
     ):
         """Test image download error."""
         # Arrange
@@ -911,7 +914,9 @@ class TestDownLoadServiceBase(unittest.TestCase):
     @mock.patch("PIL.Image.open", side_effect=Exception("Image error"))
     @mock.patch("requests.get")
     @mock.patch("abk_bwp.abk_common.ensure_dir")
-    @mock.patch("abk_bwp.bingwallpaper.get_full_img_dir_from_file_name", return_value="mocked/path")
+    @mock.patch(
+        "abk_bwp.bingwallpaper.get_full_img_dir_from_file_name", return_value="mocked/path"
+    )
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
     def test_process_and_download_image_raises_exception(
         self,
@@ -920,7 +925,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
         mock_ensure_dir,
         mock_requests_get,
         mock_image_open,
-        mock_get_quality
+        mock_get_quality,
     ):
         """Test test_process_and_download_image_raises_exception."""
         # Arrange
@@ -954,7 +959,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
         mock_requests_get.assert_called_once_with(
             "http://example.com/corrupt.jpg",
             stream=True,
-            timeout=bingwallpaper.BWP_REQUEST_TIMEOUT
+            timeout=bingwallpaper.BWP_REQUEST_TIMEOUT,
         )
         mock_image_open.assert_called_once()
         mock_get_quality.assert_not_called()
@@ -969,9 +974,9 @@ class TestDownLoadServiceBase(unittest.TestCase):
 # class TestBingDownloadService(unittest.TestCase):
 #     """Test BingDownloadService."""
 
-    # -------------------------------------------------------------------------
-    # download_new_images
-    # -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# download_new_images
+# -------------------------------------------------------------------------
 #     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
 #     @mock.patch('requests.get')
 #     @mock.patch.object(bingwallpaper.BingDownloadService, '_download_images')
