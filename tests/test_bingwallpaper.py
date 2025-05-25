@@ -1,6 +1,7 @@
 """Unit tests for bingwallpaper.py."""
 
 # Standard library imports
+import datetime
 import unittest
 from unittest.mock import patch
 
@@ -24,7 +25,10 @@ class TestBingwallpaper(unittest.TestCase):
         bingwallpaper.get_config_img_region.cache_clear()
         bingwallpaper.get_config_bing_img_region.cache_clear()
         bingwallpaper.is_config_ftv_enabled.cache_clear()
+        bingwallpaper.get_relative_img_dir.cache_clear()
         bingwallpaper.get_config_store_jpg_quality.cache_clear()
+        bingwallpaper.get_config_desktop_jpg_quality.cache_clear()
+        bingwallpaper.get_config_ftv_jpg_quality.cache_clear()
         bingwallpaper.get_config_background_img_size.cache_clear()
         return super().setUp()
 
@@ -156,6 +160,58 @@ class TestBingwallpaper(unittest.TestCase):
     def test_ftv_enabled_missing(self):
         """Test FTV enabled missing."""
         self.assertFalse(bingwallpaper.is_config_ftv_enabled())
+
+    @patch("abk_bwp.bingwallpaper.is_config_ftv_enabled", return_value=True)
+    def test_ftv_enabled_path(self, mock_ftv_enabled):
+        """Test FTV enabled."""
+        test_date = datetime.date(2024, 5, 24)
+        result = bingwallpaper.get_relative_img_dir(test_date)
+        self.assertEqual(result, "05/24")
+        mock_ftv_enabled.assert_called_once()
+
+    @patch("abk_bwp.bingwallpaper.is_config_ftv_enabled", return_value=False)
+    def test_ftv_disabled_path(self, mock_ftv_enabled):
+        """Test FTV disabled."""
+        test_date = datetime.date(2024, 5, 24)
+        result = bingwallpaper.get_relative_img_dir(test_date)
+        self.assertEqual(result, "2024/05")
+        mock_ftv_enabled.assert_called_once()
+
+    @patch.dict(config.bwp_config, {"desktop_img": {"jpg_quality": 18}})
+    def test_get_config_desktop_jpg_quality_little_value(self):
+        """Test get_config_desktop_jpg_quality too little."""
+        result = bingwallpaper.get_config_desktop_jpg_quality()
+        self.assertEqual(result, bingwallpaper.BWP_RESIZE_JPG_QUALITY_MIN)
+
+    @patch.dict(config.bwp_config, {"desktop_img": {"jpg_quality": 256}})
+    def test_get_config_desktop_jpg_quality_big_value(self):
+        """Test get_config_desktop_jpg_quality too big."""
+        result = bingwallpaper.get_config_desktop_jpg_quality()
+        self.assertEqual(result, bingwallpaper.BWP_RESIZE_JPG_QUALITY_MAX)
+
+    @patch.dict(config.bwp_config, {"desktop_img": {"jpg_quality": 85}})
+    def test_get_config_desktop_jpg_quality_custom_value(self):
+        """Test get_config_desktop_jpg_quality setting."""
+        result = bingwallpaper.get_config_desktop_jpg_quality()
+        self.assertEqual(result, 85)
+
+    @patch.dict(config.bwp_config, {"ftv": {"jpg_quality": 42}})
+    def test_get_config_ftv_jpg_quality_little_value(self):
+        """Test get_config_ftv_jpg_quality too little."""
+        result = bingwallpaper.get_config_ftv_jpg_quality()
+        self.assertEqual(result, bingwallpaper.BWP_RESIZE_JPG_QUALITY_MIN)
+
+    @patch.dict(config.bwp_config, {"ftv": {"jpg_quality": 181}})
+    def test_get_config_ftv_jpg_quality_big_value(self):
+        """Test get_config_ftv_jpg_quality too big."""
+        result = bingwallpaper.get_config_ftv_jpg_quality()
+        self.assertEqual(result, bingwallpaper.BWP_RESIZE_JPG_QUALITY_MAX)
+
+    @patch.dict(config.bwp_config, {"ftv": {"jpg_quality": 89}})
+    def test_get_config_ftv_jpg_quality_custom_value(self):
+        """Test get_config_ftv_jpg_quality setting."""
+        result = bingwallpaper.get_config_ftv_jpg_quality()
+        self.assertEqual(result, 89)
 
     @parameterized.expand(
         [

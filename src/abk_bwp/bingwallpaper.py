@@ -159,8 +159,7 @@ def get_relative_img_dir(img_date: datetime.date) -> str:
     """
     if is_config_ftv_enabled():
         return os.path.join(f"{img_date.month:02d}", f"{img_date.day:02d}")
-    else:
-        return os.path.join(f"{img_date.year:04d}", f"{img_date.month:02d}")
+    return os.path.join(f"{img_date.year:04d}", f"{img_date.month:02d}")
 
 
 @lru_cache(maxsize=3)
