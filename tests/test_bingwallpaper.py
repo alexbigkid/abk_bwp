@@ -43,7 +43,7 @@ class TestBingwallpaper(unittest.TestCase):
         """Test test_get_config_img_dir_default."""
         mock_home_dir.return_value = str(Path.home())  # cross-platform home path
         mock_bwp_config[bingwallpaper.ROOT_KW.IMAGE_DIR.value] = bingwallpaper.BWP_DEFAULT_PIX_DIR
-        expected_dir = Path(f"{mock_home_dir.return_value}/{bingwallpaper.BWP_DEFAULT_PIX_DIR}")
+        expected_dir = Path(mock_home_dir.return_value) / bingwallpaper.BWP_DEFAULT_PIX_DIR
 
         result = bingwallpaper.get_config_img_dir()
 
