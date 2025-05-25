@@ -447,6 +447,8 @@ class TestDownLoadServiceBase(unittest.TestCase):
         bingwallpaper.DownLoadServiceBase.convert_dir_structure_if_needed()
 
         mock_convert_to_ftv.assert_called_once_with("/mocked/path", ["2021", "2022"])
+        mock_get_config_img_dir.assert_called_once()
+        mock_is_config_ftv_enabled.assert_called_once()
 
     @mock.patch("abk_bwp.bingwallpaper.DownLoadServiceBase._convert_to_date_dir_structure")
     @mock.patch("abk_bwp.bingwallpaper.is_config_ftv_enabled", return_value=False)
@@ -462,6 +464,8 @@ class TestDownLoadServiceBase(unittest.TestCase):
         bingwallpaper.DownLoadServiceBase.convert_dir_structure_if_needed()
 
         mock_convert_to_date.assert_called_once_with("/mocked/path", ["01", "02"])
+        mock_get_config_img_dir.assert_called_once()
+        mock_is_config_ftv_enabled.assert_called_once()
 
     @mock.patch("builtins.open", new_callable=mock.mock_open)
     @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir", return_value="/mocked/path")
@@ -479,6 +483,81 @@ class TestDownLoadServiceBase(unittest.TestCase):
             "/mocked/path/Please_do_not_modify_anything_in_this_directory.Handled_by_BingWallpaper_automagic",
             "a",
         )
+        mock_get_config_img_dir.assert_called_once()
+
+    @mock.patch("shutil.rmtree")
+    @mock.patch("os.renames")
+    @mock.patch("os.walk")
+    @mock.patch.dict(config.bwp_config, {"alt_peapix_region": ["us"]})
+    def test_convert_to_ftv_dir_structure(
+        self, mock_os_walk, mock_os_renames, mock_shutil_rmtree
+    ):
+        """Test test_convert_to_ftv_dir_structure."""
+        root_image_dir = "/mocked/path"
+        year_list = ["2021"]
+        month_list = ["01"]
+        image_files = ["2021-01-01_us.jpg"]
+        # Mock os.walk to simulate directory structure
+
+        def os_walk_side_effect(path):
+            if path == os.path.join(root_image_dir, "2021"):
+                return iter([(path, month_list, [])])
+            elif path == os.path.join(root_image_dir, "2021", "01"):
+                return iter([(path, [], image_files)])
+            else:
+                return iter([])
+
+        mock_os_walk.side_effect = os_walk_side_effect
+
+        bingwallpaper.DownLoadServiceBase._convert_to_ftv_dir_structure(root_image_dir, year_list)
+
+        expected_src = os.path.join(root_image_dir, "2021", "01", "2021-01-01_us.jpg")
+        expected_dst = os.path.join(root_image_dir, "01", "01", "2021-01-01_us.jpg")
+        mock_os_renames.assert_called_once_with(expected_src, expected_dst)
+        mock_shutil_rmtree.assert_called_once_with(
+            os.path.join(root_image_dir, "2021"), ignore_errors=True
+        )
+
+    @mock.patch("abk_bwp.bingwallpaper.logger._resolve")
+    @mock.patch("shutil.rmtree")
+    @mock.patch("os.renames", side_effect=OSError("Simulated error during renaming"))
+    @mock.patch("os.walk")
+    @mock.patch.dict("abk_bwp.bingwallpaper.bwp_config", {"alt_peapix_region": ["us"]})
+    def test_convert_to_ftv_dir_structure_exception(
+        self, mock_os_walk, mock_os_renames, mock_shutil_rmtree, mock_logger_resolve
+    ):
+        """Test exception handling in _convert_to_ftv_dir_structure."""
+        # Set up a dummy logger for lazy resolution.
+        dummy_logger = mock.Mock()
+        mock_logger_resolve.return_value = dummy_logger
+        root_image_dir = "/mocked/path"
+        year_list = ["2021"]
+        month_list = ["01"]
+        image_files = ["2021-01-01_us.jpg"]
+        # Simulate os.walk returning an iterator (not a list) for the given paths.
+
+        def os_walk_side_effect(path):
+            if path == os.path.join(root_image_dir, "2021"):
+                return iter([(path, month_list, [])])
+            elif path == os.path.join(root_image_dir, "2021", "01"):
+                return iter([(path, [], image_files)])
+            else:
+                return iter([])
+
+        mock_os_walk.side_effect = os_walk_side_effect
+
+        # Call the method and assert that an OSError is raised.
+        with self.assertRaises(OSError) as cm:
+            bingwallpaper.DownLoadServiceBase._convert_to_ftv_dir_structure(
+                root_image_dir, year_list
+            )
+
+        self.assertIn("Simulated error during renaming", str(cm.exception))
+        # Assert that our dummy logger’s error method was called.
+        self.assertTrue(dummy_logger.error.called)
+        # Optionally, check that rmtree is not called because the exception stops processing.
+        mock_shutil_rmtree.assert_not_called()
+        mock_os_renames.assert_called_once()
 
 
 if __name__ == "__main__":
