@@ -181,7 +181,7 @@ class TestBingwallpaper(unittest.TestCase):
         """Test FTV enabled."""
         test_date = datetime.date(2024, 5, 24)
         result = bingwallpaper.get_relative_img_dir(test_date)
-        self.assertEqual(result, "05/24")
+        self.assertEqual(os.path.normpath(result), os.path.normpath("05/24"))
         mock_ftv_enabled.assert_called_once()
 
     @mock.patch("abk_bwp.bingwallpaper.is_config_ftv_enabled", return_value=False)
@@ -189,7 +189,7 @@ class TestBingwallpaper(unittest.TestCase):
         """Test FTV disabled."""
         test_date = datetime.date(2024, 5, 24)
         result = bingwallpaper.get_relative_img_dir(test_date)
-        self.assertEqual(result, "2024/05")
+        self.assertEqual(os.path.normpath(result), os.path.normpath("2024/05"))
         mock_ftv_enabled.assert_called_once()
 
     @mock.patch.dict(config.bwp_config, {"desktop_img": {"jpg_quality": 18}})
