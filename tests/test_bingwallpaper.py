@@ -962,7 +962,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
         # Assert
         # ----------------------------------
         mock_get_path.assert_called_once_with("test.jpg")
-        mock_ensure_dir.assert_called_once_with("mocked/path")
+        mock_ensure_dir.assert_called_once_with(os.path.join("mocked", "path"))
         mock_requests_get.assert_called_once()
         mock_requests_get.assert_called_once_with(
             "http://example.com/corrupt.jpg",
