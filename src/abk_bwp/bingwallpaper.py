@@ -925,7 +925,9 @@ class BingWallPaper:
             os.path.join(img_root_dir, BWP_META_DATA_FILE_NAME)
         )
         logger.debug(f"{json.dumps(img_metadata, indent=4)}")
-        root_img_file_list = sorted(next(os.walk(img_root_dir))[BWP_FILES])
+        # root_img_file_list = sorted(next(os.walk(img_root_dir))[BWP_FILES])
+        first_walk = next(iter(os.walk(img_root_dir)))
+        root_img_file_list = sorted(first_walk[BWP_FILES])
         scale_img_file_list = tuple(
             [img for img in root_img_file_list if img.startswith(BWP_SCALE_FILE_PREFIX)]
         )
@@ -965,7 +967,7 @@ class BingWallPaper:
                         )
                 os.remove(scale_img_name)
             except OSError as exp:
-                logger.error(f"ERROR: {exp=}, resizing file: {scale_img_name}")
+                logger.exception(f"ERROR: {exp=}, resizing file: {scale_img_name}")
 
     @staticmethod
     @abk_common.function_trace
