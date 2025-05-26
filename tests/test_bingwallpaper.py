@@ -1741,6 +1741,41 @@ class TestBingWallPaper(unittest.TestCase):
         mock_get_quality.assert_not_called()  # It should fail before this
         mock_logger.exception.assert_called_once()
 
+    # -------------------------------------------------------------------------
+    # TestBingWallPaper._calculate_image_resizing
+    # -------------------------------------------------------------------------
+    def test_exact_match_min_size(self):
+        """Returns same size when input matches BWP_RESIZE_MIN_IMG_SIZE."""
+        result = bingwallpaper.BingWallPaper._calculate_image_resizing(
+            bingwallpaper.BWP_RESIZE_MIN_IMG_SIZE
+        )
+        self.assertEqual(result, bingwallpaper.BWP_RESIZE_MIN_IMG_SIZE)
+
+    def test_exact_match_default_size(self):
+        """Returns same size when input matches BWP_DEFAULT_IMG_SIZE."""
+        result = bingwallpaper.BingWallPaper._calculate_image_resizing(
+            bingwallpaper.BWP_DEFAULT_IMG_SIZE
+        )
+        self.assertEqual(result, bingwallpaper.BWP_DEFAULT_IMG_SIZE)
+
+    def test_larger_than_mid_threshold(self):
+        """Returns default size if either dimension is larger than mid threshold."""
+        larger_img = (
+            bingwallpaper.BWP_RESIZE_MID_IMG_SIZE[0] + 1,
+            bingwallpaper.BWP_RESIZE_MID_IMG_SIZE[1] + 1,
+        )
+        result = bingwallpaper.BingWallPaper._calculate_image_resizing(larger_img)
+        self.assertEqual(result, bingwallpaper.BWP_DEFAULT_IMG_SIZE)
+
+    def test_smaller_than_mid_threshold(self):
+        """Returns min size if image is smaller than mid threshold."""
+        smaller_img = (
+            bingwallpaper.BWP_RESIZE_MID_IMG_SIZE[0] - 1,
+            bingwallpaper.BWP_RESIZE_MID_IMG_SIZE[1] - 1,
+        )
+        result = bingwallpaper.BingWallPaper._calculate_image_resizing(smaller_img)
+        self.assertEqual(result, bingwallpaper.BWP_RESIZE_MIN_IMG_SIZE)
+
 
 if __name__ == "__main__":
     unittest.main()
