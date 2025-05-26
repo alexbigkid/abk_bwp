@@ -13,6 +13,7 @@ from xmlrpc.client import ResponseError
 # Third party imports
 from parameterized import parameterized
 from PIL import Image
+from requests import Response
 
 
 # Own modules imports
@@ -495,7 +496,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
         )
 
     # -------------------------------------------------------------------------
-    # convert_dir_structure_if_needed
+    # DownLoadServiceBase.convert_dir_structure_if_needed
     # -------------------------------------------------------------------------
     @mock.patch("abk_bwp.bingwallpaper.DownLoadServiceBase._convert_to_ftv_dir_structure")
     @mock.patch("abk_bwp.bingwallpaper.is_config_ftv_enabled", return_value=True)
@@ -550,7 +551,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
         mock_get_config_img_dir.assert_called_once()
 
     # -------------------------------------------------------------------------
-    # _convert_to_ftv_dir_structure
+    # DownLoadServiceBase._convert_to_ftv_dir_structure
     # -------------------------------------------------------------------------
     @mock.patch("shutil.rmtree")
     @mock.patch("os.renames")
@@ -627,7 +628,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
         mock_os_renames.assert_called_once()
 
     # -------------------------------------------------------------------------
-    # _convert_to_date_dir_structure
+    # DownLoadServiceBase._convert_to_date_dir_structure
     # -------------------------------------------------------------------------
     @mock.patch("abk_bwp.bingwallpaper.logger", new_callable=mock.MagicMock)
     @mock.patch("shutil.rmtree")
@@ -698,7 +699,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
             )
 
     # -------------------------------------------------------------------------
-    # _download_images
+    # DownLoadServiceBase._download_images
     # -------------------------------------------------------------------------
     @mock.patch.object(bingwallpaper.BingDownloadService, "_process_and_download_image")
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
@@ -805,7 +806,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
         mock_logger.error.assert_called_with(mock.ANY)  # Something like "❌ Stream error: ..."
 
     # -------------------------------------------------------------------------
-    # _process_and_download_image
+    # DownLoadServiceBase._process_and_download_image
     # -------------------------------------------------------------------------
     @mock.patch("abk_bwp.bingwallpaper.get_config_store_jpg_quality", return_value=85)
     @mock.patch("PIL.Image.open")
@@ -985,7 +986,7 @@ class TestBingDownloadService(unittest.TestCase):
     """Test BingDownloadService."""
 
     # -------------------------------------------------------------------------
-    # download_new_images
+    # BingDownloadService.download_new_images
     # -------------------------------------------------------------------------
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
     @mock.patch("requests.get")
@@ -1044,7 +1045,7 @@ class TestBingDownloadService(unittest.TestCase):
             service.download_new_images()
 
     # -------------------------------------------------------------------------
-    # _process_bing_api_data
+    # BingDownloadService._process_bing_api_data
     # -------------------------------------------------------------------------
     @mock.patch("os.path.exists", return_value=False)
     @mock.patch(
@@ -1150,8 +1151,6 @@ class TestBingDownloadService(unittest.TestCase):
         # Setup logger mock
         mock_logger = mock.MagicMock()
         mock_get_logger.return_value = mock_logger
-        # Setup Metadata list
-
         # Malformed date should raise in datetime.strptime
         metadata_list = [
             {"startdate": "not-a-date", "copyright": "Test Image", "urlbase": "/testimage"}
@@ -1167,6 +1166,105 @@ class TestBingDownloadService(unittest.TestCase):
         mock_get_region.assert_called_once_with()
         mock_get_full_path.assert_not_called()
         mock_exists.assert_not_called()
+
+
+# =============================================================================
+# PeapixDownloadService
+# =============================================================================
+class TestPeapixDownloadService(unittest.TestCase):
+    """Test PeapixDownloadService."""
+
+    # -------------------------------------------------------------------------
+    # PeapixDownloadService.download_new_images
+    # -------------------------------------------------------------------------
+    @mock.patch(
+        "abk_bwp.bingwallpaper.get_config_img_dir", return_value=os.path.join("mock", "dir")
+    )
+    @mock.patch.dict("abk_bwp.bingwallpaper.bwp_config", {
+        "CONSTANT": {"PEAPIX_URL": "https://api.peapix.com"},
+        "REGION": "us",
+    })
+    @mock.patch("requests.get")
+    @mock.patch.object(bingwallpaper.PeapixDownloadService, "_process_peapix_api_data")
+    @mock.patch.object(bingwallpaper.PeapixDownloadService, "_download_images")
+    @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
+    def test_download_new_images_success(
+        self,
+        mock_get_logger,
+        mock_download,
+        mock_process,
+        mock_requests_get,
+        mock_img_dir,
+    ):
+        """Test test_download_new_images_success."""
+        # Arrange
+        # ----------------------------------
+        # Setup logger mock
+        mock_logger = mock.MagicMock()
+        mock_get_logger.return_value = mock_logger
+        # Setup request response
+        fake_response = mock.MagicMock(spec=Response)
+        fake_response.status_code = 200
+        fake_response.json.return_value = {"data": "mocked"}
+        mock_requests_get.return_value = fake_response
+        mock_process.return_value = ["image1", "image2"]
+
+        # Act
+        # ----------------------------------
+        service = bingwallpaper.PeapixDownloadService(logger=mock_logger)
+        service.download_new_images()
+
+        # Assert
+        # ----------------------------------
+        mock_img_dir.assert_called_once_with()
+        mock_requests_get.assert_called_once()
+        mock_process.assert_called_once_with({"data": "mocked"})
+        mock_download.assert_called_once_with(["image1", "image2"])
+        mock_logger.debug.assert_any_call(
+            "Getting Image info from: get_metadata_url='https://peapix.com/bing/feed?country=us'"
+        )
+
+    @mock.patch(
+        "abk_bwp.bingwallpaper.get_config_img_dir", return_value=os.path.join("mock", "dir")
+    )
+    @mock.patch.dict("abk_bwp.bingwallpaper.bwp_config", {
+        "CONSTANT": {"PEAPIX_URL": "https://api.peapix.com"},
+        "REGION": "us",
+    })
+    @mock.patch("requests.get")
+    @mock.patch.object(bingwallpaper.PeapixDownloadService, "_process_peapix_api_data")
+    @mock.patch.object(bingwallpaper.PeapixDownloadService, "_download_images")
+    @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
+    def test_download_new_images_http_error(
+        self,
+        mock_get_logger,
+        mock_download,
+        mock_process,
+        mock_requests_get,
+        mock_img_dir,
+    ):
+        """Test test_download_new_images_success."""
+        # Arrange
+        # ----------------------------------
+        # Setup logger mock
+        mock_logger = mock.MagicMock()
+        mock_get_logger.return_value = mock_logger
+        # Setup request response
+        fake_response = mock.MagicMock(spec=Response)
+        fake_response.status_code = 500
+        mock_requests_get.return_value = fake_response
+
+        # Act + Assert
+        # ----------------------------------
+        service = bingwallpaper.PeapixDownloadService(logger=mock_logger)
+        with self.assertRaises(ResponseError) as cm:
+            service.download_new_images()
+
+        self.assertIn("ERROR: getting bing image return error code: 500", str(cm.exception))
+        mock_img_dir.assert_called_once()
+        mock_requests_get.assert_called_once()
+        mock_process.assert_not_called()
+        mock_download.assert_not_called()
 
 
 if __name__ == "__main__":
