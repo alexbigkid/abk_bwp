@@ -1256,6 +1256,126 @@ class TestPeapixDownloadService(unittest.TestCase):
         mock_process.assert_not_called()
         mock_download.assert_not_called()
 
+    # -------------------------------------------------------------------------
+    # PeapixDownloadService._process_peapix_api_data
+    # -------------------------------------------------------------------------
+    @mock.patch("abk_bwp.bingwallpaper.get_config_img_region", return_value="EN-US")
+    @mock.patch(
+        "abk_bwp.bingwallpaper.get_full_img_dir_from_date",
+        return_value=os.path.join("mocked", "path")
+    )
+    @mock.patch("os.path.exists", return_value=False)
+    @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
+    def test_returns_images_to_download(
+        self, mock_get_logger, mock_exists, mock_get_dir, mock_get_region
+    ):
+        """Test test_returns_images_to_download."""
+        # Arrange
+        # ----------------------------------
+        # Setup logger mock
+        mock_logger = mock.MagicMock()
+        mock_get_logger.return_value = mock_logger
+        metadata = [
+            {
+                "date": "2025-05-25",
+                "title": "Sunset",
+                "copyright": "MyPhoto",
+                "imageUrl": "url1",
+                "fullUrl": "url2",
+                "thumbUrl": "url3"
+            }
+        ]
+
+        # Act
+        # ----------------------------------
+        service = bingwallpaper.PeapixDownloadService(logger=mock_logger)
+        result = service._process_peapix_api_data(metadata)
+
+        # Asserts
+        # ----------------------------------
+        self.assertEqual(len(result), 1)
+        self.assertIsInstance(result[0], bingwallpaper.ImageDownloadData)
+        self.assertEqual(result[0].imageDate, datetime.date(2025, 5, 25))
+        self.assertEqual(result[0].imageName, "2025-05-25_EN-US.jpg")
+        mock_exists.assert_called_once_with(os.path.join("mocked", "path", "2025-05-25_EN-US.jpg"))
+        mock_get_dir.assert_called_once_with(datetime.date(2025, 5, 25))
+        mock_get_region.assert_called_once()
+
+    @mock.patch("abk_bwp.bingwallpaper.get_config_img_region", return_value="EN-US")
+    @mock.patch(
+        "abk_bwp.bingwallpaper.get_full_img_dir_from_date",
+        return_value=os.path.join("mocked", "path")
+    )
+    @mock.patch("os.path.exists", return_value=True)
+    @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
+    def test_skips_existing_images(
+        self, mock_get_logger, mock_exists, mock_get_dir, mock_get_region
+    ):
+        """Test test_skips_existing_images."""
+        # Arrange
+        # ----------------------------------
+        # Setup logger mock
+        mock_logger = mock.MagicMock()
+        mock_get_logger.return_value = mock_logger
+        # Setup metadata
+        metadata = [{
+            "date": "2025-05-25",
+            "title": "Already Exists",
+            "copyright": "",
+            "imageUrl": "",
+            "fullUrl": "",
+            "thumbUrl": ""
+        }]
+
+        # Act
+        # ----------------------------------
+        service = bingwallpaper.PeapixDownloadService(logger=mock_logger)
+        result = service._process_peapix_api_data(metadata)
+
+        # Asserts
+        # ----------------------------------
+        self.assertEqual(result, [])
+        mock_exists.assert_called_once_with(os.path.join("mocked", "path", "2025-05-25_EN-US.jpg"))
+        mock_get_dir.assert_called_once_with(datetime.date(2025, 5, 25))
+        mock_get_region.assert_called_once()
+
+    @mock.patch("abk_bwp.bingwallpaper.get_config_img_region", return_value="EN-US")
+    @mock.patch(
+        "abk_bwp.bingwallpaper.get_full_img_dir_from_date",
+        return_value=os.path.join("mocked", "path")
+    )
+    @mock.patch("os.path.exists", return_value=False)
+    @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
+    def test_handles_invalid_date(
+        self, mock_get_logger, mock_exists, mock_get_dir, mock_get_region
+    ):
+        """Test test_handles_invalid_date."""
+        # Arrange
+        # ----------------------------------
+        # Setup logger mock
+        mock_logger = mock.MagicMock()
+        mock_get_logger.return_value = mock_logger
+        bad_metadata = [{
+            "date": "not-a-date",
+            "title": "Invalid Date",
+            "imageUrl": "",
+            "fullUrl": "",
+            "thumbUrl": ""
+        }]
+
+        # Act
+        # ----------------------------------
+        service = bingwallpaper.PeapixDownloadService(logger=mock_logger)
+        result = service._process_peapix_api_data(bad_metadata)
+
+        # Asserts
+        # ----------------------------------
+        self.assertEqual(result, [])
+        mock_logger.exception.assert_called_once()
+        mock_exists.assert_not_called()
+        mock_get_dir.assert_not_called()
+        mock_get_region.assert_called_once()
+
 
 if __name__ == "__main__":
     unittest.main()

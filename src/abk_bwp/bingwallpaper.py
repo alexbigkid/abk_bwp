@@ -737,8 +737,9 @@ class PeapixDownloadService(DownLoadServiceBase):
             try:
                 img_date_str = img_data.get("date", "")
                 img_date = datetime.datetime.strptime(img_date_str, "%Y-%m-%d").date()
+                full_img_dir=get_full_img_dir_from_date(img_date)
                 img_to_check = os.path.join(
-                    get_full_img_dir_from_date(img_date),
+                    full_img_dir,
                     f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}",
                 )
                 if os.path.exists(img_to_check) is False:
@@ -752,7 +753,7 @@ class PeapixDownloadService(DownLoadServiceBase):
                                 img_data.get("fullUrl", ""),
                                 img_data.get("thumbUrl", ""),
                             ],
-                            imagePath=get_full_img_dir_from_date(img_date),
+                            imagePath=full_img_dir,
                             imageName=f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}",
                         )
                     )
