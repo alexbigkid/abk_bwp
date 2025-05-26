@@ -2093,6 +2093,82 @@ class TestBingWallPaper(unittest.TestCase):
         self.assertEqual(mock_delete_file.call_count, 2)
         self.assertEqual(mock_delete_dir.call_count, 4)
 
+    # -------------------------------------------------------------------------
+    # TestBingWallPaper.prepare_ftv_images
+    # -------------------------------------------------------------------------
+    @mock.patch("abk_bwp.bingwallpaper.BingWallPaper._resize_background_image")
+    @mock.patch("abk_bwp.bingwallpaper.os.path.join", side_effect=lambda *args: "/".join(args))
+    @mock.patch(
+        "abk_bwp.bingwallpaper.get_full_img_dir_from_date", return_value="/images/2025-05-26"
+    )
+    @mock.patch("abk_bwp.bingwallpaper.delete_files_in_dir")
+    @mock.patch("abk_bwp.bingwallpaper.os.walk")
+    @mock.patch("abk_bwp.bingwallpaper.abk_common.ensure_dir")
+    @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir", return_value="/images")
+    @mock.patch("abk_bwp.bingwallpaper.logger", new_callable=mock.Mock)
+    def test_prepare_ftv_images(
+        self,
+        mock_logger,
+        mock_get_config_img_dir,
+        mock_ensure_dir,
+        mock_os_walk,
+        mock_delete_files,
+        mock_get_full_img_dir,
+        mock_path_join,
+        mock_resize_image,
+    ):
+        """Test prepare_ftv_images static method behavior."""
+        # Arrange
+        # ----------------------------------
+        ftv_dir = "/images/ftv_images_today"
+        today_dir = "/images/2025-05-26"
+
+        mock_os_walk.side_effect = [
+            iter([(ftv_dir, [], ["old1.jpg", "old2.jpg"])]),
+            iter([(today_dir, [], ["new1.jpg", "new2.jpg"])]),
+        ]
+
+        # Act
+        # ----------------------------------
+        result = bingwallpaper.BingWallPaper.prepare_ftv_images()
+
+        # Asserts
+        # ----------------------------------
+        mock_get_config_img_dir.assert_called_once()
+        mock_path_join.assert_any_call(today_dir, "new1.jpg")
+        mock_path_join.assert_any_call(ftv_dir, "new1.jpg")
+        mock_path_join.assert_any_call(today_dir, "new2.jpg")
+        mock_path_join.assert_any_call(ftv_dir, "new2.jpg")
+        mock_ensure_dir.assert_called_once_with(ftv_dir)
+        mock_delete_files.assert_called_once_with(
+            dir_name=ftv_dir, file_list=["old1.jpg", "old2.jpg"]
+        )
+        mock_get_full_img_dir.assert_called_once_with(datetime.date.today())
+        mock_resize_image.assert_has_calls(
+            [
+                mock.call(
+                    f"{today_dir}/new1.jpg",
+                    f"{ftv_dir}/new1.jpg",
+                    bingwallpaper.BWP_DEFAULT_IMG_SIZE,
+                ),
+                mock.call(
+                    f"{today_dir}/new2.jpg",
+                    f"{ftv_dir}/new2.jpg",
+                    bingwallpaper.BWP_DEFAULT_IMG_SIZE,
+                ),
+            ]
+        )
+        mock_resize_image.assert_called()
+        mock_resize_image.assert_any_call(
+            f"{today_dir}/new1.jpg", f"{ftv_dir}/new1.jpg", mock.ANY
+        )
+        mock_resize_image.assert_any_call(
+            f"{today_dir}/new2.jpg", f"{ftv_dir}/new2.jpg", mock.ANY
+        )
+        mock_resize_image.assert_has_calls(mock_resize_image.mock_calls)  # confirms call order
+        self.assertEqual(mock_resize_image.call_count, 2)
+        self.assertEqual(result, [f"{ftv_dir}/new1.jpg", f"{ftv_dir}/new2.jpg"])
+
 
 if __name__ == "__main__":
     unittest.main()
