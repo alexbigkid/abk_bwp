@@ -1058,7 +1058,7 @@ class BingWallPaper:
                         dst_img_name, optimize=True, quality=get_config_desktop_jpg_quality()
                     )
         except Exception as exp:
-            logger.error(
+            logger.exception(
                 f"ERROR:_resize_background_image: {exp=}, resizing file: {src_img_name=} to \
                     {dst_img_name=} with {dst_img_size=}"
             )

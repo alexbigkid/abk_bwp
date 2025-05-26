@@ -6,6 +6,7 @@ from collections import namedtuple
 import logging
 import platform
 import sys
+import tempfile
 import warnings
 import datetime
 import os
@@ -1812,10 +1813,8 @@ class TestBingWallPaper(unittest.TestCase):
     @mock.patch("abk_bwp.bingwallpaper.get_config_img_region", return_value="en-US")
     @mock.patch("abk_bwp.bingwallpaper.get_full_img_dir_from_date")
     @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir", return_value="/images")
-    @mock.patch("abk_bwp.bingwallpaper.logger", new_callable=mock.Mock)
     def test_update_current_background_image_happy_path(
         self,
-        mock_logger,
         mock_get_img_dir,
         mock_get_today_img_path,
         mock_get_region,
@@ -1864,6 +1863,118 @@ class TestBingWallPaper(unittest.TestCase):
         mock_walk.assert_called_once_with("/images")
         mock_delete.assert_called_once_with("/images", ["background_img_old.jpg"])
         mock_set_bg.assert_called_once_with(dst_full_path)
+
+    # -------------------------------------------------------------------------
+    # TestBingWallPaper._resize_background_image
+    # -------------------------------------------------------------------------
+    @mock.patch("abk_bwp.bingwallpaper.get_config_desktop_jpg_quality", return_value=85)
+    @mock.patch("abk_bwp.bingwallpaper.BingWallPaper.add_outline_text")
+    @mock.patch("abk_bwp.bingwallpaper.abk_common.ensure_dir")
+    @mock.patch("abk_bwp.bingwallpaper.logger", new_callable=mock.Mock)
+    def test_resize_background_image_with_resize_and_exif(
+        self, mock_logger, mock_ensure_dir, mock_add_text, mock_quality
+    ):
+        """Test test_resize_background_image_with_resize_and_exif."""
+        # Arrange
+        # ----------------------------------
+        src_img = Image.new("RGB", (1000, 1000), color="blue")
+        exif_dict = {
+            bingwallpaper.BWP_EXIF_IMAGE_DESCRIPTION_FIELD: "Some Title",
+            bingwallpaper.BWP_EXIF_IMAGE_COPYRIGHT_FIELD: "Some Copyright",
+        }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            src_path = os.path.join(tmpdir, "src.jpg")
+            dst_path = os.path.join(tmpdir, "dst.jpg")
+            src_img.save(src_path)
+
+            mock_img = mock.MagicMock(spec=Image.Image)
+            mock_img.size = (1000, 1000)
+            mock_img.getexif.return_value = exif_dict
+            mock_img.resize.return_value = mock_img
+            mock_img.convert.return_value = mock_img
+            mock_img.__enter__.return_value = mock_img
+
+            # Act
+            # ----------------------------------
+            with mock.patch("PIL.Image.open", return_value=mock_img):
+                result = bingwallpaper.BingWallPaper._resize_background_image(
+                    src_path, dst_path, (800, 600)
+                )
+
+        # Asserts
+        # ----------------------------------
+        self.assertTrue(result)
+        mock_ensure_dir.assert_called_once_with(tmpdir)
+        mock_add_text.assert_called_once()
+        mock_quality.assert_called_once()
+        mock_img.save.assert_called_once_with(dst_path, optimize=True, quality=85)
+
+    @mock.patch("abk_bwp.bingwallpaper.get_config_desktop_jpg_quality", return_value=80)
+    @mock.patch("abk_bwp.bingwallpaper.BingWallPaper.add_outline_text")
+    @mock.patch("abk_bwp.bingwallpaper.Image.open")
+    @mock.patch("abk_bwp.bingwallpaper.abk_common.ensure_dir")
+    @mock.patch("abk_bwp.bingwallpaper.logger", new_callable=mock.Mock)
+    def test_resize_background_image_no_resize_needed(
+        self, mock_logger, mock_ensure_dir, mock_image_open, mock_add_text, mock_get_quality
+    ):
+        """Test when no resize is needed (image is already at correct size)."""
+        # Arrange
+        # ----------------------------------
+        mock_img = mock.Mock()
+        mock_img.size = (1920, 1080)
+        mock_img.convert.return_value = mock_img
+        mock_img.getexif.return_value = {
+            bingwallpaper.BWP_EXIF_IMAGE_DESCRIPTION_FIELD: "Test Title",
+            bingwallpaper.BWP_EXIF_IMAGE_COPYRIGHT_FIELD: "Test Copyright",
+        }
+        mock_image_open.return_value.__enter__.return_value = mock_img
+        src_path = "src.jpg"
+        dst_path = "dst.jpg"
+        dst_size = (1920, 1080)
+
+        # Act
+        # ----------------------------------
+        result = bingwallpaper.BingWallPaper._resize_background_image(
+            src_path, dst_path, dst_size
+        )
+
+        # Asserts
+        # ----------------------------------
+        self.assertTrue(result)
+        mock_ensure_dir.assert_called_once_with(os.path.dirname(dst_path))
+        mock_img.convert.assert_called_once_with("RGB")
+        mock_add_text.assert_called_once_with(mock_img, "Test Title", "Test Copyright")
+        mock_img.save.assert_called_once_with(dst_path, optimize=True, quality=80)
+        mock_get_quality.assert_called_once()
+
+    @mock.patch("abk_bwp.bingwallpaper.get_config_desktop_jpg_quality", return_value=75)
+    @mock.patch("abk_bwp.bingwallpaper.BingWallPaper.add_outline_text")
+    @mock.patch("abk_bwp.bingwallpaper.abk_common.ensure_dir")
+    @mock.patch("abk_bwp.bingwallpaper.logger", new_callable=mock.Mock)
+    def test_resize_background_image_with_exception(
+        self, mock_logger, mock_ensure_dir, mock_add_text, mock_quality
+    ):
+        """Test test_resize_background_image_with_exception."""
+        # Arrange
+        # ----------------------------------
+        invalid_src_path = "/does/not/exist.jpg"
+        fake_dst_dir = "/tmp"
+        fake_dst_path = f"{fake_dst_dir}/output.jpg"
+
+        # Act
+        # ----------------------------------
+        result = bingwallpaper.BingWallPaper._resize_background_image(
+            invalid_src_path, fake_dst_path, (800, 600)
+        )
+
+        # Asserts
+        # ----------------------------------
+        self.assertFalse(result)
+        mock_ensure_dir.assert_called_once_with(fake_dst_dir)
+        mock_add_text.assert_not_called()
+        mock_quality.assert_not_called()
+        mock_logger.exception.assert_called_once()
 
 
 if __name__ == "__main__":
