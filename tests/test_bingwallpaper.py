@@ -1542,8 +1542,8 @@ class TestWindowsDependent(unittest.TestCase):
         )
         self.assertTrue(
             any(
-                "Set background to" in str(call) and file_name in str(call)
-                for call in self.mock_logger.info.call_args_list
+                "Windows 10 and above is supported" in call.args[0]
+                for call in self.mock_logger.error.call_args_list
             )
         )
 
