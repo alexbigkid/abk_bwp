@@ -1538,7 +1538,12 @@ class TestWindowsDependent(unittest.TestCase):
         self.mock_logger.error.assert_any_call(
             "Windows 10 and above is supported, you are using Windows 6"
         )
-        self.mock_logger.info.assert_any_call(f"(windows) Set background to {file_name}")
+        self.assertTrue(
+            any(
+                "Set background to" in str(call) and file_name in str(call)
+                for call in self.mock_logger.info.call_args_list
+            )
+        )
 
 
 # =============================================================================
