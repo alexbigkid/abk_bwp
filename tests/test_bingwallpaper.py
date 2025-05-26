@@ -1462,12 +1462,15 @@ class TestLinuxDependent(unittest.TestCase):
     def test_set_desktop_background_logs_debug_and_info(self):
         """Test logging output from set_desktop_background."""
         # Arrange
+        # ----------------------------------
         file_name = "/home/test/Pictures/image.jpg"
 
         # Act
+        # ----------------------------------
         self.service.set_desktop_background(file_name)
 
         # Assert
+        # ----------------------------------
         self.mock_logger.debug.assert_called_once_with(f"{file_name=}")
         expected_prefix = f"({self.service.os_type.value})"
         self.mock_logger.info.assert_any_call(f"{expected_prefix} Set background to {file_name}")
@@ -1501,6 +1504,8 @@ class TestWindowsDependent(unittest.TestCase):
     @mock.patch("platform.uname")
     def test_set_desktop_background_windows_10_success(self, mock_uname, mock_spi):
         """Test setting background on Windows 10+."""
+        # Arrange
+        # ----------------------------------
         UnameResult = namedtuple(
             "uname_result", ["system", "node", "release", "version", "machine", "processor"]
         )
@@ -1509,8 +1514,12 @@ class TestWindowsDependent(unittest.TestCase):
         )
         file_name = "C:\\path\\to\\image.jpg"
 
+        # Act
+        # ----------------------------------
         self.service.set_desktop_background(file_name)
 
+        # Asserts
+        # ----------------------------------
         mock_spi.assert_called_once_with(20, 0, file_name, 3)
 
     @mock.patch("ctypes.windll.user32.SystemParametersInfoW", create=True)
@@ -1518,6 +1527,7 @@ class TestWindowsDependent(unittest.TestCase):
     def test_set_desktop_background_windows_old_version(self, mock_uname, mock_spi):
         """Test setting background on unsupported Windows version (< 10)."""
         # Arrange
+        # ----------------------------------
         Uname = namedtuple(
             "Uname", ["system", "node", "release", "version", "machine", "processor"]
         )
@@ -1525,9 +1535,11 @@ class TestWindowsDependent(unittest.TestCase):
         file_name = "C:\\Users\\Test\\Pictures\\image.jpg"
 
         # Act
+        # ----------------------------------
         self.service.set_desktop_background(file_name)
 
         # Assert
+        # ----------------------------------
         # print("LOGGER CALLS:")
         # for call in self.mock_logger.error.call_args_list:
         #     print(call)
@@ -1622,15 +1634,21 @@ class TestBingWallPaper(unittest.TestCase):
         mock_get_quality,
     ):
         """Test test_process_manually_downloaded_images."""
+        # Arrange
+        # ----------------------------------
         mock_img = mock.Mock()
         mock_img.size = (1920, 1080)
         mock_img.getexif.return_value = {}
         mock_img.resize.return_value = mock_img
         mock_img_open.return_value.__enter__.return_value = mock_img
 
+        # Act
+        # ----------------------------------
         with mock.patch("os.remove") as mock_remove:
             bingwallpaper.BingWallPaper.process_manually_downloaded_images()
 
+        # Asserts
+        # ----------------------------------
         mock_get_img_dir.assert_called_once()
         mock_read_json.assert_called_once_with(
             os.path.join(mock_get_img_dir.return_value, bingwallpaper.BWP_META_DATA_FILE_NAME)
@@ -1672,15 +1690,21 @@ class TestBingWallPaper(unittest.TestCase):
         mock_get_quality,
     ):
         """Test else branch when no EXIF title is present."""
+        # Arrange
+        # ----------------------------------
         mock_img = mock.Mock()
         mock_img.size = (1920, 1080)
         mock_img.getexif.return_value = {}
         mock_img.resize.return_value = mock_img
         mock_img_open.return_value.__enter__.return_value = mock_img
 
+        # Act
+        # ----------------------------------
         with mock.patch("os.remove") as mock_remove:
             bingwallpaper.BingWallPaper.process_manually_downloaded_images()
 
+        # Asserts
+        # ----------------------------------
         mock_get_img_dir.assert_called_once()
         mock_read_json.assert_called_once_with(
             os.path.join(mock_get_img_dir.return_value, bingwallpaper.BWP_META_DATA_FILE_NAME)
@@ -1775,6 +1799,64 @@ class TestBingWallPaper(unittest.TestCase):
         )
         result = bingwallpaper.BingWallPaper._calculate_image_resizing(smaller_img)
         self.assertEqual(result, bingwallpaper.BWP_RESIZE_MIN_IMG_SIZE)
+
+    # -------------------------------------------------------------------------
+    # TestBingWallPaper.update_current_background_image
+    # -------------------------------------------------------------------------
+    @mock.patch.object(bingwallpaper.BingWallPaper, "set_desktop_background")
+    @mock.patch("abk_bwp.bingwallpaper.delete_files_in_dir")
+    @mock.patch("os.walk")
+    @mock.patch.object(bingwallpaper.BingWallPaper, "_resize_background_image", return_value=True)
+    @mock.patch("abk_bwp.bingwallpaper.get_config_background_img_size", return_value=(1920, 1080))
+    @mock.patch("os.path.exists", return_value=True)
+    @mock.patch("abk_bwp.bingwallpaper.get_config_img_region", return_value="en-US")
+    @mock.patch("abk_bwp.bingwallpaper.get_full_img_dir_from_date")
+    @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir", return_value="/images")
+    @mock.patch("abk_bwp.bingwallpaper.logger", new_callable=mock.Mock)
+    def test_update_current_background_image_happy_path(
+        self,
+        mock_logger,
+        mock_get_img_dir,
+        mock_get_today_img_path,
+        mock_get_region,
+        mock_exists,
+        mock_get_size,
+        mock_resize,
+        mock_walk,
+        mock_delete,
+        mock_set_bg,
+    ):
+        """Test test_update_current_background_image_happy_path."""
+        # Arrange
+        # ----------------------------------
+        today = datetime.date.today()
+        img_name = f"{today.year:04d}-{today.month:02d}-{today.day:02d}_en-US.jpg"
+        dst_file_name = f"{bingwallpaper.BWP_DEFAULT_BACKGROUND_IMG_PREFIX}_{img_name}"
+        full_img_path = os.path.join("/images", f"{today.year:04d}-{today.month:02d}-{today.day:02d}", img_name)
+        dst_full_path = os.path.join("/images", dst_file_name)
+
+        mock_get_today_img_path.return_value = os.path.dirname(full_img_path)
+        mock_walk.return_value = [(
+            "/images",
+            [],
+            ["background_img_old.jpg", dst_file_name]  # simulate both current and old images in the dir
+        )]
+
+        # Act
+        # ----------------------------------
+        self.bwp.update_current_background_image()
+
+        # Assert
+        # ----------------------------------
+        mock_get_img_dir.assert_called_once()
+        mock_get_today_img_path.assert_called_once_with(today)
+        mock_get_region.assert_called_once()
+        mock_exists.assert_called_once_with(full_img_path)
+        mock_get_size.assert_called_once()
+        mock_resize.assert_called_once_with(full_img_path, dst_full_path, (1920, 1080))
+        mock_walk.assert_called_once_with("/images")
+        mock_delete.assert_called_once_with("/images", ["background_img_old.jpg"])
+        mock_set_bg.assert_called_once_with(dst_full_path)
 
 
 if __name__ == "__main__":

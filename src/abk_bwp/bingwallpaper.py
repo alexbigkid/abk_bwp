@@ -1004,7 +1004,8 @@ class BingWallPaper:
             dst_file_name = f"{BWP_DEFAULT_BACKGROUND_IMG_PREFIX}_{todays_img_name}"
             dst_img_full_name = os.path.join(config_img_dir, dst_file_name)
             if BingWallPaper._resize_background_image(src_img, dst_img_full_name, dst_img_size):
-                bwp_file_list = sorted(next(os.walk(config_img_dir))[BWP_FILES])
+                first_walk = next(iter(os.walk(config_img_dir)))
+                bwp_file_list = sorted(first_walk[BWP_FILES])
                 old_background_img_list = [
                     f
                     for f in bwp_file_list
@@ -1018,7 +1019,7 @@ class BingWallPaper:
     def _resize_background_image(
         src_img_name: str, dst_img_name: str, dst_img_size: tuple[int, int]
     ) -> bool:
-        """Re0sizes background image."""
+        """Resizes background image."""
         logger.debug(f"{src_img_name=}, {dst_img_name=}, {dst_img_size=}")
         try:
             dst_path = os.path.dirname(dst_img_name)
