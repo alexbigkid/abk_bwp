@@ -1976,6 +1976,60 @@ class TestBingWallPaper(unittest.TestCase):
         mock_quality.assert_not_called()
         mock_logger.exception.assert_called_once()
 
+    # -------------------------------------------------------------------------
+    # TestBingWallPaper.add_outline_text
+    # -------------------------------------------------------------------------
+
+    @mock.patch("abk_bwp.bingwallpaper.get_text_overlay_font_name", return_value="arial.ttf")
+    @mock.patch("abk_bwp.bingwallpaper.ImageFont.truetype")
+    @mock.patch("abk_bwp.bingwallpaper.ImageDraw.Draw")
+    def test_add_outline_text(self, mock_draw_cls, mock_truetype, mock_get_font_name):
+        """Test test_add_outline_text."""
+        # Arrange
+        # ----------------------------------
+        mock_font = mock.Mock()
+        mock_font.getbbox.return_value = (0, 0, 100, 30)  # x0, y0, x1, y1
+        mock_truetype.return_value = mock_font
+
+        mock_draw = mock.Mock()
+        mock_draw_cls.return_value = mock_draw
+
+        mock_img = mock.Mock()
+        mock_img.size = (1920, 1080)
+
+        title = "Sample Title"
+        copyright = "© 2025"
+
+        with (
+            mock.patch("abk_bwp.bingwallpaper.BWP_TITLE_TEXT_FONT_SIZE", 30),
+            mock.patch("abk_bwp.bingwallpaper.BWP_TITLE_TEXT_POSITION_OFFSET", (10, 10)),
+            mock.patch("abk_bwp.bingwallpaper.BWP_TITLE_OUTLINE_AMOUNT", 2),
+            mock.patch("abk_bwp.bingwallpaper.BWP_TITLE_GLOW_COLOR", "glow"),
+            mock.patch("abk_bwp.bingwallpaper.BWP_TITLE_TEXT_COLOR", "maintext"),
+        ):
+            # Act
+            # ----------------------------------
+            bingwallpaper.BingWallPaper.add_outline_text(mock_img, title, copyright)
+
+        # Asserts
+        # ----------------------------------
+        mock_get_font_name.assert_called_once()
+        # Check that the font was loaded
+        mock_truetype.assert_called_once_with("arial.ttf", 30)
+        # Ensure getbbox was called on the longest line
+        mock_font.getbbox.assert_called()
+        # Check that outline + text were drawn
+        # Outline should be drawn 8 * BWP_TITLE_OUTLINE_AMOUNT = 16 times
+        # Final text should be drawn once
+        expected_outline_calls = 8 * 2
+        self.assertEqual(mock_draw.text.call_count, expected_outline_calls + 1)
+        # Check final draw.text call (last one) used the main text color
+        last_call = mock_draw.text.call_args_list[-1]
+        _, kwargs = last_call
+        self.assertEqual(kwargs["fill"], "maintext")
+        self.assertIn("Sample Title", kwargs["text"])
+        self.assertIn("© 2025", kwargs["text"])
+
 
 if __name__ == "__main__":
     unittest.main()
