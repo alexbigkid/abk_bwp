@@ -1467,8 +1467,9 @@ class TestLinuxDependent(unittest.TestCase):
 
         # Assert
         self.mock_logger.debug.assert_called_once_with(f"{file_name=}")
-        self.mock_logger.info.assert_any_call(f"(linux) Set background to {file_name}")
-        self.mock_logger.info.assert_any_call("(linux) Not implemented yet")
+        expected_prefix = f"({self.service.os_type.value})"
+        self.mock_logger.info.assert_any_call(f"{expected_prefix} Set background to {file_name}")
+        self.mock_logger.info.assert_any_call(f"{expected_prefix} Not implemented yet")
 
 
 # =============================================================================
@@ -1520,17 +1521,17 @@ class TestWindowsDependent(unittest.TestCase):
         """Test setting background on unsupported Windows version (< 10)."""
         # Arrange
         mock_uname.return_value = platform.uname()._replace(release="6")
-        test_file = "C:\\Users\\Test\\Pictures\\image.jpg"
+        file_name = "C:\\Users\\Test\\Pictures\\image.jpg"
 
         # Act
-        self.service.set_desktop_background(test_file)
+        self.service.set_desktop_background(file_name)
 
         # Assert
         mock_spi.assert_not_called()
         self.mock_logger.error.assert_any_call(
             "Windows 10 and above is supported, you are using Windows 6"
         )
-        self.mock_logger.info.assert_any_call(f"(windows) Set background to {test_file}")
+        self.mock_logger.info.assert_any_call(f"(windows) Set background to {file_name}")
 
 
 if __name__ == "__main__":
