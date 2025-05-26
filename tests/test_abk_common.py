@@ -4,6 +4,7 @@
 import errno
 import json
 import os
+from pathlib import Path
 import sys
 import unittest
 from unittest import mock
@@ -521,10 +522,9 @@ class TestGetHomeDir(unittest.TestCase):
 
         self.abk_common = abk_common
 
-    @mock.patch.dict(os.environ, {"HOME": "users_home_dir_001"})
-    def test_GetHomeDir__returns_users_homedir_from_env(self) -> None:
-        """test_GetHomeDir__returns_users_homedir_from_env."""
-        exp_home_dir = "users_home_dir_001"
+    def test_GetHomeDir__returns_home_dir_pathlib(self) -> None:
+        """Test that get_home_dir returns Path.home()."""
+        exp_home_dir = str(Path.home())
         act_home_dir = self.abk_common.get_home_dir()
         self.assertEqual(exp_home_dir, act_home_dir, "ERROR: unexpected home dir returned")
 
