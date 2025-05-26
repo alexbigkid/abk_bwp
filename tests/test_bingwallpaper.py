@@ -1496,26 +1496,6 @@ class TestWindowsDependent(unittest.TestCase):
     # -------------------------------------------------------------------------
     # WindowsDependent.set_desktop_background
     # -------------------------------------------------------------------------
-    # @mock.patch("ctypes.windll.user32.SystemParametersInfoW", create=True)
-    # @mock.patch("platform.uname")
-    # def test_set_desktop_background_windows_10_success(self, mock_uname, mock_spi):
-    #     """Test setting background on supported Windows version (>= 10)."""
-    #     # Arrange
-    #     mock_uname.return_value = platform.uname()._replace(release="10")
-    #     file_name = "C:\\Users\\Test\\Pictures\\image.jpg"
-
-    #     # Act
-    #     self.service.set_desktop_background(file_name)
-
-    #     # Assert
-    #     mock_spi.assert_called_once_with(20, 0, file_name, 3)
-    #     self.mock_logger.debug.assert_called_once_with(f"{file_name=}")
-    #     self.mock_logger.info.assert_any_call(f"os info: {mock_uname.return_value}")
-    #     self.mock_logger.info.assert_any_call("win#: 10")
-    #     self.mock_logger.info.assert_any_call(f"Background image set to: {file_name}")
-    #     self.mock_logger.info.assert_any_call("(windows) Not tested yet")
-    #     self.mock_logger.info.assert_any_call(f"(windows) Set background to {file_name}")
-
     @mock.patch("ctypes.windll.user32.SystemParametersInfoW")
     @mock.patch("platform.uname")
     def test_set_desktop_background_windows_10_success(self, mock_uname, mock_spi):
