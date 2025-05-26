@@ -1,6 +1,7 @@
 """Unit tests for bingwallpaper.py."""
 
 # Standard library imports
+from collections import namedtuple
 import logging
 import platform
 import sys
@@ -1518,13 +1519,17 @@ class TestWindowsDependent(unittest.TestCase):
     @mock.patch("ctypes.windll.user32.SystemParametersInfoW")
     @mock.patch("platform.uname")
     def test_set_desktop_background_windows_10_success(self, mock_uname, mock_spi):
-        """Test test_set_desktop_background_windows_10_success."""
-        mock_uname.return_value = mock.MagicMock(
-            _fields=(...), __getitem__=lambda s, i: ["", "", "10", "", "", ""]
-        )  # or use namedtuple
+        """Test setting background on Windows 10+."""
+        UnameResult = namedtuple(
+            "uname_result", ["system", "node", "release", "version", "machine", "processor"]
+        )
+        mock_uname.return_value = UnameResult(
+            "Windows", "Host", "10", "10.0.19041", "AMD64", "Intel64"
+        )
         file_name = "C:\\path\\to\\image.jpg"
 
         self.service.set_desktop_background(file_name)
+
         mock_spi.assert_called_once_with(20, 0, file_name, 3)
 
     @mock.patch("ctypes.windll.user32.SystemParametersInfoW", create=True)
@@ -1539,6 +1544,13 @@ class TestWindowsDependent(unittest.TestCase):
         self.service.set_desktop_background(file_name)
 
         # Assert
+        print(self.mock_logger.error.call_args_list)
+        self.assertTrue(
+            any(
+                "Windows 10 and above is supported" in str(call)
+                for call in self.mock_logger.error.call_args_list
+            )
+        )
         mock_spi.assert_not_called()
         self.mock_logger.error.assert_any_call(
             "Windows 10 and above is supported, you are using Windows 6"
