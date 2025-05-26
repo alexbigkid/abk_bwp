@@ -1527,7 +1527,9 @@ class TestWindowsDependent(unittest.TestCase):
         self.service.set_desktop_background(file_name)
 
         # Assert
-        print(self.mock_logger.error.call_args_list)
+        print("LOGGER CALLS:")
+        for call in self.mock_logger.error.call_args_list:
+            print(call)
         self.assertTrue(
             any(
                 "Windows 10 and above is supported" in str(call)
