@@ -1413,25 +1413,25 @@ class TestMacOSDependent(unittest.TestCase):
         """Test test_set_desktop_background_calls_osascript."""
         # Arrange
         # ----------------------------------
-        test_file = os.path.join("Users", "test", "Pictures", "image.jpg")
+        file_name = os.path.join("Users", "test", "Pictures", "image.jpg")
 
         # Act
         # ----------------------------------
-        self.service.set_desktop_background(test_file)
+        self.service.set_desktop_background(file_name)
 
         # Asserts
         # ----------------------------------
         # Check debug logging of filename
-        self.mock_logger.debug.assert_any_call(f"file_name='{test_file}'")
+        self.mock_logger.debug.assert_any_call(f"file_name='{file_name}'")
         # Check subprocess was called with expected AppleScript
         expected_script = f"""/usr/bin/osascript<<END
 tell application "Finder"
-set desktop picture to POSIX file "{test_file}"
+set desktop picture to POSIX file "{file_name}"
 end tell
 END"""
         mock_subprocess_call.assert_called_once_with(expected_script, shell=True)  # noqa: S604
         # Check info log about setting background
-        self.mock_logger.info.assert_any_call(f"(MacOS) Set background to {test_file}")
+        self.mock_logger.info.assert_any_call(f"(MacOS) Set background to {file_name}")
 
 
 # =============================================================================
@@ -1460,14 +1460,14 @@ class TestLinuxDependent(unittest.TestCase):
     def test_set_desktop_background_logs_debug_and_info(self):
         """Test logging output from set_desktop_background."""
         # Arrange
-        test_file = "/home/test/Pictures/image.jpg"
+        file_name = "/home/test/Pictures/image.jpg"
 
         # Act
-        self.service.set_desktop_background(test_file)
+        self.service.set_desktop_background(file_name)
 
         # Assert
-        self.mock_logger.debug.assert_called_once_with(f"{test_file=}")
-        self.mock_logger.info.assert_any_call(f"(linux) Set background to {test_file}")
+        self.mock_logger.debug.assert_called_once_with(f"{file_name=}")
+        self.mock_logger.info.assert_any_call(f"(linux) Set background to {file_name}")
         self.mock_logger.info.assert_any_call("(linux) Not implemented yet")
 
 
@@ -1500,19 +1500,19 @@ class TestWindowsDependent(unittest.TestCase):
         """Test setting background on supported Windows version (>= 10)."""
         # Arrange
         mock_uname.return_value = platform.uname()._replace(release="10")
-        test_file = "C:\\Users\\Test\\Pictures\\image.jpg"
+        file_name = "C:\\Users\\Test\\Pictures\\image.jpg"
 
         # Act
-        self.service.set_desktop_background(test_file)
+        self.service.set_desktop_background(file_name)
 
         # Assert
-        mock_spi.assert_called_once_with(20, 0, test_file, 3)
-        self.mock_logger.debug.assert_called_once_with(f"{test_file=}")
+        mock_spi.assert_called_once_with(20, 0, file_name, 3)
+        self.mock_logger.debug.assert_called_once_with(f"{file_name=}")
         self.mock_logger.info.assert_any_call(f"os info: {mock_uname.return_value}")
         self.mock_logger.info.assert_any_call("win#: 10")
-        self.mock_logger.info.assert_any_call(f"Background image set to: {test_file}")
+        self.mock_logger.info.assert_any_call(f"Background image set to: {file_name}")
         self.mock_logger.info.assert_any_call("(windows) Not tested yet")
-        self.mock_logger.info.assert_any_call(f"(windows) Set background to {test_file}")
+        self.mock_logger.info.assert_any_call(f"(windows) Set background to {file_name}")
 
     @mock.patch("ctypes.windll.user32.SystemParametersInfoW", create=True)
     @mock.patch("platform.uname")
