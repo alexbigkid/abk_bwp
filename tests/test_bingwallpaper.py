@@ -1514,6 +1514,7 @@ class TestWindowsDependent(unittest.TestCase):
     #     self.mock_logger.info.assert_any_call(f"Background image set to: {file_name}")
     #     self.mock_logger.info.assert_any_call("(windows) Not tested yet")
     #     self.mock_logger.info.assert_any_call(f"(windows) Set background to {file_name}")
+
     @mock.patch("ctypes.windll.user32.SystemParametersInfoW")
     @mock.patch("platform.uname")
     def test_set_desktop_background_windows_10_success(self, mock_uname, mock_spi):
@@ -1543,6 +1544,86 @@ class TestWindowsDependent(unittest.TestCase):
             "Windows 10 and above is supported, you are using Windows 6"
         )
         self.mock_logger.info.assert_any_call(f"(windows) Set background to {file_name}")
+
+
+# =============================================================================
+# TestBingWallPaper
+# =============================================================================
+# class TestBingWallPaper(unittest.TestCase):
+#     """Test BingWallPaper."""
+
+#     def setUp(self):
+#         """Setup BingWallPaper."""
+#         self.mock_logger = mock.Mock()
+#         self.mock_options = Namespace()
+#         self.mock_os_dependent = mock.Mock()
+#         self.mock_dl_service = mock.Mock()
+
+#         self.bwp = bingwallpaper.BingWallPaper(
+#             logger=self.mock_logger,
+#             options=self.mock_options,
+#             os_dependant=self.mock_os_dependent,
+#             dl_service=self.mock_dl_service,
+#         )
+
+#     # -------------------------------------------------------------------------
+#     # TestBingWallPaper.convert_dir_structure_if_needed
+#     # -------------------------------------------------------------------------
+#     def test_convert_dir_structure_if_needed(self):
+#         """Test test_convert_dir_structure_if_needed."""
+#         self.bwp.convert_dir_structure_if_needed()
+#         self.mock_dl_service.convert_dir_structure_if_needed.assert_called_once()
+
+#     # -------------------------------------------------------------------------
+#     # TestBingWallPaper.test_download_new_images
+#     # -------------------------------------------------------------------------
+#     def test_download_new_images(self):
+#         """Test test_download_new_images."""
+#         self.bwp.download_new_images()
+#         self.mock_dl_service.download_new_images.assert_called_once()
+
+#     # -------------------------------------------------------------------------
+#     # TestBingWallPaper.test_set_desktop_background
+#     # -------------------------------------------------------------------------
+#     def test_set_desktop_background(self):
+#         """Test test_set_desktop_background."""
+#         test_img = os.path.join("fake", "path", "image.jpg")
+#         self.bwp.set_desktop_background(test_img)
+#         self.mock_os_dependent.set_desktop_background.assert_called_once_with(test_img)
+
+#     @mock.patch("abk_bwp.bingwallpaper.logger", new_callable=mock.Mock)
+#     @mock.patch("abk_bwp.bingwallpaper.get_config_store_jpg_quality", return_value=85)
+#     @mock.patch("abk_bwp.bingwallpaper.get_full_img_dir_from_date",
+# return_value=os.path.join("resized", "path"))
+#     @mock.patch("abk_bwp.abk_common.ensure_dir")
+#     @mock.patch("abk_bwp.abk_common.read_json_file",
+# return_value={"2024-05-01_img.jpg": "Sample Title"})
+#     @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir", return_value="/images")
+#     @mock.patch("PIL.Image.open")
+#     @mock.patch("os.walk", return_value=[("/images", [], ["scale_2024-05-01_img.jpg"])])
+#     def test_process_manually_downloaded_images(
+#         self,
+#         mock_walk,
+#         mock_img_open,
+#         mock_get_img_dir,
+#         mock_read_json,
+#         mock_ensure_dir,
+#         mock_get_resized_path,
+#         mock_get_quality,
+#         mock_logger,
+#     ):
+#         mock_img = mock.Mock()
+#         mock_img.size = (1920, 1080)
+#         mock_img.getexif.return_value = {}
+#         mock_img.resize.return_value = mock_img
+#         mock_img_open.return_value.__enter__.return_value = mock_img
+
+#         with mock.patch("os.remove") as mock_remove:
+#             bingwallpaper.BingWallPaper.process_manually_downloaded_images()
+
+#         mock_img_open.assert_called_once_with(os.path.join("images","scale_2024-05-01_img.jpg"))
+#         mock_img.save.assert_called_once()
+#         mock_remove.assert_called_once_with(os.path.join("images", "scale_2024-05-01_img.jpg"))
 
 
 if __name__ == "__main__":
