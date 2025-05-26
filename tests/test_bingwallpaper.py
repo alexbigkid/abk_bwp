@@ -1265,7 +1265,7 @@ class TestPeapixDownloadService(unittest.TestCase):
     @mock.patch("abk_bwp.bingwallpaper.get_config_img_region", return_value="EN-US")
     @mock.patch(
         "abk_bwp.bingwallpaper.get_full_img_dir_from_date",
-        return_value=os.path.join("mocked", "path")
+        return_value=os.path.join("mocked", "path"),
     )
     @mock.patch("os.path.exists", return_value=False)
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
@@ -1285,7 +1285,7 @@ class TestPeapixDownloadService(unittest.TestCase):
                 "copyright": "MyPhoto",
                 "imageUrl": "url1",
                 "fullUrl": "url2",
-                "thumbUrl": "url3"
+                "thumbUrl": "url3",
             }
         ]
 
@@ -1300,14 +1300,16 @@ class TestPeapixDownloadService(unittest.TestCase):
         self.assertIsInstance(result[0], bingwallpaper.ImageDownloadData)
         self.assertEqual(result[0].imageDate, datetime.date(2025, 5, 25))
         self.assertEqual(result[0].imageName, "2025-05-25_EN-US.jpg")
-        mock_exists.assert_called_once_with(os.path.join("mocked", "path", "2025-05-25_EN-US.jpg"))
+        mock_exists.assert_called_once_with(
+            os.path.join("mocked", "path", "2025-05-25_EN-US.jpg")
+        )
         mock_get_dir.assert_called_once_with(datetime.date(2025, 5, 25))
         mock_get_region.assert_called_once()
 
     @mock.patch("abk_bwp.bingwallpaper.get_config_img_region", return_value="EN-US")
     @mock.patch(
         "abk_bwp.bingwallpaper.get_full_img_dir_from_date",
-        return_value=os.path.join("mocked", "path")
+        return_value=os.path.join("mocked", "path"),
     )
     @mock.patch("os.path.exists", return_value=True)
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
@@ -1321,14 +1323,16 @@ class TestPeapixDownloadService(unittest.TestCase):
         mock_logger = mock.MagicMock()
         mock_get_logger.return_value = mock_logger
         # Setup metadata
-        metadata = [{
-            "date": "2025-05-25",
-            "title": "Already Exists",
-            "copyright": "",
-            "imageUrl": "",
-            "fullUrl": "",
-            "thumbUrl": ""
-        }]
+        metadata = [
+            {
+                "date": "2025-05-25",
+                "title": "Already Exists",
+                "copyright": "",
+                "imageUrl": "",
+                "fullUrl": "",
+                "thumbUrl": "",
+            }
+        ]
 
         # Act
         # ----------------------------------
@@ -1338,14 +1342,16 @@ class TestPeapixDownloadService(unittest.TestCase):
         # Asserts
         # ----------------------------------
         self.assertEqual(result, [])
-        mock_exists.assert_called_once_with(os.path.join("mocked", "path", "2025-05-25_EN-US.jpg"))
+        mock_exists.assert_called_once_with(
+            os.path.join("mocked", "path", "2025-05-25_EN-US.jpg")
+        )
         mock_get_dir.assert_called_once_with(datetime.date(2025, 5, 25))
         mock_get_region.assert_called_once()
 
     @mock.patch("abk_bwp.bingwallpaper.get_config_img_region", return_value="EN-US")
     @mock.patch(
         "abk_bwp.bingwallpaper.get_full_img_dir_from_date",
-        return_value=os.path.join("mocked", "path")
+        return_value=os.path.join("mocked", "path"),
     )
     @mock.patch("os.path.exists", return_value=False)
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
@@ -1358,13 +1364,15 @@ class TestPeapixDownloadService(unittest.TestCase):
         # Setup logger mock
         mock_logger = mock.MagicMock()
         mock_get_logger.return_value = mock_logger
-        bad_metadata = [{
-            "date": "not-a-date",
-            "title": "Invalid Date",
-            "imageUrl": "",
-            "fullUrl": "",
-            "thumbUrl": ""
-        }]
+        bad_metadata = [
+            {
+                "date": "not-a-date",
+                "title": "Invalid Date",
+                "imageUrl": "",
+                "fullUrl": "",
+                "thumbUrl": "",
+            }
+        ]
 
         # Act
         # ----------------------------------
@@ -1388,6 +1396,7 @@ class TestMacOSDependent(unittest.TestCase):
     """Test MacOSDependent."""
 
     def setUp(self):
+        """Test Setup MacOSDependent."""
         self.mock_logger = mock.MagicMock(spec=logging.Logger)
         self.service = bingwallpaper.MacOSDependent(logger=self.mock_logger)
 
@@ -1420,7 +1429,7 @@ tell application "Finder"
 set desktop picture to POSIX file "{test_file}"
 end tell
 END"""
-        mock_subprocess_call.assert_called_once_with(expected_script, shell=True)
+        mock_subprocess_call.assert_called_once_with(expected_script, shell=True)  # noqa: S604
         # Check info log about setting background
         self.mock_logger.info.assert_any_call(f"(MacOS) Set background to {test_file}")
 
@@ -1500,9 +1509,9 @@ class TestWindowsDependent(unittest.TestCase):
         mock_spi.assert_called_once_with(20, 0, test_file, 3)
         self.mock_logger.debug.assert_called_once_with(f"{test_file=}")
         self.mock_logger.info.assert_any_call(f"os info: {mock_uname.return_value}")
-        self.mock_logger.info.assert_any_call(f"win#: 10")
+        self.mock_logger.info.assert_any_call("win#: 10")
         self.mock_logger.info.assert_any_call(f"Background image set to: {test_file}")
-        self.mock_logger.info.assert_any_call(f"(windows) Not tested yet")
+        self.mock_logger.info.assert_any_call("(windows) Not tested yet")
         self.mock_logger.info.assert_any_call(f"(windows) Set background to {test_file}")
 
     @mock.patch("ctypes.windll.user32.SystemParametersInfoW", create=True)
@@ -1518,7 +1527,9 @@ class TestWindowsDependent(unittest.TestCase):
 
         # Assert
         mock_spi.assert_not_called()
-        self.mock_logger.error.assert_any_call("Windows 10 and above is supported, you are using Windows 6")
+        self.mock_logger.error.assert_any_call(
+            "Windows 10 and above is supported, you are using Windows 6"
+        )
         self.mock_logger.info.assert_any_call(f"(windows) Set background to {test_file}")
 
 
