@@ -2032,7 +2032,6 @@ class TestBingWallPaper(unittest.TestCase):
     # -------------------------------------------------------------------------
     # TestBingWallPaper.trim_number_of_images
     # -------------------------------------------------------------------------
-
     @mock.patch("abk_bwp.bingwallpaper.abk_common.delete_dir")
     @mock.patch("abk_bwp.bingwallpaper.abk_common.delete_file")
     @mock.patch("abk_bwp.bingwallpaper.os.path.join", side_effect=lambda a, b: f"{a}/{b}")
