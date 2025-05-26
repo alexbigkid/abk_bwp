@@ -1514,8 +1514,8 @@ class TestWindowsDependent(unittest.TestCase):
     #     self.mock_logger.info.assert_any_call(f"Background image set to: {file_name}")
     #     self.mock_logger.info.assert_any_call("(windows) Not tested yet")
     #     self.mock_logger.info.assert_any_call(f"(windows) Set background to {file_name}")
-    @mock.patch("bingwallpaper.ctypes.windll.user32.SystemParametersInfoW")
-    @mock.patch("bingwallpaper.platform.uname")
+    @mock.patch("ctypes.windll.user32.SystemParametersInfoW")
+    @mock.patch("platform.uname")
     def test_set_desktop_background_windows_10_success(self, mock_uname, mock_spi):
         """Test test_set_desktop_background_windows_10_success."""
         mock_uname.return_value = mock.MagicMock(
