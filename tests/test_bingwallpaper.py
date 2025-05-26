@@ -1180,21 +1180,16 @@ class TestPeapixDownloadService(unittest.TestCase):
     @mock.patch(
         "abk_bwp.bingwallpaper.get_config_img_dir", return_value=os.path.join("mock", "dir")
     )
-    @mock.patch.dict("abk_bwp.bingwallpaper.bwp_config", {
-        "CONSTANT": {"PEAPIX_URL": "https://api.peapix.com"},
-        "REGION": "us",
-    })
+    @mock.patch.dict(
+        "abk_bwp.bingwallpaper.bwp_config",
+        {"CONSTANT": {"PEAPIX_URL": "https://api.peapix.com"}, "REGION": "us"},
+    )
     @mock.patch("requests.get")
     @mock.patch.object(bingwallpaper.PeapixDownloadService, "_process_peapix_api_data")
     @mock.patch.object(bingwallpaper.PeapixDownloadService, "_download_images")
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
     def test_download_new_images_success(
-        self,
-        mock_get_logger,
-        mock_download,
-        mock_process,
-        mock_requests_get,
-        mock_img_dir,
+        self, mock_get_logger, mock_download, mock_process, mock_requests_get, mock_img_dir
     ):
         """Test test_download_new_images_success."""
         # Arrange
@@ -1227,21 +1222,16 @@ class TestPeapixDownloadService(unittest.TestCase):
     @mock.patch(
         "abk_bwp.bingwallpaper.get_config_img_dir", return_value=os.path.join("mock", "dir")
     )
-    @mock.patch.dict("abk_bwp.bingwallpaper.bwp_config", {
-        "CONSTANT": {"PEAPIX_URL": "https://api.peapix.com"},
-        "REGION": "us",
-    })
+    @mock.patch.dict(
+        "abk_bwp.bingwallpaper.bwp_config",
+        {"CONSTANT": {"PEAPIX_URL": "https://api.peapix.com"}, "REGION": "us"},
+    )
     @mock.patch("requests.get")
     @mock.patch.object(bingwallpaper.PeapixDownloadService, "_process_peapix_api_data")
     @mock.patch.object(bingwallpaper.PeapixDownloadService, "_download_images")
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
     def test_download_new_images_http_error(
-        self,
-        mock_get_logger,
-        mock_download,
-        mock_process,
-        mock_requests_get,
-        mock_img_dir,
+        self, mock_get_logger, mock_download, mock_process, mock_requests_get, mock_img_dir
     ):
         """Test test_download_new_images_success."""
         # Arrange

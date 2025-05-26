@@ -6,6 +6,7 @@ import getpass
 import json
 import logging
 import os
+from pathlib import Path
 import timeit
 from enum import Enum
 
@@ -68,12 +69,12 @@ def get_user_name():
 
 @function_trace
 def get_home_dir() -> str:
-    """Gets home directory.
+    """Get the user's home directory in a cross-platform way.
 
     Returns:
         str: current directory
     """
-    home_dir = os.environ["HOME"]
+    home_dir = str(Path.home())
     logger.info(f"{home_dir=}")
     return home_dir
 
