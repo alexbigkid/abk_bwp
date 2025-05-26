@@ -1979,7 +1979,6 @@ class TestBingWallPaper(unittest.TestCase):
     # -------------------------------------------------------------------------
     # TestBingWallPaper.add_outline_text
     # -------------------------------------------------------------------------
-
     @mock.patch("abk_bwp.bingwallpaper.get_text_overlay_font_name", return_value="arial.ttf")
     @mock.patch("abk_bwp.bingwallpaper.ImageFont.truetype")
     @mock.patch("abk_bwp.bingwallpaper.ImageDraw.Draw")
@@ -2029,6 +2028,71 @@ class TestBingWallPaper(unittest.TestCase):
         self.assertEqual(kwargs["fill"], "maintext")
         self.assertIn("Sample Title", kwargs["text"])
         self.assertIn("© 2025", kwargs["text"])
+
+    # -------------------------------------------------------------------------
+    # TestBingWallPaper.trim_number_of_images
+    # -------------------------------------------------------------------------
+
+    @mock.patch("abk_bwp.bingwallpaper.abk_common.delete_dir")
+    @mock.patch("abk_bwp.bingwallpaper.abk_common.delete_file")
+    @mock.patch("abk_bwp.bingwallpaper.os.path.join", side_effect=lambda a, b: f"{a}/{b}")
+    @mock.patch(
+        "abk_bwp.bingwallpaper.os.path.split", side_effect=lambda p: (f"{p}_parent", "dummy")
+    )
+    @mock.patch(
+        "abk_bwp.bingwallpaper.get_full_img_dir_from_file_name",
+        side_effect=lambda name: f"/images/{name}",
+    )
+    @mock.patch("abk_bwp.bingwallpaper.get_config_number_of_images_to_keep", return_value=3)
+    @mock.patch(
+        "abk_bwp.bingwallpaper.get_all_background_img_names",
+        return_value=["img1", "img2", "img3", "img4", "img5"],
+    )
+    @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir", return_value="/images")
+    @mock.patch("abk_bwp.bingwallpaper.logger", new_callable=mock.Mock)
+    def test_trim_number_of_images(
+        self,
+        mock_logger,
+        mock_get_config_img_dir,
+        mock_get_all_img_names,
+        mock_get_max_keep,
+        mock_get_full_path,
+        mock_path_split,
+        mock_path_join,
+        mock_delete_file,
+        mock_delete_dir,
+    ):
+        """Test test_trim_number_of_images."""
+        # Arrange
+        # ----------------------------------
+        # Act
+        # ----------------------------------
+        bingwallpaper.BingWallPaper.trim_number_of_images()
+
+        # Asserts
+        # ----------------------------------
+        # 5 - 3 = 2 files should be trimmed
+        mock_get_config_img_dir.assert_called_once()
+        mock_get_all_img_names.assert_called_once_with("/images")
+        mock_get_max_keep.assert_called_once()
+        self.assertEqual(mock_get_full_path.call_count, 2)
+        mock_path_join.assert_has_calls(
+            [mock.call("/images/img1", "img1"), mock.call("/images/img2", "img2")]
+        )
+        mock_path_split.assert_has_calls([mock.call("/images/img1"), mock.call("/images/img2")])
+        mock_delete_file.assert_has_calls(
+            [mock.call("/images/img1/img1"), mock.call("/images/img2/img2")]
+        )
+        mock_delete_dir.assert_has_calls(
+            [
+                mock.call("/images/img1"),
+                mock.call("/images/img1_parent"),
+                mock.call("/images/img2"),
+                mock.call("/images/img2_parent"),
+            ]
+        )
+        self.assertEqual(mock_delete_file.call_count, 2)
+        self.assertEqual(mock_delete_dir.call_count, 4)
 
 
 if __name__ == "__main__":
