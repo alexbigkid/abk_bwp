@@ -1832,15 +1832,22 @@ class TestBingWallPaper(unittest.TestCase):
         today = datetime.date.today()
         img_name = f"{today.year:04d}-{today.month:02d}-{today.day:02d}_en-US.jpg"
         dst_file_name = f"{bingwallpaper.BWP_DEFAULT_BACKGROUND_IMG_PREFIX}_{img_name}"
-        full_img_path = os.path.join("/images", f"{today.year:04d}-{today.month:02d}-{today.day:02d}", img_name)
+        full_img_path = os.path.join(
+            "/images", f"{today.year:04d}-{today.month:02d}-{today.day:02d}", img_name
+        )
         dst_full_path = os.path.join("/images", dst_file_name)
 
         mock_get_today_img_path.return_value = os.path.dirname(full_img_path)
-        mock_walk.return_value = [(
-            "/images",
-            [],
-            ["background_img_old.jpg", dst_file_name]  # simulate both current and old images in the dir
-        )]
+        mock_walk.return_value = [
+            (
+                "/images",
+                [],
+                [
+                    "background_img_old.jpg",
+                    dst_file_name,
+                ],  # simulate both current and old images in the dir
+            )
+        ]
 
         # Act
         # ----------------------------------
