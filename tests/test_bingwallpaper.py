@@ -1,6 +1,9 @@
 """Unit tests for bingwallpaper.py."""
 
 # Standard library imports
+import logging
+import platform
+import sys
 import warnings
 import datetime
 import os
@@ -17,7 +20,7 @@ from requests import Response
 
 
 # Own modules imports
-from abk_bwp import bingwallpaper, config
+from abk_bwp import abk_common, bingwallpaper, config
 
 
 # =============================================================================
@@ -1375,6 +1378,148 @@ class TestPeapixDownloadService(unittest.TestCase):
         mock_exists.assert_not_called()
         mock_get_dir.assert_not_called()
         mock_get_region.assert_called_once()
+
+
+# =============================================================================
+# MacOSDependent
+# =============================================================================
+@unittest.skipUnless(platform.system() == "Darwin", "Only runs on macOS")
+class TestMacOSDependent(unittest.TestCase):
+    """Test MacOSDependent."""
+
+    def setUp(self):
+        self.mock_logger = mock.MagicMock(spec=logging.Logger)
+        self.service = bingwallpaper.MacOSDependent(logger=self.mock_logger)
+
+    # -------------------------------------------------------------------------
+    # MacOSDependent.set_desktop_background
+    # -------------------------------------------------------------------------
+    def test_constructor_sets_os_type(self):
+        """Test test_constructor_sets_os_type."""
+        self.assertEqual(self.service.os_type, abk_common.OsType.MAC_OS)
+        self.assertIs(self.service._logger, self.mock_logger)
+
+    @mock.patch("subprocess.call")
+    def test_set_desktop_background_calls_osascript(self, mock_subprocess_call):
+        """Test test_set_desktop_background_calls_osascript."""
+        # Arrange
+        # ----------------------------------
+        test_file = os.path.join("Users", "test", "Pictures", "image.jpg")
+
+        # Act
+        # ----------------------------------
+        self.service.set_desktop_background(test_file)
+
+        # Asserts
+        # ----------------------------------
+        # Check debug logging of filename
+        self.mock_logger.debug.assert_any_call(f"file_name='{test_file}'")
+        # Check subprocess was called with expected AppleScript
+        expected_script = f"""/usr/bin/osascript<<END
+tell application "Finder"
+set desktop picture to POSIX file "{test_file}"
+end tell
+END"""
+        mock_subprocess_call.assert_called_once_with(expected_script, shell=True)
+        # Check info log about setting background
+        self.mock_logger.info.assert_any_call(f"(MacOS) Set background to {test_file}")
+
+
+# =============================================================================
+# LinuxDependent
+# =============================================================================
+@unittest.skipUnless(sys.platform.startswith("linux"), "Linux-specific test")
+class TestLinuxDependent(unittest.TestCase):
+    """Test LinuxDependent."""
+
+    def setUp(self):
+        """Setup TestLinuxDependent."""
+        self.mock_logger = mock.MagicMock(spec=logging.Logger)
+        self.service = bingwallpaper.LinuxDependent(logger=self.mock_logger)
+
+    # -------------------------------------------------------------------------
+    # LinuxDependent.__init__
+    # -------------------------------------------------------------------------
+    def test_constructor_sets_os_type(self):
+        """Test that constructor sets os_type and logger."""
+        self.assertEqual(self.service.os_type, abk_common.OsType.LINUX_OS)
+        self.assertIs(self.service._logger, self.mock_logger)
+
+    # -------------------------------------------------------------------------
+    # LinuxDependent.set_desktop_background
+    # -------------------------------------------------------------------------
+    def test_set_desktop_background_logs_debug_and_info(self):
+        """Test logging output from set_desktop_background."""
+        # Arrange
+        test_file = "/home/test/Pictures/image.jpg"
+
+        # Act
+        self.service.set_desktop_background(test_file)
+
+        # Assert
+        self.mock_logger.debug.assert_called_once_with(f"{test_file=}")
+        self.mock_logger.info.assert_any_call(f"(linux) Set background to {test_file}")
+        self.mock_logger.info.assert_any_call("(linux) Not implemented yet")
+
+
+# =============================================================================
+# WindowsDependent
+# =============================================================================
+@unittest.skipUnless(sys.platform.startswith("win"), "Windows-specific test")
+class TestWindowsDependent(unittest.TestCase):
+    """Test WindowsDependent."""
+
+    def setUp(self):
+        """Setup WindowsDependent."""
+        self.mock_logger = mock.MagicMock(spec=logging.Logger)
+        self.service = bingwallpaper.WindowsDependent(logger=self.mock_logger)
+
+    # -------------------------------------------------------------------------
+    # WindowsDependent.__init__
+    # -------------------------------------------------------------------------
+    def test_constructor_sets_os_type(self):
+        """Test that constructor sets os_type and logger."""
+        self.assertEqual(self.service.os_type, abk_common.OsType.WINDOWS_OS)
+        self.assertIs(self.service._logger, self.mock_logger)
+
+    # -------------------------------------------------------------------------
+    # WindowsDependent.set_desktop_background
+    # -------------------------------------------------------------------------
+    @mock.patch("ctypes.windll.user32.SystemParametersInfoW", create=True)
+    @mock.patch("platform.uname")
+    def test_set_desktop_background_windows_10_success(self, mock_uname, mock_spi):
+        """Test setting background on supported Windows version (>= 10)."""
+        # Arrange
+        mock_uname.return_value = platform.uname()._replace(release="10")
+        test_file = "C:\\Users\\Test\\Pictures\\image.jpg"
+
+        # Act
+        self.service.set_desktop_background(test_file)
+
+        # Assert
+        mock_spi.assert_called_once_with(20, 0, test_file, 3)
+        self.mock_logger.debug.assert_called_once_with(f"{test_file=}")
+        self.mock_logger.info.assert_any_call(f"os info: {mock_uname.return_value}")
+        self.mock_logger.info.assert_any_call(f"win#: 10")
+        self.mock_logger.info.assert_any_call(f"Background image set to: {test_file}")
+        self.mock_logger.info.assert_any_call(f"(windows) Not tested yet")
+        self.mock_logger.info.assert_any_call(f"(windows) Set background to {test_file}")
+
+    @mock.patch("ctypes.windll.user32.SystemParametersInfoW", create=True)
+    @mock.patch("platform.uname")
+    def test_set_desktop_background_windows_old_version(self, mock_uname, mock_spi):
+        """Test setting background on unsupported Windows version (< 10)."""
+        # Arrange
+        mock_uname.return_value = platform.uname()._replace(release="6")
+        test_file = "C:\\Users\\Test\\Pictures\\image.jpg"
+
+        # Act
+        self.service.set_desktop_background(test_file)
+
+        # Assert
+        mock_spi.assert_not_called()
+        self.mock_logger.error.assert_any_call("Windows 10 and above is supported, you are using Windows 6")
+        self.mock_logger.info.assert_any_call(f"(windows) Set background to {test_file}")
 
 
 if __name__ == "__main__":
