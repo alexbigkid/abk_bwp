@@ -1517,7 +1517,10 @@ class TestWindowsDependent(unittest.TestCase):
     def test_set_desktop_background_windows_old_version(self, mock_uname, mock_spi):
         """Test setting background on unsupported Windows version (< 10)."""
         # Arrange
-        mock_uname.return_value = platform.uname()._replace(release="6")
+        Uname = namedtuple(
+            "Uname", ["system", "node", "release", "version", "machine", "processor"]
+        )
+        mock_uname.return_value = Uname("Windows", "my-host", "6", "6.1.7601", "AMD64", "Intel64")
         file_name = "C:\\Users\\Test\\Pictures\\image.jpg"
 
         # Act
