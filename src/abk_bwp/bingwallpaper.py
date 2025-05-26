@@ -657,9 +657,9 @@ class BingDownloadService(DownLoadServiceBase):
                 bing_img_date_str = img_data.get("startdate", "")
                 img_date = datetime.datetime.strptime(bing_img_date_str, "%Y%m%d").date()
                 img_date_str = f"{img_date.year:04d}-{img_date.month:02d}-{img_date.day:02d}"
+                full_img_dir = get_full_img_dir_from_date(img_date)
                 img_to_check = os.path.join(
-                    get_full_img_dir_from_date(img_date),
-                    f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}",
+                    full_img_dir, f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}"
                 )
                 img_url_base = img_data.get("urlbase", "")
                 if os.path.exists(img_to_check) is False:
@@ -671,7 +671,7 @@ class BingDownloadService(DownLoadServiceBase):
                             imageUrl=[
                                 f"{BWP_BING_IMG_URL_PREFIX}{img_url_base}{BWP_BING_IMG_URL_POSTFIX}"
                             ],
-                            imagePath=get_full_img_dir_from_date(img_date),
+                            imagePath=full_img_dir,
                             imageName=f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}",
                         )
                     )

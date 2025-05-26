@@ -1043,6 +1043,131 @@ class TestBingDownloadService(unittest.TestCase):
         with self.assertRaises(ResponseError):
             service.download_new_images()
 
+    # -------------------------------------------------------------------------
+    # _process_bing_api_data
+    # -------------------------------------------------------------------------
+    @mock.patch("os.path.exists", return_value=False)
+    @mock.patch(
+        "abk_bwp.bingwallpaper.get_full_img_dir_from_date",
+        return_value=os.path.join("mocked", "path"),
+    )
+    @mock.patch("abk_bwp.bingwallpaper.get_config_img_region", return_value="en-US")
+    @mock.patch(
+        "abk_bwp.bingwallpaper.get_config_img_dir", return_value=os.path.join("mock", "imgdir")
+    )
+    @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
+    def test_process_valid_metadata_image_not_exists(
+        self, mock_get_logger, mock_get_img_dir, mock_get_region, mock_get_full_path, mock_exists
+    ):
+        """Test test_process_valid_metadata_image_not_exists."""
+        # Arrange
+        # ----------------------------------
+        mock_logger = mock.MagicMock()
+        mock_get_logger.return_value = mock_logger
+
+        metadata_list = [
+            {"startdate": "20250102", "copyright": "Test Image", "urlbase": "/testimage"}
+        ]
+
+        # Act
+        # ----------------------------------
+        service = bingwallpaper.BingDownloadService(logger=mock_logger)
+        result = service._process_bing_api_data(metadata_list)
+
+        # Assert
+        # ----------------------------------
+        self.assertEqual(len(result), 1)
+        image_data = result[0]
+        self.assertIsInstance(image_data, bingwallpaper.ImageDownloadData)
+        self.assertEqual(image_data.imageDate, datetime.date(2025, 1, 2))
+        self.assertIn("/testimage", image_data.imageUrl[0])
+        self.assertEqual(image_data.imagePath, os.path.join("mocked", "path"))
+        self.assertEqual(image_data.imageName, "2025-01-02_en-US.jpg")
+        mock_logger.debug.assert_any_call("Number if images to download: 1")
+        mock_get_img_dir.assert_called_once_with()
+        mock_get_region.assert_called_once_with()
+        mock_get_full_path.assert_called_once_with(datetime.date(2025, 1, 2))
+        mock_exists.assert_called_once_with(
+            os.path.join("mocked", "path", "2025-01-02_en-US.jpg")
+        )
+
+    @mock.patch("os.path.exists", return_value=True)
+    @mock.patch(
+        "abk_bwp.bingwallpaper.get_full_img_dir_from_date",
+        return_value=os.path.join("mocked", "path"),
+    )
+    @mock.patch("abk_bwp.bingwallpaper.get_config_img_region", return_value="en-US")
+    @mock.patch(
+        "abk_bwp.bingwallpaper.get_config_img_dir", return_value=os.path.join("mock", "imgdir")
+    )
+    @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
+    def test_process_image_already_exists(
+        self, mock_get_logger, mock_get_img_dir, mock_get_region, mock_get_full_path, mock_exists
+    ):
+        """Test test_process_image_already_exists."""
+        # Arrange
+        # ----------------------------------
+        # Setup logger mock
+        mock_logger = mock.MagicMock()
+        mock_get_logger.return_value = mock_logger
+        # Setup Metadata list
+        metadata_list = [
+            {"startdate": "20250102", "copyright": "Test Image", "urlbase": "/testimage"}
+        ]
+
+        # Act
+        # ----------------------------------
+        service = bingwallpaper.BingDownloadService(logger=mock_logger)
+        result = service._process_bing_api_data(metadata_list)
+
+        # Assert
+        # ----------------------------------
+        self.assertEqual(result, [])  # should not return anything if already exists
+        mock_logger.debug.assert_any_call("Number if images to download: 0")
+        mock_get_img_dir.assert_called_once_with()
+        mock_get_region.assert_called_once_with()
+        mock_get_full_path.assert_called_once_with(datetime.date(2025, 1, 2))
+        mock_exists.assert_called_once_with(
+            os.path.join("mocked", "path", "2025-01-02_en-US.jpg")
+        )
+
+    @mock.patch("os.path.exists", return_value=False)
+    @mock.patch(
+        "abk_bwp.bingwallpaper.get_full_img_dir_from_date",
+        return_value=os.path.join("mocked", "path"),
+    )
+    @mock.patch("abk_bwp.bingwallpaper.get_config_img_region", return_value="en-US")
+    @mock.patch(
+        "abk_bwp.bingwallpaper.get_config_img_dir", return_value=os.path.join("mock", "imgdir")
+    )
+    @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
+    def test_process_invalid_metadata_logs_exception(
+        self, mock_get_logger, mock_get_img_dir, mock_get_region, mock_get_full_path, mock_exists
+    ):
+        """Test test_process_invalid_metadata_logs_exception."""
+        # Arrange
+        # ----------------------------------
+        # Setup logger mock
+        mock_logger = mock.MagicMock()
+        mock_get_logger.return_value = mock_logger
+        # Setup Metadata list
+
+        # Malformed date should raise in datetime.strptime
+        metadata_list = [
+            {"startdate": "not-a-date", "copyright": "Test Image", "urlbase": "/testimage"}
+        ]
+
+        service = bingwallpaper.BingDownloadService(logger=mock_logger)
+        result = service._process_bing_api_data(metadata_list)
+
+        self.assertEqual(result, [])
+        mock_logger.exception.assert_called_once()
+        mock_logger.debug.assert_any_call("Number if images to download: 0")
+        mock_get_img_dir.assert_called_once_with()
+        mock_get_region.assert_called_once_with()
+        mock_get_full_path.assert_not_called()
+        mock_exists.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()
