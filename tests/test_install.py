@@ -123,9 +123,7 @@ class TestInstallOnMacOS(unittest.TestCase):
         installer._shell_file_name = "bingwallpaper.sh"
         com_name = "com.abk.bingwallpaper"
         mock_create_plist_file.return_value = com_name
-        plist_name = os.path.join(
-            "/fake", "path", "com.abk.bingwallpaper.plist"
-        )
+        plist_name = os.path.join("/fake", "path", "com.abk.bingwallpaper.plist")
         mock_create_plist_link.return_value = plist_name
 
         # Act
@@ -140,6 +138,53 @@ class TestInstallOnMacOS(unittest.TestCase):
         mock_create_plist_link.assert_called_once_with(plist_name)
         mock_stop_unload.assert_called_once_with(plist_name, com_name)
         mock_load_start.assert_called_once_with(plist_name, com_name)
+
+    # -------------------------------------------------------------------------
+    # InstallOnMacOS._create_plist_file
+    # -------------------------------------------------------------------------
+    @mock.patch("abk_bwp.abk_common.get_user_name", return_value="testuser")
+    @mock.patch("os.path.dirname", return_value=os.path.join("/fake", "dir"))
+    @mock.patch("builtins.open", new_callable=mock.mock_open)
+    def test_create_plist_file(self, mock_open_file, mock_dirname, mock_get_user_name):
+        """Test test_create_plist_file."""
+        # Arrange
+        # ----------------------------------
+        mock_logger = mock.Mock()
+        installer = InstallOnMacOS(mock_logger)
+        time_to_exe = time(9, 30)
+        script_name = "bingwallpaper.sh"
+        plist_label = "com.testuser.bingwallpaper.sh"
+        expected_plist_path = os.path.join("/fake", "dir", "com.testuser.bingwallpaper.sh.plist")
+        expected_script_path = os.path.join("/fake", "dir", "bingwallpaper.sh")
+
+        # Act
+        # ----------------------------------
+        result = installer._create_plist_file(time_to_exe, script_name)
+
+        # Assert
+        # ----------------------------------
+        mock_logger.debug.assert_called()  # at least one debug log happened
+        mock_get_user_name.assert_called_once()
+        mock_dirname.assert_called_once_with(mock.ANY)
+        mock_open_file.assert_called_once_with(expected_plist_path, "w")
+        # Validate writelines call
+        handle = mock_open_file()
+        handle.writelines.assert_called_once()
+        written_lines = handle.writelines.call_args[0][0]
+        # These are examples of expected line fragments; verify each was written
+        # for call in mock_logger.debug.call_args_list:
+        #     args, kwargs = call
+        #     print("Args:", args)
+        #     print("Kwargs:", kwargs)
+        mock_logger.debug.assert_any_call(
+            f"{time_to_exe.hour=}, {time_to_exe.minute=}, {script_name=}"
+        )
+        mock_logger.debug.assert_any_call(f"{script_name = }")
+        mock_logger.debug.assert_any_call(f"{plist_label = }")
+        # Return value can be validated using another mock
+        mock_return_checker = mock.Mock()
+        mock_return_checker(plist_label)
+        mock_return_checker.assert_called_once_with(result)
 
 
 if __name__ == "__main__":

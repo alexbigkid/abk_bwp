@@ -169,7 +169,6 @@ class InstallOnMacOS(IInstallBase):
                 "</plist>\n",
             ]
             fh.writelines(lines_to_write)
-        self._logger.debug(f"{plist_label=}")
         return plist_label
 
     @abk_common.function_trace
