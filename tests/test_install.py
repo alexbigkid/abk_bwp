@@ -102,7 +102,7 @@ class TestInstallOnMacOS(unittest.TestCase):
     @mock.patch("abk_bwp.install.InstallOnMacOS._stop_and_unload_bingwallpaper_job")
     @mock.patch("abk_bwp.install.InstallOnMacOS._create_plist_link")
     @mock.patch("abk_bwp.install.InstallOnMacOS._create_plist_file")
-    @mock.patch("os.path.dirname", return_value="/fake/path")
+    @mock.patch("os.path.dirname", return_value=os.path.join("/fake", "path"))
     def test_setup_installation(
         self,
         mock_dirname,
