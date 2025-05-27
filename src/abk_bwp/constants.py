@@ -28,7 +28,9 @@ class _Const:
 
         self._load_from_pyproject()
 
-    def _find_project_root(self, start: Path = Path.cwd()) -> Path:  # noqa: B008
+    def _find_project_root(self, start: Path | None = None) -> Path:
+        if start is None:
+            start = Path.cwd()
         for parent in [start, *start.parents]:
             if (parent / "pyproject.toml").exists():
                 return parent
