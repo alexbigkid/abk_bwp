@@ -55,6 +55,11 @@ class IInstallBase(metaclass=ABCMeta):
             f"({__class__.__name__}) Initializing {self.os_type} installation environment ..."
         )
 
+    @abstractmethod
+    def setup_installation(self) -> None:
+        """Abstract method - should not be implemented. Interface purpose."""
+        raise NotImplementedError
+
     # @abk_common.function_trace
     # def install_python_packages(self) -> None:
     # TODO: 1. check whether pyenv is installed
@@ -81,11 +86,6 @@ class IInstallBase(metaclass=ABCMeta):
     # #     echo "WARNING: Hombrew is not installed, please install with:"
     # #     echo "/usr/bin/ruby -e \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)\""
     # # fi
-
-    @abstractmethod
-    def setup_installation(self) -> None:
-        """Abstract method - should not be implemented. Interface purpose."""
-        raise NotImplementedError
 
 
 class InstallOnMacOS(IInstallBase):
