@@ -155,7 +155,7 @@ class TestInstallOnMacOS(unittest.TestCase):
         script_name = "bingwallpaper.sh"
         plist_label = "com.testuser.bingwallpaper.sh"
         expected_plist_path = os.path.join("/fake", "dir", "com.testuser.bingwallpaper.sh.plist")
-        expected_script_path = os.path.join("/fake", "dir", "bingwallpaper.sh")
+        # expected_script_path = os.path.join("/fake", "dir", "bingwallpaper.sh")
 
         # Act
         # ----------------------------------
@@ -170,7 +170,7 @@ class TestInstallOnMacOS(unittest.TestCase):
         # Validate writelines call
         handle = mock_open_file()
         handle.writelines.assert_called_once()
-        written_lines = handle.writelines.call_args[0][0]
+        # written_lines = handle.writelines.call_args[0][0]
         # These are examples of expected line fragments; verify each was written
         # for call in mock_logger.debug.call_args_list:
         #     args, kwargs = call
