@@ -1,6 +1,7 @@
 """Unit tests for install.py."""
 
 # Standard library imports
+import os
 import unittest
 from unittest import mock
 import logging
@@ -120,8 +121,12 @@ class TestInstallOnMacOS(unittest.TestCase):
         installer._logger = mock_logger
         installer.os_type = abk_common.OsType.MAC_OS
         installer._shell_file_name = "bingwallpaper.sh"
-        mock_create_plist_file.return_value = "com.abk.bingwallpaper"
-        mock_create_plist_link.return_value = "/fake/path/com.abk.bingwallpaper.plist"
+        com_name = "com.abk.bingwallpaper"
+        mock_create_plist_file.return_value = com_name
+        plist_name = os.path.join(
+            "/fake", "path", "com.abk.bingwallpaper.plist"
+        )
+        mock_create_plist_link.return_value = plist_name
 
         # Act
         # ----------------------------------
@@ -132,13 +137,9 @@ class TestInstallOnMacOS(unittest.TestCase):
         mock_dirname.assert_called_once()
         mock_logger.debug.assert_called()
         mock_create_plist_file.assert_called_once_with(time(12, 0, 0), "bingwallpaper.sh")
-        mock_create_plist_link.assert_called_once_with("/fake/path/com.abk.bingwallpaper.plist")
-        mock_stop_unload.assert_called_once_with(
-            "/fake/path/com.abk.bingwallpaper.plist", "com.abk.bingwallpaper"
-        )
-        mock_load_start.assert_called_once_with(
-            "/fake/path/com.abk.bingwallpaper.plist", "com.abk.bingwallpaper"
-        )
+        mock_create_plist_link.assert_called_once_with(plist_name)
+        mock_stop_unload.assert_called_once_with(plist_name, com_name)
+        mock_load_start.assert_called_once_with(plist_name, com_name)
 
 
 if __name__ == "__main__":
