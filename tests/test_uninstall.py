@@ -170,6 +170,59 @@ class TestUninstallOnMacOS(unittest.TestCase):
         mock_logger.info.assert_called()
         mock_logger.debug.called_called()
 
+    # -------------------------------------------------------------------------
+    # UninstallOnMacOS.cleanup_image_dir
+    # -------------------------------------------------------------------------
+    @mock.patch("abk_bwp.abk_common.get_home_dir", return_value="/Users/testuser")
+    @mock.patch("os.path.join", side_effect=lambda *args: "/".join(args))
+    def test_cleanup_image_dir(self, mock_join, mock_get_home_dir):
+        """Test cleanup_image_dir calls _delete_image_dir with correct path."""
+        # Arrange
+        # ----------------------------------
+        uninstall = UninstallOnMacOS(logger=mock.Mock())
+        uninstall._delete_image_dir = mock.Mock()
+
+        # Act
+        # ----------------------------------
+        uninstall.cleanup_image_dir("Pictures/BingWallpapers")
+
+        # Assert
+        # ----------------------------------
+        mock_get_home_dir.assert_called_once()
+        mock_join.assert_called_once_with("/Users/testuser", "Pictures/BingWallpapers")
+        uninstall._delete_image_dir.assert_called_once_with(
+            "/Users/testuser/Pictures/BingWallpapers"
+        )
+
+    # -------------------------------------------------------------------------
+    # UninstallOnMacOS._delete_image_dir
+    # -------------------------------------------------------------------------
+    @mock.patch("shutil.rmtree")
+    @mock.patch("os.path.isdir", return_value=True)
+    def test_delete_image_dir_success(self, mock_isdir, mock_rmtree):
+        """Test _delete_image_dir deletes directory if it exists."""
+        logger = mock.Mock()
+        uninstall = UninstallOnMacOS(logger=logger)
+
+        uninstall._delete_image_dir("/path/to/images")
+
+        mock_isdir.assert_called_once_with("/path/to/images")
+        mock_rmtree.assert_called_once_with("/path/to/images")
+        logger.error.assert_not_called()
+
+    @mock.patch("abk_bwp.uninstall.shutil.rmtree", side_effect=Exception("fail"))
+    @mock.patch("abk_bwp.uninstall.os.path.isdir", return_value=True)
+    def test_delete_image_dir_failure(self, mock_isdir, mock_rmtree):
+        """Test _delete_image_dir logs error if deletion fails."""
+        logger = mock.Mock()
+        uninstall = UninstallOnMacOS(logger=logger)
+
+        uninstall._delete_image_dir("/path/to/images")
+
+        mock_isdir.assert_called_once_with("/path/to/images")
+        mock_rmtree.assert_called_once_with("/path/to/images")
+        logger.error.assert_called_once_with("deleting image directory /path/to/images failed")
+
 
 if __name__ == "__main__":
     unittest.main()
