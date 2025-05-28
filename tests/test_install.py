@@ -2,6 +2,7 @@
 
 # Standard library imports
 import os
+from pathlib import Path
 import unittest
 from unittest import mock
 import logging
@@ -185,6 +186,58 @@ class TestInstallOnMacOS(unittest.TestCase):
         mock_return_checker = mock.Mock()
         mock_return_checker(plist_label)
         mock_return_checker.assert_called_once_with(result)
+
+    # -------------------------------------------------------------------------
+    # InstallOnMacOS._create_plist_link
+    # -------------------------------------------------------------------------
+    @mock.patch("abk_bwp.abk_common.get_home_dir", return_value=str(Path.home()))
+    @mock.patch("abk_bwp.abk_common.ensure_dir")
+    @mock.patch("abk_bwp.abk_common.ensure_link_exists")
+    @mock.patch("os.path.basename", return_value="com.testuser.bingwallpaper.sh.plist")
+    @mock.patch("os.path.join", side_effect=lambda *args: "/".join(args))  # preserve join logic
+    def test_create_plist_link(
+        self,
+        mock_path_join,
+        mock_basename,
+        mock_ensure_link_exists,
+        mock_ensure_dir,
+        mock_get_home_dir,
+    ):
+        """Test test_create_plist_link."""
+        # Arrange
+        # ----------------------------------
+        mock_logger = mock.Mock()
+        installer = InstallOnMacOS(mock_logger)
+        expected_file_name = "com.testuser.bingwallpaper.sh.plist"
+        full_file_name = os.path.join("/some", "fake", "path", expected_file_name)
+        expected_dst = os.path.join(
+            mock_get_home_dir.return_value, "Library", "LaunchAgents", expected_file_name
+        )
+
+        # Act
+        # ----------------------------------
+        result = installer._create_plist_link(full_file_name)
+
+        # Assert
+        # ----------------------------------
+        # Verify logger debug/info
+        for call in mock_logger.info.call_args_list:
+            args, kwargs = call
+            print("Args:", args)
+            print("Kwargs:", kwargs)
+        # mock_logger.debug.assert_any_call(f"{full_file_name=}")
+        # mock_logger.info.assert_any_call(f"src= {full_file_name}, dst= {expected_dst}")
+        # mock_logger.debug.assert_any_call(f"{expected_dst=}")
+        # Validate abk_common calls
+        mock_get_home_dir.assert_called_once()
+        mock_ensure_dir.assert_called_once_with(
+            os.path.join(mock_get_home_dir.return_value, "Library/LaunchAgents")
+        )
+        mock_ensure_link_exists.assert_called_once_with(full_file_name, expected_dst)
+        # Validate result using a mock
+        mock_result_checker = mock.Mock()
+        mock_result_checker(expected_dst)
+        mock_result_checker.assert_called_once_with(result)
 
 
 if __name__ == "__main__":
