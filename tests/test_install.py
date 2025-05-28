@@ -3,6 +3,7 @@
 # Standard library imports
 import os
 from pathlib import Path
+import subprocess
 import unittest
 from unittest import mock
 import logging
@@ -221,10 +222,10 @@ class TestInstallOnMacOS(unittest.TestCase):
         # Assert
         # ----------------------------------
         # Verify logger debug/info
-        for call in mock_logger.info.call_args_list:
-            args, kwargs = call
-            print("Args:", args)
-            print("Kwargs:", kwargs)
+        # for call in mock_logger.info.call_args_list:
+        #     args, kwargs = call
+        #     print("Args:", args)
+        #     print("Kwargs:", kwargs)
         # mock_logger.debug.assert_any_call(f"{full_file_name=}")
         # mock_logger.info.assert_any_call(f"src= {full_file_name}, dst= {expected_dst}")
         # mock_logger.debug.assert_any_call(f"{expected_dst=}")
@@ -250,9 +251,13 @@ class TestInstallOnMacOS(unittest.TestCase):
         mock_logger = mock.Mock()
         test_user = "testuser"
         plist_name = os.path.join(
-            "/Users", test_user, "Library", "LaunchAgents", "com.testuser.bingwallpaper.sh.plist"
+            "/Users",
+            test_user,
+            "Library",
+            "LaunchAgents",
+            f"com.{test_user}.bingwallpaper.sh.plist"
         )
-        plist_label = "com.testuser.bingwallpaper.sh.plist"
+        plist_label = f"com.{test_user}.bingwallpaper.sh.plist"
         expected_commands = [
             f"launchctl list | grep {plist_label}",
             f"launchctl stop {plist_label}",
@@ -272,11 +277,44 @@ class TestInstallOnMacOS(unittest.TestCase):
         for cmd in expected_commands:
             mock_logger.info.assert_any_call(f"about to execute command '{cmd}'")
             mock_logger.info.assert_any_call(f"command '{cmd}' succeeded, returned: 0")
-
         # Ensure each command was executed once
         assert mock_check_call.call_count == len(expected_commands)
         mock_check_call.assert_has_calls(
             [mock.call(cmd, shell=True) for cmd in expected_commands]
+        )
+
+    @mock.patch("subprocess.check_call")
+    def test_stop_and_unload_bingwallpaper_job_with_error(self, mock_check_call):
+        """Test test_stop_and_unload_bingwallpaper_job_with_error."""
+        # Arrange
+        # ----------------------------------
+        mock_logger = mock.Mock()
+        installer = InstallOnMacOS(mock_logger)
+        test_user = "testuser"
+        plist_name = os.path.join(
+            "/Users",
+            test_user,
+            "Library",
+            "LaunchAgents"
+            f"com.{test_user}.bingwallpaper.sh.plist"
+        )
+        plist_label = f"com.{test_user}.bingwallpaper.sh.plist"
+        # Raise CalledProcessError on second command
+        def side_effect(cmd, shell):
+            """side_effect."""
+            if "stop" in cmd:
+                raise subprocess.CalledProcessError(returncode=1, cmd=cmd)
+            return 0
+        mock_check_call.side_effect = side_effect
+
+        # Act
+        # ----------------------------------
+        installer._stop_and_unload_bingwallpaper_job(plist_name, plist_label)
+
+        # Assert
+        # ----------------------------------
+        mock_logger.info.assert_any_call(
+            "error: e.returncode=1. It is expected though, not all cmds exec successfully."
         )
 
 
