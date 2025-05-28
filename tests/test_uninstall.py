@@ -234,7 +234,9 @@ class TestUninstallOnMacOS(unittest.TestCase):
         # ----------------------------------
         mock_isdir.assert_called_once_with("/path/to/images")
         mock_rmtree.assert_called_once_with("/path/to/images")
-        logger.exception.assert_called_once_with("deleting image directory /path/to/images failed")
+        logger.exception.assert_called_once_with(
+            "deleting image directory /path/to/images failed"
+        )
 
     # -------------------------------------------------------------------------
     # UninstallOnMacOS._get_plist_names
