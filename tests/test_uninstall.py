@@ -312,6 +312,70 @@ class TestUninstallOnMacOS(unittest.TestCase):
         # ----------------------------------
         logger.exception.assert_called_once_with("ERROR: returned: 1")
 
+    # -------------------------------------------------------------------------
+    # UninstallOnMacOS._delete_plist_file
+    # -------------------------------------------------------------------------
+    @mock.patch("os.unlink")
+    @mock.patch("os.path.isfile", return_value=True)
+    def test_delete_plist_file_success(self, mock_isfile, mock_unlink):
+        """Test test_delete_plist_file_success."""
+        # Arrange
+        # ----------------------------------
+        mock_logger = mock.Mock()
+        uninstall = UninstallOnMacOS(logger=mock_logger)
+        script_name = "/Users/testuser/Library/LaunchAgents/com.example.plist"
+
+        # Act
+        # ----------------------------------
+        uninstall._delete_plist_file(script_name)
+
+        # Assert
+        # ----------------------------------
+        mock_isfile.assert_called_once_with(script_name)
+        mock_unlink.assert_called_once_with(script_name)
+        mock_logger.info.assert_called_with(f"deleted file {script_name}")
+
+    @mock.patch("os.unlink", side_effect=OSError(13, "Permission denied"))
+    @mock.patch("os.path.isfile", return_value=True)
+    def test_delete_plist_file_oserror(self, mock_isfile, mock_unlink):
+        """Test test_delete_plist_file_oserror."""
+        # Arrange
+        # ----------------------------------
+        mock_logger = mock.Mock()
+        uninstall = UninstallOnMacOS(logger=mock_logger)
+        script_name = "/Users/testuser/Library/LaunchAgents/com.example.plist"
+
+        # Act
+        # ----------------------------------
+        uninstall._delete_plist_file(script_name)
+
+        # Assert
+        # ----------------------------------
+        mock_isfile.assert_called_once_with(script_name)
+        mock_unlink.assert_called_once_with(script_name)
+        mock_logger.exception.assert_called_once()
+        mock_logger.exception.assert_called_once_with(
+            f"failed to delete file {script_name}, with error = 13"
+        )
+
+    @mock.patch("abk_bwp.uninstall.os.path.isfile", return_value=False)
+    def test_delete_plist_file_does_not_exist(self, mock_isfile):
+        """Test test_delete_plist_file_does_not_exist."""
+        # Arrange
+        # ----------------------------------
+        mock_logger = mock.Mock()
+        uninstall = UninstallOnMacOS(logger=mock_logger)
+        script_name = "/Users/testuser/Library/LaunchAgents/com.example.plist"
+
+        # Act
+        # ----------------------------------
+        uninstall._delete_plist_file(script_name)
+
+        # Assert
+        # ----------------------------------
+        mock_isfile.assert_called_once_with(script_name)
+        mock_logger.info.assert_called_with(f"file {script_name} does not exist")
+
 
 if __name__ == "__main__":
     unittest.main()
