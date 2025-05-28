@@ -7,7 +7,12 @@ import unittest
 from unittest import mock
 
 from abk_bwp import abk_common
-from abk_bwp.uninstall import IUninstallBase, UninstallOnLinux, UninstallOnMacOS
+from abk_bwp.uninstall import (
+    IUninstallBase,
+    UninstallOnLinux,
+    UninstallOnMacOS,
+    UninstallOnWindows,
+)
 
 # Third party imports
 
@@ -411,6 +416,42 @@ class TestUninstallOnLinux(unittest.TestCase):
 
         mock_logger.debug.assert_called_once_with(f"{image_dir=}")
         mock_logger.info.assert_any_call("Linux cleanup_image_dir is not supported yet")
+
+
+# =============================================================================
+# UninstallOnWindows
+# =============================================================================
+class TestUninstallOnWindows(unittest.TestCase):
+    """TestUninstallOnWindows class."""
+
+    def test_init_sets_os_type(self):
+        """Test test_init_sets_os_type."""
+        mock_logger = mock.Mock()
+        uninstall = UninstallOnWindows(logger=mock_logger)
+
+        self.assertEqual(uninstall.os_type, abk_common.OsType.WINDOWS_OS)
+        self.assertIs(uninstall._logger, mock_logger)
+
+    def test_teardown_installation_logs_message(self):
+        """Test test_teardown_installation_logs_message."""
+        mock_logger = mock.Mock()
+        uninstall = UninstallOnWindows(logger=mock_logger)
+
+        uninstall.teardown_installation()
+
+        mock_logger.debug.assert_called_once()
+        mock_logger.info.assert_any_call("Windows uninstallation is not supported yet")
+
+    def test_cleanup_image_dir_logs_message(self):
+        """Test test_cleanup_image_dir_logs_message."""
+        mock_logger = mock.Mock()
+        uninstall = UninstallOnWindows(logger=mock_logger)
+        image_dir = "/home/testuser/Pictures/BingWallpapers"
+
+        uninstall.cleanup_image_dir(image_dir)
+
+        mock_logger.debug.assert_called_once_with(f"{image_dir=}")
+        mock_logger.info.assert_any_call("Windows cleanup_image_dir is not supported yet")
 
 
 if __name__ == "__main__":
