@@ -7,7 +7,7 @@ import unittest
 from unittest import mock
 
 from abk_bwp import abk_common
-from abk_bwp.uninstall import IUninstallBase, UninstallOnMacOS
+from abk_bwp.uninstall import IUninstallBase, UninstallOnLinux, UninstallOnMacOS
 
 # Third party imports
 
@@ -375,6 +375,42 @@ class TestUninstallOnMacOS(unittest.TestCase):
         # ----------------------------------
         mock_isfile.assert_called_once_with(script_name)
         mock_logger.info.assert_called_with(f"file {script_name} does not exist")
+
+
+# =============================================================================
+# UninstallOnLinux
+# =============================================================================
+class TestUninstallOnLinux(unittest.TestCase):
+    """TestUninstallOnLinux class."""
+
+    def test_init_sets_os_type(self):
+        """Test test_init_sets_os_type."""
+        mock_logger = mock.Mock()
+        uninstall = UninstallOnLinux(logger=mock_logger)
+
+        self.assertEqual(uninstall.os_type, abk_common.OsType.LINUX_OS)
+        self.assertIs(uninstall._logger, mock_logger)
+
+    def test_teardown_installation_logs_message(self):
+        """Test test_teardown_installation_logs_message."""
+        mock_logger = mock.Mock()
+        uninstall = UninstallOnLinux(logger=mock_logger)
+
+        uninstall.teardown_installation()
+
+        mock_logger.debug.assert_called_once()
+        mock_logger.info.assert_any_call("Linux uninstallation is not supported yet")
+
+    def test_cleanup_image_dir_logs_message(self):
+        """Test test_cleanup_image_dir_logs_message."""
+        mock_logger = mock.Mock()
+        uninstall = UninstallOnLinux(logger=mock_logger)
+        image_dir = "/home/testuser/Pictures/BingWallpapers"
+
+        uninstall.cleanup_image_dir(image_dir)
+
+        mock_logger.debug.assert_called_once_with(f"{image_dir=}")
+        mock_logger.info.assert_any_call("Linux cleanup_image_dir is not supported yet")
 
 
 if __name__ == "__main__":
