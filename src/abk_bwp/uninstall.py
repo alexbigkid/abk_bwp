@@ -140,10 +140,10 @@ class UninstallOnMacOS(IUninstallBase):
         """
         self._logger.debug(f"{script_name=}")
         user_name = abk_common.get_user_name()
-        plist_lable = f"com.{user_name}.{script_name}"
-        plist_file_name = f"{plist_lable}.plist"
-        self._logger.debug(f"{plist_lable=}, {plist_file_name=}")
-        return (plist_lable, plist_file_name)
+        plist_label = f"com.{user_name}.{script_name}"
+        plist_file_name = f"{plist_label}.plist"
+        self._logger.debug(f"{plist_label=}, {plist_file_name=}")
+        return (plist_label, plist_file_name)
 
     @abk_common.function_trace
     def _stop_and_unload_bingwallpaper_job(self, plist_name: str, plist_label: str) -> None:

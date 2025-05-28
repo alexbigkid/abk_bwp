@@ -223,6 +223,26 @@ class TestUninstallOnMacOS(unittest.TestCase):
         mock_rmtree.assert_called_once_with("/path/to/images")
         logger.error.assert_called_once_with("deleting image directory /path/to/images failed")
 
+    # -------------------------------------------------------------------------
+    # UninstallOnMacOS._get_plist_names
+    # -------------------------------------------------------------------------
+    @mock.patch("abk_bwp.abk_common.get_user_name", return_value="testuser")
+    def test_get_plist_names(self, mock_get_user_name):
+        """Test _get_plist_names returns correct label and filename."""
+        logger = mock.Mock()
+        uninstall = UninstallOnMacOS(logger=logger)
+
+        result = uninstall._get_plist_names("bingwallpaper.sh")
+
+        self.assertEqual(
+            result, ("com.testuser.bingwallpaper.sh", "com.testuser.bingwallpaper.sh.plist")
+        )
+        logger.debug.assert_any_call("script_name='bingwallpaper.sh'")
+        logger.debug.assert_any_call(
+            "plist_label='com.testuser.bingwallpaper.sh', plist_file_name='com.testuser.bingwallpaper.sh.plist'"  # noqa: E501
+        )
+        mock_get_user_name.assert_called_once()
+
 
 if __name__ == "__main__":
     unittest.main()
