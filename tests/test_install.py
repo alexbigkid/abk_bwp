@@ -3,7 +3,7 @@
 # Standard library imports
 import os
 from pathlib import Path
-import subprocess
+import subprocess  # noqa: S404
 import unittest
 from unittest import mock
 import logging
@@ -255,7 +255,7 @@ class TestInstallOnMacOS(unittest.TestCase):
             test_user,
             "Library",
             "LaunchAgents",
-            f"com.{test_user}.bingwallpaper.sh.plist"
+            f"com.{test_user}.bingwallpaper.sh.plist",
         )
         plist_label = f"com.{test_user}.bingwallpaper.sh.plist"
         expected_commands = [
@@ -278,9 +278,9 @@ class TestInstallOnMacOS(unittest.TestCase):
             mock_logger.info.assert_any_call(f"about to execute command '{cmd}'")
             mock_logger.info.assert_any_call(f"command '{cmd}' succeeded, returned: 0")
         # Ensure each command was executed once
-        assert mock_check_call.call_count == len(expected_commands)
+        self.assertEqual(mock_check_call.call_count, len(expected_commands))
         mock_check_call.assert_has_calls(
-            [mock.call(cmd, shell=True) for cmd in expected_commands]
+            [mock.call(cmd, shell=True) for cmd in expected_commands]  # noqa: S604
         )
 
     @mock.patch("subprocess.check_call")
@@ -292,19 +292,17 @@ class TestInstallOnMacOS(unittest.TestCase):
         installer = InstallOnMacOS(mock_logger)
         test_user = "testuser"
         plist_name = os.path.join(
-            "/Users",
-            test_user,
-            "Library",
-            "LaunchAgents"
-            f"com.{test_user}.bingwallpaper.sh.plist"
+            "/Users", test_user, "Library", f"LaunchAgentscom.{test_user}.bingwallpaper.sh.plist"
         )
         plist_label = f"com.{test_user}.bingwallpaper.sh.plist"
+
         # Raise CalledProcessError on second command
         def side_effect(cmd, shell):
             """side_effect."""
             if "stop" in cmd:
                 raise subprocess.CalledProcessError(returncode=1, cmd=cmd)
             return 0
+
         mock_check_call.side_effect = side_effect
 
         # Act
