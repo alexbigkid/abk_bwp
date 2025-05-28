@@ -91,14 +91,6 @@ class TestBwpInstall(unittest.TestCase):
         # Check exit code was 0
         mock_sys_exit.assert_called_once_with(0)
 
-    # @mock.patch("sys.exit")
-    # def test_unsupported_platform(self, mock_exit):
-    #     """Test unsupported platform raises ValueError and exits with 1."""
-    #     with mock.patch("abk_bwp.install._platform", new="plan9"):  # unsupported
-    #         from abk_bwp.install import bwp_install
-    #         bwp_install(self.clo)
-    #     self.clo.logger.error.assert_called()
-    #     mock_exit.assert_called_once_with(1)
     @mock.patch("sys.exit")
     def test_unsupported_platform(self, mock_exit):
         """Test unsupported platform raises ValueError and exits with 1."""
