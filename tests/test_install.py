@@ -12,8 +12,8 @@ from datetime import time
 # Third party imports
 
 # Local imports
-from abk_bwp.install import IInstallBase, InstallOnMacOS, InstallOnLinux, InstallOnWindows
 from abk_bwp import abk_common
+from abk_bwp.install import IInstallBase, InstallOnMacOS, InstallOnLinux, InstallOnWindows
 
 
 class DummyInstall(IInstallBase):

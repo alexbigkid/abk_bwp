@@ -13,7 +13,6 @@
 """  # noqa: D205, D208
 
 import logging
-import logging.config
 
 # Standard lib imports
 import os
@@ -29,7 +28,7 @@ from colorama import Fore, Style
 
 
 # local imports
-from abk_bwp import abk_common
+from abk_bwp import abk_common, clo
 from abk_bwp.config import ROOT_KW, bwp_config
 
 
@@ -317,7 +316,7 @@ def bwp_install(install_logger: logging.Logger | None = None) -> None:
 
 
 if __name__ == "__main__":
-    command_line_options = abk_common.CommandLineOptions()
+    command_line_options = clo.CommandLineOptions()
     command_line_options.handle_options()
     install_logger = command_line_options.logger
     bwp_install(install_logger)
