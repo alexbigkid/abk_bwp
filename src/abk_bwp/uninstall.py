@@ -166,7 +166,7 @@ class UninstallOnMacOS(IUninstallBase):
                 return_code = subprocess.check_call(cmd, shell=True)  # noqa: S602
                 self._logger.info(f"command '{cmd}' succeeded, returned: {return_code}")
         except subprocess.CalledProcessError as e:
-            self._logger.error(f"ERROR: returned: {e.returncode}")
+            self._logger.exception(f"ERROR: returned: {e.returncode}")
 
     @abk_common.function_trace
     def _delete_plist_file(self, script_name: str) -> None:

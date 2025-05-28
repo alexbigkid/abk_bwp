@@ -2,6 +2,7 @@
 
 # Standard library imports
 import logging
+import subprocess  # noqa: S404
 import unittest
 from unittest import mock
 
@@ -201,11 +202,17 @@ class TestUninstallOnMacOS(unittest.TestCase):
     @mock.patch("os.path.isdir", return_value=True)
     def test_delete_image_dir_success(self, mock_isdir, mock_rmtree):
         """Test _delete_image_dir deletes directory if it exists."""
+        # Arrange
+        # ----------------------------------
         logger = mock.Mock()
         uninstall = UninstallOnMacOS(logger=logger)
 
+        # Act
+        # ----------------------------------
         uninstall._delete_image_dir("/path/to/images")
 
+        # Assert
+        # ----------------------------------
         mock_isdir.assert_called_once_with("/path/to/images")
         mock_rmtree.assert_called_once_with("/path/to/images")
         logger.error.assert_not_called()
@@ -214,11 +221,17 @@ class TestUninstallOnMacOS(unittest.TestCase):
     @mock.patch("abk_bwp.uninstall.os.path.isdir", return_value=True)
     def test_delete_image_dir_failure(self, mock_isdir, mock_rmtree):
         """Test _delete_image_dir logs error if deletion fails."""
+        # Arrange
+        # ----------------------------------
         logger = mock.Mock()
         uninstall = UninstallOnMacOS(logger=logger)
 
+        # Act
+        # ----------------------------------
         uninstall._delete_image_dir("/path/to/images")
 
+        # Assert
+        # ----------------------------------
         mock_isdir.assert_called_once_with("/path/to/images")
         mock_rmtree.assert_called_once_with("/path/to/images")
         logger.error.assert_called_once_with("deleting image directory /path/to/images failed")
@@ -229,11 +242,17 @@ class TestUninstallOnMacOS(unittest.TestCase):
     @mock.patch("abk_bwp.abk_common.get_user_name", return_value="testuser")
     def test_get_plist_names(self, mock_get_user_name):
         """Test _get_plist_names returns correct label and filename."""
+        # Arrange
+        # ----------------------------------
         logger = mock.Mock()
         uninstall = UninstallOnMacOS(logger=logger)
 
+        # Act
+        # ----------------------------------
         result = uninstall._get_plist_names("bingwallpaper.sh")
 
+        # Assert
+        # ----------------------------------
         self.assertEqual(
             result, ("com.testuser.bingwallpaper.sh", "com.testuser.bingwallpaper.sh.plist")
         )
@@ -242,6 +261,54 @@ class TestUninstallOnMacOS(unittest.TestCase):
             "plist_label='com.testuser.bingwallpaper.sh', plist_file_name='com.testuser.bingwallpaper.sh.plist'"  # noqa: E501
         )
         mock_get_user_name.assert_called_once()
+
+    # -------------------------------------------------------------------------
+    # UninstallOnMacOS._stop_and_unload_bingwallpaper_job
+    # -------------------------------------------------------------------------
+    @mock.patch("subprocess.check_call")
+    def test_stop_and_unload_bingwallpaper_job_success(self, mock_check_call):
+        """Test successful execution of stop and unload job."""
+        # Arrange
+        # ----------------------------------
+        logger = mock.Mock(spec=["debug", "info", "error"])
+        uninstall = UninstallOnMacOS(logger=logger)
+        plist_label = "com.testuser.bingwallpaper.sh"
+        plist_name = f"/Users/testuser/Library/LaunchAgents/{plist_label}.plist"
+
+        # Act
+        # ----------------------------------
+        uninstall._stop_and_unload_bingwallpaper_job(plist_name, plist_label)
+
+        # Assert
+        # ----------------------------------
+        expected_calls = [
+            mock.call(f"launchctl list | grep {plist_label}", shell=True),  # noqa: S604
+            mock.call(f"launchctl stop {plist_label}", shell=True),  # noqa: S604
+            mock.call(f"launchctl unload -w {plist_name}", shell=True),  # noqa: S604
+        ]
+        self.assertEqual(mock_check_call.call_args_list, expected_calls)
+        self.assertEqual(mock_check_call.call_count, 3)
+
+    @mock.patch(
+        "abk_bwp.uninstall.subprocess.check_call",
+        side_effect=subprocess.CalledProcessError(1, "launchctl"),
+    )
+    def test_stop_and_unload_bingwallpaper_job_failure(self, mock_check_call):
+        """Test error handling when command fails."""
+        # Arrange
+        # ----------------------------------
+        logger = mock.Mock()
+        uninstall = UninstallOnMacOS(logger=logger)
+        plist_name = "/Users/testuser/Library/LaunchAgents/com.testuser.bingwallpaper.sh.plist"
+        plist_label = "com.testuser.bingwallpaper.sh"
+
+        # Act
+        # ----------------------------------
+        uninstall._stop_and_unload_bingwallpaper_job(plist_name, plist_label)
+
+        # Assert
+        # ----------------------------------
+        logger.exception.assert_called_once_with("ERROR: returned: 1")
 
 
 if __name__ == "__main__":
