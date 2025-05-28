@@ -126,7 +126,7 @@ class UninstallOnMacOS(IUninstallBase):
             try:
                 shutil.rmtree(images_dir)
             except Exception:
-                self._logger.error(f"deleting image directory {images_dir} failed")
+                self._logger.exception(f"deleting image directory {images_dir} failed")
 
     # TODO: remove tuple
     @abk_common.function_trace
@@ -181,7 +181,7 @@ class UninstallOnMacOS(IUninstallBase):
                 os.unlink(script_name)
                 self._logger.info(f"deleted file {script_name}")
             except OSError as error:
-                self._logger.error(
+                self._logger.exception(
                     f"failed to delete file {script_name}, with error = {error.errno}"
                 )
         else:
@@ -275,8 +275,8 @@ def bwp_uninstall(uninstall_logger: logging.Logger | None = None) -> None:
             uninstallation.cleanup_image_dir(bwp_config[ROOT_KW.IMAGE_DIR.value])
         uninstallation.teardown_installation()
     except Exception as exc:
-        _logger.error(f"{Fore.RED}ERROR: executing bingwallpaper")
-        _logger.error(f"EXCEPTION: {exc}{Style.RESET_ALL}")
+        _logger.exception(f"{Fore.RED}ERROR: executing bingwallpaper")
+        _logger.exception(f"EXCEPTION: {exc}{Style.RESET_ALL}")
         exit_code = 1
     finally:
         sys.exit(exit_code)
