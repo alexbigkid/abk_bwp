@@ -12,7 +12,7 @@ from datetime import time
 # Third party imports
 
 # Local imports
-from abk_bwp.install import IInstallBase, InstallOnMacOS
+from abk_bwp.install import IInstallBase, InstallOnMacOS, InstallOnLinux
 from abk_bwp import abk_common
 
 
@@ -373,6 +373,43 @@ class TestInstallOnMacOS(unittest.TestCase):
         installer = InstallOnMacOS(mock_logger)
         installer._load_and_start_bingwallpaper_job("/fake/path.plist", "label")
         mock_logger.critical.assert_called_once_with("ERROR: unknown")
+
+
+# =============================================================================
+# InstallOnLinux
+# =============================================================================
+class TestInstallOnLinux(unittest.TestCase):
+    """TestInstallOnLinux class."""
+
+    # -------------------------------------------------------------------------
+    # InstallOnLinux.__init__
+    # -------------------------------------------------------------------------
+    @mock.patch("abk_bwp.install.IInstallBase.__init__", return_value=None)
+    def test_init_sets_os_type_and_calls_super(self, mock_super_init):
+        """Test test_init_sets_os_type_and_calls_super."""
+        logger = mock.Mock()
+        installer = InstallOnLinux(logger)
+        self.assertEqual(installer.os_type, abk_common.OsType.LINUX_OS)
+        mock_super_init.assert_called_once_with(logger)
+
+    # -------------------------------------------------------------------------
+    # InstallOnLinux.setup_installation
+    # -------------------------------------------------------------------------
+    def test_install_on_linux_setup_installation_logs_correct_message(self):
+        """Test test_install_on_linux_setup_installation_logs_correct_message."""
+        # Arrange
+        # ----------------------------------
+        mock_logger = mock.Mock()
+        installer = InstallOnLinux(mock_logger)
+
+        # Act
+        # ----------------------------------
+        installer.setup_installation()
+
+        # Assert
+        # ----------------------------------
+        self.assertEqual(installer.os_type, abk_common.OsType.LINUX_OS)
+        mock_logger.info.assert_any_call("Linux installation is not supported yet")
 
 
 if __name__ == "__main__":
