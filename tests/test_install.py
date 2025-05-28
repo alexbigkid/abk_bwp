@@ -315,6 +315,65 @@ class TestInstallOnMacOS(unittest.TestCase):
             "error: e.returncode=1. It is expected though, not all cmds exec successfully."
         )
 
+    # -------------------------------------------------------------------------
+    # InstallOnMacOS._load_and_start_bingwallpaper_job
+    # -------------------------------------------------------------------------
+    @mock.patch("subprocess.check_call")
+    def test_load_and_start_bingwallpaper_job_success(self, mock_check_call):
+        """Test test_load_and_start_bingwallpaper_job_success."""
+        # Arrange
+        # ----------------------------------
+        mock_logger = mock.Mock()
+        installer = InstallOnMacOS(mock_logger)
+        plist_name = "/Users/testuser/Library/LaunchAgents/com.testuser.bingwallpaper.sh.plist"
+        plist_label = "com.testuser.bingwallpaper.sh.plist"
+        expected_commands = [f"launchctl load -w {plist_name}", f"launchctl start {plist_label}"]
+        mock_check_call.return_value = 0
+
+        # Act
+        # ----------------------------------
+        installer._load_and_start_bingwallpaper_job(plist_name, plist_label)
+
+        # Assert
+        # ----------------------------------
+        mock_logger.debug.assert_called_once_with(f"{plist_name=}, {plist_label=}")
+        for cmd in expected_commands:
+            mock_logger.info.assert_any_call(f"about to execute command '{cmd}'")
+            mock_logger.info.assert_any_call(f"command '{cmd}' succeeded, returned: 0")
+
+        mock_check_call.assert_has_calls(
+            [mock.call(cmd, shell=True) for cmd in expected_commands]  # noqa: S604
+        )
+        self.assertEqual(mock_check_call.call_count, 2)
+
+    @mock.patch("subprocess.check_call")
+    def test_load_and_start_bingwallpaper_job_subprocess_error(self, mock_check_call):
+        """Test test_load_and_start_bingwallpaper_job_subprocess_error."""
+        # Arrange
+        # ----------------------------------
+        mock_logger = mock.Mock()
+        installer = InstallOnMacOS(mock_logger)
+        plist_name = "/fake/path.plist"
+        plist_label = "com.test.bingwallpaper"
+        # Fail on first command
+        mock_check_call.side_effect = subprocess.CalledProcessError(1, "launchctl load -w")
+
+        # Act
+        # ----------------------------------
+        installer._load_and_start_bingwallpaper_job(plist_name, plist_label)
+
+        # Assert
+        # ----------------------------------
+        mock_logger.critical.assert_called_once_with("ERROR: returned: 1")
+
+    @mock.patch("subprocess.check_call", side_effect=RuntimeError("unexpected"))
+    def test_load_and_start_bingwallpaper_job_unknown_exception(self, mock_check_call):
+        """Test test_load_and_start_bingwallpaper_job_unknown_exception."""
+        mock_logger = mock.Mock()
+        installer = InstallOnMacOS(mock_logger)
+        installer._load_and_start_bingwallpaper_job("/fake/path.plist", "label")
+        mock_logger.critical.assert_called_once_with("ERROR: unknown")
+
 
 if __name__ == "__main__":
     unittest.main()
