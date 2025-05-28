@@ -152,6 +152,7 @@ class TestBingwallpaper(unittest.TestCase):
         mock_get_date.side_effect = side_effect
 
         # Act
+        # ---------------------------------------------------------------------
         result = bingwallpaper.get_all_background_img_names("/mocked/path")
 
         # Asserts
