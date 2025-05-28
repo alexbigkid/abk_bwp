@@ -239,6 +239,46 @@ class TestInstallOnMacOS(unittest.TestCase):
         mock_result_checker(expected_dst)
         mock_result_checker.assert_called_once_with(result)
 
+    # -------------------------------------------------------------------------
+    # InstallOnMacOS._stop_and_unload_bingwallpaper_job
+    # -------------------------------------------------------------------------
+    @mock.patch("subprocess.check_call")
+    def test_stop_and_unload_bingwallpaper_job(self, mock_check_call):
+        """Test test_stop_and_unload_bingwallpaper_job."""
+        # Arrange
+        # ----------------------------------
+        mock_logger = mock.Mock()
+        test_user = "testuser"
+        plist_name = os.path.join(
+            "/Users", test_user, "Library", "LaunchAgents", "com.testuser.bingwallpaper.sh.plist"
+        )
+        plist_label = "com.testuser.bingwallpaper.sh.plist"
+        expected_commands = [
+            f"launchctl list | grep {plist_label}",
+            f"launchctl stop {plist_label}",
+            f"launchctl unload -w {plist_name}",
+        ]
+        # Simulate success for all commands
+        mock_check_call.return_value = 0
+
+        # Act
+        # ----------------------------------
+        installer = InstallOnMacOS(mock_logger)
+        installer._stop_and_unload_bingwallpaper_job(plist_name, plist_label)
+
+        # Assert
+        # ----------------------------------
+        mock_logger.debug.assert_called_once_with(f"{plist_name=}, {plist_label=}")
+        for cmd in expected_commands:
+            mock_logger.info.assert_any_call(f"about to execute command '{cmd}'")
+            mock_logger.info.assert_any_call(f"command '{cmd}' succeeded, returned: 0")
+
+        # Ensure each command was executed once
+        assert mock_check_call.call_count == len(expected_commands)
+        mock_check_call.assert_has_calls(
+            [mock.call(cmd, shell=True) for cmd in expected_commands]
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
