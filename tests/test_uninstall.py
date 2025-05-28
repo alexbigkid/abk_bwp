@@ -130,12 +130,15 @@ class TestUninstallOnMacOS(unittest.TestCase):
         mock_remove_link,
         mock_delete_file,
     ):
+        """Test test_teardown_installation."""
         # Arrange
         # ----------------------------------
         mock_shell_file_name.return_value = "bingwallpaper.sh"
         mock_logger = mock.Mock()
         uninstall = UninstallOnMacOS(logger=mock_logger)
-        uninstall._get_plist_names = mock.Mock(return_value=("com.bwp.agent", "com.bwp.agent.plist"))
+        uninstall._get_plist_names = mock.Mock(
+            return_value=("com.bwp.agent", "com.bwp.agent.plist")
+        )
 
         # Act
         # ----------------------------------
@@ -146,9 +149,9 @@ class TestUninstallOnMacOS(unittest.TestCase):
         mock_get_current_dir.assert_called_once()
         self.assertEqual(mock_join.call_count, 3)
         expected_calls = [
-            mock.call('/path/to', 'bingwallpaper.sh'),
-            mock.call('/Users/testuser/Library/LaunchAgents', 'com.bwp.agent.plist'),
-            mock.call('/path/to', 'com.bwp.agent.plist'),
+            mock.call("/path/to", "bingwallpaper.sh"),
+            mock.call("/Users/testuser/Library/LaunchAgents", "com.bwp.agent.plist"),
+            mock.call("/path/to", "com.bwp.agent.plist"),
         ]
         mock_join.assert_has_calls(expected_calls, any_order=False)
         mock_dirname.assert_called_once_with("/path/to/bingwallpaper.sh")
@@ -157,14 +160,16 @@ class TestUninstallOnMacOS(unittest.TestCase):
         uninstall._get_plist_names.assert_called_once_with("bingwallpaper.sh")
         mock_get_home_dir.assert_called_once()
         mock_stop_and_unload.assert_called_once_with(
-            "/Users/testuser/Library/LaunchAgents/com.bwp.agent.plist",
-            "com.bwp.agent"
+            "/Users/testuser/Library/LaunchAgents/com.bwp.agent.plist", "com.bwp.agent"
         )
-        mock_remove_link.assert_called_once_with("/Users/testuser/Library/LaunchAgents/com.bwp.agent.plist")
+        mock_remove_link.assert_called_once_with(
+            "/Users/testuser/Library/LaunchAgents/com.bwp.agent.plist"
+        )
         mock_delete_file.assert_called_once_with("/path/to/com.bwp.agent.plist")
         # Assert: logging occurred
         mock_logger.info.assert_called()
         mock_logger.debug.called_called()
+
 
 if __name__ == "__main__":
     unittest.main()
