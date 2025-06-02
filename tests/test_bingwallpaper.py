@@ -1,18 +1,18 @@
 """Unit tests for bingwallpaper.py."""
 
 # Standard library imports
-from argparse import Namespace
-from collections import namedtuple
+import datetime
 import logging
+import os
 import platform
 import sys
 import tempfile
-import warnings
-import datetime
-import os
-from pathlib import Path
 import time
 import unittest
+import warnings
+from argparse import Namespace
+from collections import namedtuple
+from pathlib import Path
 from unittest import mock
 from xmlrpc.client import ResponseError
 
@@ -20,7 +20,6 @@ from xmlrpc.client import ResponseError
 from parameterized import parameterized
 from PIL import Image
 from requests import Response
-
 
 # Own modules imports
 from abk_bwp import abk_common, bingwallpaper, config
@@ -1213,7 +1212,7 @@ class TestPeapixDownloadService(unittest.TestCase):
 
         # Act
         # ----------------------------------
-        service = bingwallpaper.PeapixDownloadService(logger=mock_logger)
+        service = bingwallpaper.PeapixDownloadService(dls_logger=mock_logger)
         service.download_new_images()
 
         # Assert
@@ -1253,7 +1252,7 @@ class TestPeapixDownloadService(unittest.TestCase):
 
         # Act + Assert
         # ----------------------------------
-        service = bingwallpaper.PeapixDownloadService(logger=mock_logger)
+        service = bingwallpaper.PeapixDownloadService(dls_logger=mock_logger)
         with self.assertRaises(ResponseError) as cm:
             service.download_new_images()
 
@@ -1295,7 +1294,7 @@ class TestPeapixDownloadService(unittest.TestCase):
 
         # Act
         # ----------------------------------
-        service = bingwallpaper.PeapixDownloadService(logger=mock_logger)
+        service = bingwallpaper.PeapixDownloadService(dls_logger=mock_logger)
         result = service._process_peapix_api_data(metadata)
 
         # Asserts
@@ -1340,7 +1339,7 @@ class TestPeapixDownloadService(unittest.TestCase):
 
         # Act
         # ----------------------------------
-        service = bingwallpaper.PeapixDownloadService(logger=mock_logger)
+        service = bingwallpaper.PeapixDownloadService(dls_logger=mock_logger)
         result = service._process_peapix_api_data(metadata)
 
         # Asserts
@@ -1380,7 +1379,7 @@ class TestPeapixDownloadService(unittest.TestCase):
 
         # Act
         # ----------------------------------
-        service = bingwallpaper.PeapixDownloadService(logger=mock_logger)
+        service = bingwallpaper.PeapixDownloadService(dls_logger=mock_logger)
         result = service._process_peapix_api_data(bad_metadata)
 
         # Asserts

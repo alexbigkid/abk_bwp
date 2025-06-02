@@ -1,34 +1,46 @@
 """Program for downloading and upscaling/downscaling bing images to use as wallpaper sized."""
 
 # Standard lib imports
-import datetime
 import io
 import json
 import logging
 import multiprocessing
-import threading
 import os
+import re
 import shutil
+import sqlite3
 import subprocess  # noqa: S404
 import sys
+import threading
 from abc import ABCMeta, abstractmethod
+from argparse import Namespace
 from dataclasses import dataclass
+from datetime import date, datetime, timedelta
 from enum import Enum
 from functools import lru_cache
 from sys import platform as _platform
+from typing import Any
 from xmlrpc.client import ResponseError
-from argparse import Namespace
+
+import reactivex as rx
 
 # Third party imports
 import requests
 from colorama import Fore, Style
 from PIL import Image, ImageDraw, ImageFont
-import reactivex as rx
 from reactivex import operators as ops
 from reactivex.scheduler import ThreadPoolScheduler
 
 # Local imports
 from abk_bwp import abk_common, clo
+from abk_bwp.db import (
+    DB_BWP_FILE_NAME,
+    DB_BWP_TABLE,
+    SQL_CREATE_TABLE,
+    SQL_SELECT_EXISTING,
+    DBColumns,
+    DbEntry,
+)
 from abk_bwp.config import CONSTANT_KW, DESKTOP_IMG_KW, FTV_KW, ROOT_KW, bwp_config
 from abk_bwp.fonts import get_text_overlay_font_name
 from abk_bwp.ftv import FTV
@@ -75,6 +87,7 @@ BWP_TITLE_TEXT_COLOR = (255, 255, 255)
 BWP_TITLE_GLOW_COLOR = (0, 0, 0)
 BWP_TITLE_OUTLINE_AMOUNT = 6
 BWP_REQUEST_TIMEOUT = 5  # timeout in seconds
+BWP_DATE_FORMAT = "%Y-%m-%d"
 
 
 # -----------------------------------------------------------------------------
@@ -154,11 +167,11 @@ def is_config_ftv_enabled() -> bool:
 
 
 @lru_cache(maxsize=128)
-def get_relative_img_dir(img_date: datetime.date) -> str:
+def get_relative_img_dir(img_date: date) -> str:
     """Gets the image directory structure depending on whether Frame TV feature is enabled.
 
     Args:
-        img_date (datetime.date): date time
+        img_date (date): date time
     Returns:
         str: image directory structure
     """
@@ -269,11 +282,11 @@ def delete_files_in_dir(dir_name: str, file_list: list[str]) -> None:
 
 
 @lru_cache(maxsize=128)
-def get_full_img_dir_from_date(img_date: datetime.date) -> str:
+def get_full_img_dir_from_date(img_date: date) -> str:
     """Gets full image directory name from date.
 
     Args:
-        img_date (datetime.date): image date
+        img_date (date): image date
     Returns:
         str: image directory name
     """
@@ -292,17 +305,17 @@ def get_full_img_dir_from_file_name(img_file_name: str) -> str:
     return os.path.join(get_config_img_dir(), get_relative_img_dir(img_date))
 
 
-def get_date_from_img_file_name(img_file_name: str) -> datetime.date | None:
+def get_date_from_img_file_name(img_file_name: str) -> date | None:
     """Gets date from image file name.
 
     Args:
         img_file_name (str): image file name
     Returns:
-        Union[datetime.date, None]: image date
+        Union[date, None]: image date
     """
     try:
         date_str, _ = img_file_name.split("_")
-        img_date = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
+        img_date = str_to_date(date_str).date()
     except ValueError:
         return None
     return img_date
@@ -337,6 +350,17 @@ def get_config_number_of_images_to_keep() -> int:
     return number_of_images_to_keep
 
 
+def str_to_date(date_str: str) -> datetime:
+    """Converts string to date.
+
+    Args:
+        date_str (str): date string
+    Returns:
+        datetime: datetime object
+    """
+    return datetime.strptime(date_str, BWP_DATE_FORMAT)
+
+
 # -----------------------------------------------------------------------------
 # Image Download Data
 # -----------------------------------------------------------------------------
@@ -344,7 +368,7 @@ def get_config_number_of_images_to_keep() -> int:
 class ImageDownloadData:
     """Image download data."""
 
-    imageDate: datetime.date
+    imageDate: date
     title: bytes
     copyright: bytes
     imageUrl: list[str]
@@ -446,9 +470,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
                             img_date_part, img_region_part = file_name.split("_")
                             if file_ext == BWP_IMG_FILE_EXT and img_region_part in region_list:
                                 try:
-                                    img_date = datetime.datetime.strptime(
-                                        img_date_part, "%Y-%m-%d"
-                                    ).date()
+                                    img_date = str_to_date(img_date_part).date()
                                     # logger.debug(f"---- ABK: {img_date.year=}, {img_date.month=}, {img_date.day=}, {img_region_part=}")  # noqa: E501
                                     # looks like a legit file name -> move it the the new location mm/dd/YYYY-mm-dd_us.jpg  # noqa: E501
                                     img_src = os.path.join(full_month_dir, img_file)
@@ -503,9 +525,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
                             img_date_part, img_region_part = file_name.split("_")
                             if file_ext == BWP_IMG_FILE_EXT and img_region_part in region_list:
                                 try:
-                                    img_date = datetime.datetime.strptime(
-                                        img_date_part, "%Y-%m-%d"
-                                    ).date()
+                                    img_date = str_to_date(img_date_part).date()
                                     # logger.debug(f"---- ABK: {img_date.year=}, {img_date.month=}, {img_date.day=}, {img_region_part=}")  # noqa: E501
                                     # looks like a legit file name -> move it the the new location YYYY/mm/YYYY-mm-dd_us.jpg  # noqa: E501
                                     img_src = os.path.join(full_day_dir, img_file)
@@ -655,7 +675,7 @@ class BingDownloadService(DownLoadServiceBase):
         for img_data in metadata_list:
             try:
                 bing_img_date_str = img_data.get("startdate", "")
-                img_date = datetime.datetime.strptime(bing_img_date_str, "%Y%m%d").date()
+                img_date = datetime.strptime(bing_img_date_str, "%Y%m%d").date()
                 img_date_str = f"{img_date.year:04d}-{img_date.month:02d}-{img_date.day:02d}"
                 full_img_dir = get_full_img_dir_from_date(img_date)
                 img_to_check = os.path.join(
@@ -691,12 +711,24 @@ class BingDownloadService(DownLoadServiceBase):
 class PeapixDownloadService(DownLoadServiceBase):
     """Peapix Download Service class. Inherited from the base download service class."""
 
+    def __init__(self, dls_logger: logging.Logger, bwp_db_file: str | None = None) -> None:
+        """Initializes PeapixDownloadService with logger and DB file name.
+
+        Args:
+            dls_logger (logging.Logger): Logger instance.
+            bwp_db_file (str | None, optional): Path to BWP DB file, useful for tests. Defaults to None.
+        """
+        super().__init__(dls_logger)
+        self._bwp_db_file = bwp_db_file or DB_BWP_FILE_NAME
+
     @abk_common.function_trace
     def download_new_images(self) -> None:
         """Downloads bing image and stores it in the defined directory."""
         dst_dir = get_config_img_dir()
         self._logger.debug(f"{dst_dir=}")
-        country_part_url = "=".join(["country", bwp_config.get(ROOT_KW.REGION.value, "us")])
+        country_part_url = "=".join(
+            [DBColumns.COUNTRY.value, bwp_config.get(ROOT_KW.REGION.value, "us")]
+        )
         get_metadata_url = "?".join(
             [
                 bwp_config.get(CONSTANT_KW.CONSTANT.value, {}).get(
@@ -710,12 +742,170 @@ class PeapixDownloadService(DownLoadServiceBase):
         # this might throw, but we have a try/catch in the bwp, so no extra handling here needed.
         resp = requests.get(get_metadata_url, timeout=BWP_REQUEST_TIMEOUT)
         if resp.status_code == 200:  # good case
-            dl_img_data = self._process_peapix_api_data(resp.json())
+            # self._logger.debug(f"Response: {resp.json()=}")
+            self._logger.debug(f"Received from API: {json.dumps(resp.json(), indent=4)}")
+
+            image_data_list = self._process_image_entries(resp.json(), country_part_url)
+            dl_img_data = self._process_peapix_api_data(image_data_list)
             self._download_images(dl_img_data)
         else:
             raise ResponseError(
                 f"ERROR: getting bing image return error code: {resp.status_code}. Cannot proceed"
             )
+
+    @abk_common.function_trace
+    def _extract_image_id(self, page_url: str) -> int:
+        """Extracts image ID from page URL.
+
+        Args:
+            page_url (str): page URL
+        Returns:
+            int: image ID
+        Raises:
+            ValueError: if invalid page URL format
+        """
+        match = re.search(r"/bing/(\d+)(?:/|$)", page_url)
+        if not match:
+            raise ValueError(f"Invalid page URL format: {page_url}")
+        return int(match.group(1))
+
+    @abk_common.function_trace
+    def _db_get_existing_data(self, conn: sqlite3.Connection) -> dict[int, str]:
+        """Gets existing data from DB.
+
+        Args:
+            conn (sqlite3.Connection): database connection
+        Returns:
+            dict[int, str]: existing data
+        """
+        cursor = conn.cursor()
+        # cursor.execute(SQL_CREATE_TABLE)
+        cursor.execute(SQL_SELECT_EXISTING)
+        rows = cursor.fetchall()
+        self._logger.debug(f"ABK:0000: {rows = }")
+        return {row[0]: row[1] for row in rows}
+
+    @abk_common.function_trace
+    def _db_insert_metadata(self, conn: sqlite3.Connection, entries: list[DbEntry]) -> None:
+        """Inserts image metadata to DB.
+
+        Args:
+            conn (sqlite3.Connection): connection
+            entries (list[DbEntry]): images metadata
+        """
+        cursor = conn.cursor()
+        columns = [col.value for col in DBColumns]
+        column_names = ", ".join(columns)
+        placeholders = ", ".join(["?" for _ in columns])
+
+        sql = f"""
+            INSERT OR REPLACE INTO {DB_BWP_TABLE} ({column_names})
+            VALUES ({placeholders})
+        """  # noqa: S608
+
+        for entry in entries:
+            values = tuple(entry.get(col) for col in columns)
+            cursor.execute(sql, values)
+
+        conn.commit()
+
+    @abk_common.function_trace
+    def _process_image_entries(
+        self, img_items: list[dict[str, Any]], country: str
+    ) -> list[dict[str, Any]]:
+        """Processes image entries and returns back json with dates added.
+
+        Args:
+            img_items (list[dict[str, str]]): image json data
+            country (str): country code: "jp", "cn", "in", "es", "de", "it",
+                                         "fr", "gb", "br", "ca", "us", "au"
+        Raises:
+            RuntimeError: if errors
+        Returns:
+            list[dict[str, str]]: json list with date included
+        """
+        try:
+            self._logger.debug(f"ABK:-002: {self._bwp_db_file = }")
+            conn = sqlite3.connect(self._bwp_db_file)
+            self._logger.debug(f"ABK:-001: {conn = }")
+            self._logger.debug(f"DB file: {self._bwp_db_file}")
+            self._logger.debug(f"PRAGMA database_list: {conn.execute('PRAGMA database_list').fetchall()}")
+            existing = self._db_get_existing_data(conn)
+            self._logger.debug(f"ABK:000: {existing = }")
+
+            for entry in img_items:
+                entry[DBColumns.PAGE_ID.value] = self._extract_image_id(
+                    entry[DBColumns.PAGE_URL.value]
+                )
+                self._logger.debug(f"ABK:001: {entry = }")
+
+            img_items.sort(key=lambda x: x[DBColumns.PAGE_ID.value], reverse=True)
+            self._logger.debug(f"ABK:002: {img_items = }")
+            image_ids = [e[DBColumns.PAGE_ID.value] for e in img_items]
+            self._logger.debug(f"ABK:003: {image_ids = }")
+            if len(image_ids) < 2:
+                raise RuntimeError(
+                    f"Only {len(image_ids)} image(s) provided (IDs: {image_ids}). Cannot infer country count."  # noqa: E501
+                )
+            self._logger.debug("ABK:004")
+            min_id, max_id = min(image_ids), max(image_ids)
+            self._logger.debug(f"ABK:005: {min_id = }, {max_id = }")
+            observed_span = max_id - min_id
+            self._logger.debug(f"ABK:006: { observed_span = }")
+
+            # infer country_count from ID gaps
+            country_count = observed_span // (len(image_ids) - 1)
+            self._logger.debug(f"ABK:007: { country_count = }")
+
+            # try to find baseline for date extrapolation
+            known = [(img_id, dt) for img_id, dt in existing.items() if img_id < max_id]
+            self._logger.debug(f"ABK:008: { known = }")
+
+            if not known:
+                raise RuntimeError(
+                    f"No baseline date found in DB before page ID {max_id} to infer from."
+                )
+
+            base_id, base_date_str = max(known, key=lambda x: x[0])
+            base_date = str_to_date(base_date_str)
+            self._logger.debug(f"{country_count = }, {max_id = }, {base_date = }")
+
+            new_data = []
+            for entry in img_items:
+                offset_days = (max_id - entry[DBColumns.PAGE_ID.value]) // country_count
+                entry[DBColumns.DATE.value] = (base_date - timedelta(days=offset_days)).strftime(
+                    BWP_DATE_FORMAT
+                )
+                entry[DBColumns.COUNTRY.value] = country
+                new_data.append(entry)
+
+            # determine if country count changed
+            if observed_span % (len(image_ids) - 1) != 0:
+                self._db_insert_metadata(conn, new_data)
+                return new_data
+
+            # generate data for all countries
+            countries = CONSTANT_KW.ALT_PEAPIX_REGION.value
+            full_data = []
+            for i in range(len(image_ids)):
+                base_entry = new_data[i]
+                base_date = str_to_date(base_entry[DBColumns.DATE.value])
+                base_id = base_entry[DBColumns.PAGE_ID.value]
+                for j, c in enumerate(countries):
+                    derived_id = base_id - (country_count - 1 - j)
+                    full_data.append(
+                        {
+                            DBColumns.PAGE_ID.value: derived_id,
+                            DBColumns.COUNTRY.value: c,
+                            DBColumns.DATE.value: base_date.strftime(BWP_DATE_FORMAT),
+                            DBColumns.PAGE_URL.value: f"https://peapix.com/bing/{derived_id}",
+                        }
+                    )
+
+            self._db_insert_metadata(conn, full_data)
+            return new_data
+        finally:
+            conn.close()
 
     @abk_common.function_trace
     def _process_peapix_api_data(
@@ -735,13 +925,18 @@ class PeapixDownloadService(DownLoadServiceBase):
 
         for img_data in metadata_list:
             try:
-                img_date_str = img_data.get("date", "")
-                img_date = datetime.datetime.strptime(img_date_str, "%Y-%m-%d").date()
+                img_date_str = img_data.get(DBColumns.DATE.value, "")
+                self._logger.info(f"ABK:001: {img_date_str=}")
+                img_date = str_to_date(img_date_str).date()
+                self._logger.info(f"ABK:002: {img_date=}")
                 full_img_dir = get_full_img_dir_from_date(img_date)
+                self._logger.info(f"ABK:003: {full_img_dir=}")
                 img_to_check = os.path.join(
                     full_img_dir, f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}"
                 )
+                self._logger.info(f"ABK:004: {img_to_check=}")
                 if os.path.exists(img_to_check) is False:
+                    self._logger.info(f"ABK:005: {img_to_check=}")
                     return_list.append(
                         ImageDownloadData(
                             imageDate=img_date,
@@ -756,6 +951,7 @@ class PeapixDownloadService(DownLoadServiceBase):
                             imageName=f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}",
                         )
                     )
+                    self._logger.info(f"ABK:006: {return_list=}")
             except Exception:
                 self._logger.exception(
                     f"ERROR: processing image data: {img_data=}. EXCEPTION: {sys.exc_info()}"
@@ -935,7 +1131,7 @@ class BingWallPaper:
         for img_file in scale_img_file_list:
             scale_img_name = os.path.join(img_root_dir, img_file)
             _, img_date_str, img_post_str = img_file.split("_")
-            img_date = datetime.datetime.strptime(img_date_str, "%Y-%m-%d").date()
+            img_date = str_to_date(img_date_str).date()
             resized_img_path = get_full_img_dir_from_date(img_date)
             resized_img_name = "_".join([img_date_str, img_post_str])
             resized_full_img_name = os.path.join(resized_img_path, resized_img_name)
@@ -995,7 +1191,7 @@ class BingWallPaper:
     def update_current_background_image(self) -> None:
         """Updates current background image."""
         config_img_dir = get_config_img_dir()
-        today = datetime.date.today()
+        today = date.today()
         today_img_path = get_full_img_dir_from_date(today)
         todays_img_name = f"{today.year:04d}-{today.month:02d}-{today.day:02d}_{get_config_img_region()}{BWP_IMG_FILE_EXT}"  # noqa: E501
         src_img = os.path.join(today_img_path, todays_img_name)
@@ -1156,7 +1352,7 @@ class BingWallPaper:
         logger.debug(f"prepare_ftv_images: {ftv_files_to_delete=}")
         delete_files_in_dir(dir_name=ftv_dir, file_list=ftv_files_to_delete)
 
-        today = datetime.date.today()
+        today = date.today()
         todays_dir = get_full_img_dir_from_date(today)
         # to_copy_file_list = sorted(next(os.walk(todays_dir))[BWP_FILES])
         first_walk = next(iter(os.walk(todays_dir)))
@@ -1199,7 +1395,7 @@ def bingwallpaper(clo: clo.CommandLineOptions) -> None:
         if bwp_dl_service == DownloadServiceType.BING.value:
             dl_service = BingDownloadService(logger=clo.logger)
         elif bwp_dl_service == DownloadServiceType.PEAPIX.value:
-            dl_service = PeapixDownloadService(logger=clo.logger)
+            dl_service = PeapixDownloadService(dls_logger=clo.logger)
         else:
             raise ValueError(f'ERROR: Download service: "{bwp_dl_service=}" is not supported')
 

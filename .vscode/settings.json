@@ -4,6 +4,7 @@
         "bingwallpaper",
         "colorama",
         "downscaling",
+        "executemany",
         "exif",
         "ftvs",
         "getbbox",

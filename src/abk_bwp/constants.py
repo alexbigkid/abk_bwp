@@ -6,6 +6,8 @@ import tomllib
 
 
 class _Const:
+    """Constants class."""
+
     _version: str
     _name: str
     _license: dict
