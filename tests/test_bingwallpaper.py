@@ -553,7 +553,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
         mock_open.assert_called_once_with(
             "/mocked/path/Please_do_not_modify_anything_in_this_directory.Handled_by_BingWallpaper_automagic",
             "a",
-            encoding='utf-8'
+            encoding="utf-8",
         )
         mock_get_config_img_dir.assert_called_once()
 
@@ -1203,7 +1203,7 @@ class TestPeapixDownloadService(unittest.TestCase):
         mock_process,
         mock_add_date,
         mock_requests_get,
-        mock_img_dir
+        mock_img_dir,
     ):
         """Test test_download_new_images_success."""
         # Arrange
@@ -1248,7 +1248,13 @@ class TestPeapixDownloadService(unittest.TestCase):
     @mock.patch.object(bingwallpaper.PeapixDownloadService, "_download_images")
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
     def test_download_new_images_http_error(
-        self, mock_get_logger, mock_download, mock_process, mock_add_date, mock_requests_get, mock_img_dir
+        self,
+        mock_get_logger,
+        mock_download,
+        mock_process,
+        mock_add_date,
+        mock_requests_get,
+        mock_img_dir,
     ):
         """Test test_download_new_images_success."""
         # Arrange
