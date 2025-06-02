@@ -14,9 +14,9 @@ image_dir = "Pictures/BingWallpapers"
 store_jpg_quality = 89
 
 # -----------------------------------------------------------------------------
-# trim number of images collected always to this number: for me ~9 years: 9 * 365 = 3285
+# trim number of images collected always to this number: for 1 year
 # -----------------------------------------------------------------------------
-number_of_images_to_keep = 3285
+number_of_images_to_keep = 365
 
 # -----------------------------------------------------------------------------
 # in case you want to uninstall the app, whether the you want to retain the images collected over time.
@@ -29,7 +29,7 @@ retain_images = true
 dl_service = "peapix"
 
 # -----------------------------------------------------------------------------
-# region used to download the bing images of the day. Accaptable regions see below in alt_peapix_region
+# region used to download the bing images of the day. Acceptable regions see below in alt_peapix_region
 # -----------------------------------------------------------------------------
 region = "us"
 
@@ -65,14 +65,16 @@ alt_dimention = [ {"width" = 640, "height" = 480}, {"width" = 1024, "height" = 7
 [constant]
 # =============================================================================
 # -----------------------------------------------------------------------------
-# alternative downlaod service. Peapix is preferred because it usually offers a better image quality.
+# alternative download service. Peapix is preferred because it usually offers a better image quality.
 # -----------------------------------------------------------------------------
 alt_dl_service = ["bing", "peapix"]
 
 # -----------------------------------------------------------------------------
 # alternative regions for peapix service. Metadata will be also used from that region and added to the image.
+# please do not change the order of the country codes, since it is used in the SQLite
 # -----------------------------------------------------------------------------
-alt_peapix_region = ["au", "br", "ca", "cn", "de", "fr", "in", "it", "jp", "es", "gb", "us"]
+alt_peapix_region = ["jp", "cn", "in", "es", "de", "it", "fr", "gb", "br", "ca", "us", "au"]
+
 # -----------------------------------------------------------------------------
 # Peapix API service URL
 # -----------------------------------------------------------------------------
