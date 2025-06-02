@@ -132,7 +132,7 @@ class TestBingWallpaper(unittest.TestCase):
         # ----------------------------------
         mock_os_dep.assert_called_once_with(logger=mock_logger)
         # Assert PeapixDownloadService was instantiated
-        mock_peapix_service.assert_called_once_with(logger=mock_logger)
+        mock_peapix_service.assert_called_once_with(dls_logger=mock_logger)
         # Verify that BingWallPaper was called with the correct dl_service
         mock_bing_wallpaper.assert_called_once()
         _, kwargs = mock_bing_wallpaper.call_args
@@ -214,7 +214,7 @@ class TestBingWallpaper(unittest.TestCase):
             # ----------------------------------
             # Assertions
             mock_mac_os.assert_called_once_with(logger=mock_logger)
-            mock_peapix_dl.assert_called_once_with(logger=mock_logger)
+            mock_peapix_dl.assert_called_once_with(dls_logger=mock_logger)
             mock_is_enabled.assert_called_once()
             mock_prepare_images.assert_called_once()
             mock_get_ftv_data.assert_called_once()

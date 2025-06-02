@@ -1191,11 +1191,18 @@ class TestPeapixDownloadService(unittest.TestCase):
         {"CONSTANT": {"PEAPIX_URL": "https://api.peapix.com"}, "REGION": "us"},
     )
     @mock.patch("requests.get")
-    @mock.patch.object(bingwallpaper.PeapixDownloadService, "_process_peapix_api_data")
+    @mock.patch.object(bingwallpaper.PeapixDownloadService, "_add_date_to_peapix_data")
+    @mock.patch.object(bingwallpaper.PeapixDownloadService, "_process_image_data")
     @mock.patch.object(bingwallpaper.PeapixDownloadService, "_download_images")
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
     def test_download_new_images_success(
-        self, mock_get_logger, mock_download, mock_process, mock_requests_get, mock_img_dir
+        self,
+        mock_get_logger,
+        mock_download,
+        mock_process,
+        mock_add_date,
+        mock_requests_get,
+        mock_img_dir
     ):
         """Test test_download_new_images_success."""
         # Arrange
@@ -1208,6 +1215,7 @@ class TestPeapixDownloadService(unittest.TestCase):
         fake_response.status_code = 200
         fake_response.json.return_value = {"data": "mocked"}
         mock_requests_get.return_value = fake_response
+        mock_add_date.return_value = [{"pageUrl": "123456", "date": "2025-05-31"}]
         mock_process.return_value = ["image1", "image2"]
 
         # Act
@@ -1219,7 +1227,8 @@ class TestPeapixDownloadService(unittest.TestCase):
         # ----------------------------------
         mock_img_dir.assert_called_once_with()
         mock_requests_get.assert_called_once()
-        mock_process.assert_called_once_with({"data": "mocked"})
+        mock_add_date.assert_called_once_with({"data": "mocked"}, "us")
+        mock_process.assert_called_once_with([{"pageUrl": "123456", "date": "2025-05-31"}])
         mock_download.assert_called_once_with(["image1", "image2"])
         mock_logger.debug.assert_any_call(
             "Getting Image info from: get_metadata_url='https://peapix.com/bing/feed?country=us'"
@@ -1233,11 +1242,12 @@ class TestPeapixDownloadService(unittest.TestCase):
         {"CONSTANT": {"PEAPIX_URL": "https://api.peapix.com"}, "REGION": "us"},
     )
     @mock.patch("requests.get")
-    @mock.patch.object(bingwallpaper.PeapixDownloadService, "_process_peapix_api_data")
+    @mock.patch.object(bingwallpaper.PeapixDownloadService, "_add_date_to_peapix_data")
+    @mock.patch.object(bingwallpaper.PeapixDownloadService, "_process_image_data")
     @mock.patch.object(bingwallpaper.PeapixDownloadService, "_download_images")
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
     def test_download_new_images_http_error(
-        self, mock_get_logger, mock_download, mock_process, mock_requests_get, mock_img_dir
+        self, mock_get_logger, mock_download, mock_process, mock_add_date, mock_requests_get, mock_img_dir
     ):
         """Test test_download_new_images_success."""
         # Arrange
@@ -1259,11 +1269,12 @@ class TestPeapixDownloadService(unittest.TestCase):
         self.assertIn("ERROR: getting bing image return error code: 500", str(cm.exception))
         mock_img_dir.assert_called_once()
         mock_requests_get.assert_called_once()
+        mock_add_date.assert_not_called()
         mock_process.assert_not_called()
         mock_download.assert_not_called()
 
     # -------------------------------------------------------------------------
-    # PeapixDownloadService._process_peapix_api_data
+    # PeapixDownloadService._process_image_data
     # -------------------------------------------------------------------------
     @mock.patch("abk_bwp.bingwallpaper.get_config_img_region", return_value="EN-US")
     @mock.patch(
@@ -1295,7 +1306,7 @@ class TestPeapixDownloadService(unittest.TestCase):
         # Act
         # ----------------------------------
         service = bingwallpaper.PeapixDownloadService(dls_logger=mock_logger)
-        result = service._process_peapix_api_data(metadata)
+        result = service._process_image_data(metadata)
 
         # Asserts
         # ----------------------------------
@@ -1340,7 +1351,7 @@ class TestPeapixDownloadService(unittest.TestCase):
         # Act
         # ----------------------------------
         service = bingwallpaper.PeapixDownloadService(dls_logger=mock_logger)
-        result = service._process_peapix_api_data(metadata)
+        result = service._process_image_data(metadata)
 
         # Asserts
         # ----------------------------------
@@ -1380,7 +1391,7 @@ class TestPeapixDownloadService(unittest.TestCase):
         # Act
         # ----------------------------------
         service = bingwallpaper.PeapixDownloadService(dls_logger=mock_logger)
-        result = service._process_peapix_api_data(bad_metadata)
+        result = service._process_image_data(bad_metadata)
 
         # Asserts
         # ----------------------------------

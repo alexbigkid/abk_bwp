@@ -33,6 +33,7 @@ from reactivex.scheduler import ThreadPoolScheduler
 
 # Local imports
 from abk_bwp import abk_common, clo
+from abk_bwp.config import CONSTANT_KW, DESKTOP_IMG_KW, FTV_KW, ROOT_KW, bwp_config
 from abk_bwp.db import (
     DB_BWP_FILE_NAME,
     DB_BWP_TABLE,
@@ -41,7 +42,6 @@ from abk_bwp.db import (
     DBColumns,
     DbEntry,
 )
-from abk_bwp.config import CONSTANT_KW, DESKTOP_IMG_KW, FTV_KW, ROOT_KW, bwp_config
 from abk_bwp.fonts import get_text_overlay_font_name
 from abk_bwp.ftv import FTV
 from abk_bwp.lazy_logger import LazyLoggerProxy
@@ -741,11 +741,9 @@ class PeapixDownloadService(DownLoadServiceBase):
         # this might throw, but we have a try/catch in the bwp, so no extra handling here needed.
         resp = requests.get(get_metadata_url, timeout=BWP_REQUEST_TIMEOUT)
         if resp.status_code == 200:  # good case
-            # self._logger.debug(f"Response: {resp.json()=}")
             self._logger.debug(f"Received from API: {json.dumps(resp.json(), indent=4)}")
-
-            image_data_list = self._process_image_entries(resp.json(), country)
-            dl_img_data = self._process_peapix_api_data(image_data_list)
+            image_data_list = self._add_date_to_peapix_data(resp.json(), country)
+            dl_img_data = self._process_image_data(image_data_list)
             self._download_images(dl_img_data)
         else:
             raise ResponseError(
@@ -811,7 +809,7 @@ class PeapixDownloadService(DownLoadServiceBase):
         conn.commit()
 
     @abk_common.function_trace
-    def _process_image_entries(
+    def _add_date_to_peapix_data(
         self, img_items: list[dict[str, Any]], country: str
     ) -> list[dict[str, Any]]:
         """Processes image entries and returns back json with dates added.
@@ -829,32 +827,23 @@ class PeapixDownloadService(DownLoadServiceBase):
         try:
             conn = sqlite3.connect(self._bwp_db_file)
             existing = self._db_get_existing_data(conn)
-            self._logger.debug(f"ABK:000: {existing = }")
 
             for entry in img_items:
                 entry[DBColumns.PAGE_ID.value] = self._extract_image_id(
                     entry[DBColumns.PAGE_URL.value]
                 )
-                self._logger.debug(f"ABK:001: {entry = }")
 
             img_items.sort(key=lambda x: x[DBColumns.PAGE_ID.value], reverse=True)
-            self._logger.debug(f"ABK:002: {img_items = }")
             image_ids = [e[DBColumns.PAGE_ID.value] for e in img_items]
-            self._logger.debug(f"ABK:003: {image_ids = }")
 
             if len(image_ids) < 2:
                 raise RuntimeError(
                     f"Only {len(image_ids)} image(s) provided (IDs: {image_ids}). Cannot infer country count."
                 )
 
-            self._logger.debug("ABK:004")
             min_id, max_id = min(image_ids), max(image_ids)
-            self._logger.debug(f"ABK:005: {min_id = }, {max_id = }")
             observed_span = max_id - min_id
-            self._logger.debug(f"ABK:006: { observed_span = }")
-
             country_count = observed_span // (len(image_ids) - 1)
-            self._logger.debug(f"ABK:007: { country_count = }")
 
             # country-aware baseline
             known = [
@@ -862,7 +851,6 @@ class PeapixDownloadService(DownLoadServiceBase):
                 for img_id, entry in existing.items()
                 if img_id < max_id and entry[DBColumns.COUNTRY.value] == country
             ]
-            self._logger.debug(f"ABK:008: { known = }")
 
             if not known:
                 raise RuntimeError(
@@ -870,7 +858,6 @@ class PeapixDownloadService(DownLoadServiceBase):
                 )
 
             base_id, base_date_str = max(known, key=lambda x: x[0])
-            self._logger.debug(f"ABK:009: { base_id = }, {base_date_str = }")
             base_date = str_to_date(base_date_str)
             self._logger.debug(f"{country_count = }, {max_id = }, {base_date = }")
 
@@ -881,22 +868,14 @@ class PeapixDownloadService(DownLoadServiceBase):
 
             new_data = []
             for entry in img_items:
-                self._logger.debug(f"ABK:010: {entry = }")
                 page_id = entry[DBColumns.PAGE_ID.value]
-                self._logger.debug(f"ABK:011: {page_id = }")
-                # if page_id in existing:
-                #     self._logger.debug(f"Skipping existing page_id={page_id} (already in DB)")
-                #     continue
 
                 offset_days = (page_id - base_id) // country_count
-                self._logger.debug(f"ABK:012: {offset_days = }")
                 entry[DBColumns.DATE.value] = (base_date + timedelta(days=offset_days)).strftime(
                     BWP_DATE_FORMAT
                 )
                 entry[DBColumns.COUNTRY.value] = country
-                self._logger.debug(f"ABK:013: {entry = }")
                 new_data.append(entry)
-            self._logger.debug(f"ABK:014: {new_data = }")
 
             if not new_data:
                 self._logger.debug("No new image entries to insert. Returning empty list.")
@@ -940,7 +919,7 @@ class PeapixDownloadService(DownLoadServiceBase):
             conn.close()
 
     @abk_common.function_trace
-    def _process_peapix_api_data(
+    def _process_image_data(
         self, metadata_list: list[dict[str, str]]
     ) -> list[ImageDownloadData]:
         """Processes received meta data from the peapix API and keeps only data about images which needs to be downloaded. Filters out data about images we already have.
@@ -958,17 +937,12 @@ class PeapixDownloadService(DownLoadServiceBase):
         for img_data in metadata_list:
             try:
                 img_date_str = img_data.get(DBColumns.DATE.value, "")
-                self._logger.info(f"ABK:001: {img_date_str=}")
                 img_date = str_to_date(img_date_str).date()
-                self._logger.info(f"ABK:002: {img_date=}")
                 full_img_dir = get_full_img_dir_from_date(img_date)
-                self._logger.info(f"ABK:003: {full_img_dir=}")
                 img_to_check = os.path.join(
                     full_img_dir, f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}"
                 )
-                self._logger.info(f"ABK:004: {img_to_check=}")
                 if os.path.exists(img_to_check) is False:
-                    self._logger.info(f"ABK:005: {img_to_check=}")
                     return_list.append(
                         ImageDownloadData(
                             imageDate=img_date,
@@ -983,7 +957,6 @@ class PeapixDownloadService(DownLoadServiceBase):
                             imageName=f"{img_date_str}_{img_region}{BWP_IMG_FILE_EXT}",
                         )
                     )
-                    self._logger.info(f"ABK:006: {return_list=}")
             except Exception:
                 self._logger.exception(
                     f"ERROR: processing image data: {img_data=}. EXCEPTION: {sys.exc_info()}"
