@@ -726,9 +726,8 @@ class PeapixDownloadService(DownLoadServiceBase):
         """Downloads bing image and stores it in the defined directory."""
         dst_dir = get_config_img_dir()
         self._logger.debug(f"{dst_dir=}")
-        country_part_url = "=".join(
-            [DBColumns.COUNTRY.value, bwp_config.get(ROOT_KW.REGION.value, "us")]
-        )
+        country = bwp_config.get(ROOT_KW.REGION.value, "us")
+        country_part_url = "=".join([DBColumns.COUNTRY.value, country])
         get_metadata_url = "?".join(
             [
                 bwp_config.get(CONSTANT_KW.CONSTANT.value, {}).get(
@@ -745,7 +744,7 @@ class PeapixDownloadService(DownLoadServiceBase):
             # self._logger.debug(f"Response: {resp.json()=}")
             self._logger.debug(f"Received from API: {json.dumps(resp.json(), indent=4)}")
 
-            image_data_list = self._process_image_entries(resp.json(), country_part_url)
+            image_data_list = self._process_image_entries(resp.json(), country)
             dl_img_data = self._process_peapix_api_data(image_data_list)
             self._download_images(dl_img_data)
         else:
@@ -770,7 +769,7 @@ class PeapixDownloadService(DownLoadServiceBase):
         return int(match.group(1))
 
     @abk_common.function_trace
-    def _db_get_existing_data(self, conn: sqlite3.Connection) -> dict[int, str]:
+    def _db_get_existing_data(self, conn: sqlite3.Connection) -> dict[int, dict[str, str]]:
         """Gets existing data from DB.
 
         Args:
@@ -782,8 +781,10 @@ class PeapixDownloadService(DownLoadServiceBase):
         # cursor.execute(SQL_CREATE_TABLE)
         cursor.execute(SQL_SELECT_EXISTING)
         rows = cursor.fetchall()
-        self._logger.debug(f"ABK:0000: {rows = }")
-        return {row[0]: row[1] for row in rows}
+        return {
+            row[0]: {DBColumns.COUNTRY.value: row[1], DBColumns.DATE.value: row[2]}
+            for row in rows
+        }
 
     @abk_common.function_trace
     def _db_insert_metadata(self, conn: sqlite3.Connection, entries: list[DbEntry]) -> None:
@@ -817,19 +818,16 @@ class PeapixDownloadService(DownLoadServiceBase):
 
         Args:
             img_items (list[dict[str, str]]): image json data
-            country (str): country code: "jp", "cn", "in", "es", "de", "it",
-                                         "fr", "gb", "br", "ca", "us", "au"
+            country (str): country code
+
         Raises:
             RuntimeError: if errors
+
         Returns:
             list[dict[str, str]]: json list with date included
         """
         try:
-            self._logger.debug(f"ABK:-002: {self._bwp_db_file = }")
             conn = sqlite3.connect(self._bwp_db_file)
-            self._logger.debug(f"ABK:-001: {conn = }")
-            self._logger.debug(f"DB file: {self._bwp_db_file}")
-            self._logger.debug(f"PRAGMA database_list: {conn.execute('PRAGMA database_list').fetchall()}")
             existing = self._db_get_existing_data(conn)
             self._logger.debug(f"ABK:000: {existing = }")
 
@@ -843,60 +841,97 @@ class PeapixDownloadService(DownLoadServiceBase):
             self._logger.debug(f"ABK:002: {img_items = }")
             image_ids = [e[DBColumns.PAGE_ID.value] for e in img_items]
             self._logger.debug(f"ABK:003: {image_ids = }")
+
             if len(image_ids) < 2:
                 raise RuntimeError(
-                    f"Only {len(image_ids)} image(s) provided (IDs: {image_ids}). Cannot infer country count."  # noqa: E501
+                    f"Only {len(image_ids)} image(s) provided (IDs: {image_ids}). Cannot infer country count."
                 )
+
             self._logger.debug("ABK:004")
             min_id, max_id = min(image_ids), max(image_ids)
             self._logger.debug(f"ABK:005: {min_id = }, {max_id = }")
             observed_span = max_id - min_id
             self._logger.debug(f"ABK:006: { observed_span = }")
 
-            # infer country_count from ID gaps
             country_count = observed_span // (len(image_ids) - 1)
             self._logger.debug(f"ABK:007: { country_count = }")
 
-            # try to find baseline for date extrapolation
-            known = [(img_id, dt) for img_id, dt in existing.items() if img_id < max_id]
+            # country-aware baseline
+            known = [
+                (img_id, entry[DBColumns.DATE.value])
+                for img_id, entry in existing.items()
+                if img_id < max_id and entry[DBColumns.COUNTRY.value] == country
+            ]
             self._logger.debug(f"ABK:008: { known = }")
 
             if not known:
                 raise RuntimeError(
-                    f"No baseline date found in DB before page ID {max_id} to infer from."
+                    f"No baseline date found in DB before page ID {max_id} for country '{country}' to infer from."
                 )
 
             base_id, base_date_str = max(known, key=lambda x: x[0])
+            self._logger.debug(f"ABK:009: { base_id = }, {base_date_str = }")
             base_date = str_to_date(base_date_str)
             self._logger.debug(f"{country_count = }, {max_id = }, {base_date = }")
 
+            countries = bwp_config.get(CONSTANT_KW.CONSTANT.value, {}).get(
+                CONSTANT_KW.ALT_PEAPIX_REGION.value, []
+            )
+            self._logger.debug(f"{countries = }")
+
             new_data = []
             for entry in img_items:
-                offset_days = (max_id - entry[DBColumns.PAGE_ID.value]) // country_count
-                entry[DBColumns.DATE.value] = (base_date - timedelta(days=offset_days)).strftime(
+                self._logger.debug(f"ABK:010: {entry = }")
+                page_id = entry[DBColumns.PAGE_ID.value]
+                self._logger.debug(f"ABK:011: {page_id = }")
+                # if page_id in existing:
+                #     self._logger.debug(f"Skipping existing page_id={page_id} (already in DB)")
+                #     continue
+
+                offset_days = (page_id - base_id) // country_count
+                self._logger.debug(f"ABK:012: {offset_days = }")
+                entry[DBColumns.DATE.value] = (base_date + timedelta(days=offset_days)).strftime(
                     BWP_DATE_FORMAT
                 )
                 entry[DBColumns.COUNTRY.value] = country
+                self._logger.debug(f"ABK:013: {entry = }")
                 new_data.append(entry)
+            self._logger.debug(f"ABK:014: {new_data = }")
+
+            if not new_data:
+                self._logger.debug("No new image entries to insert. Returning empty list.")
+                return []
 
             # determine if country count changed
             if observed_span % (len(image_ids) - 1) != 0:
                 self._db_insert_metadata(conn, new_data)
                 return new_data
 
-            # generate data for all countries
-            countries = CONSTANT_KW.ALT_PEAPIX_REGION.value
+            # determine the position of the given country in the countries list
+            try:
+                country_index = countries.index(country)
+            except ValueError:
+                raise RuntimeError(f"Country '{country}' not found in configured list: {countries}")
+
             full_data = []
-            for i in range(len(image_ids)):
+
+            for i in range(len(new_data)):
                 base_entry = new_data[i]
                 base_date = str_to_date(base_entry[DBColumns.DATE.value])
                 base_id = base_entry[DBColumns.PAGE_ID.value]
-                for j, c in enumerate(countries):
-                    derived_id = base_id - (country_count - 1 - j)
+
+                for offset in range(len(countries)):
+                    derived_index = (country_index - offset) % len(countries)
+                    derived_country = countries[derived_index]
+                    derived_id = base_id - offset
+
+                    if derived_id in existing:
+                        continue
+
                     full_data.append(
                         {
                             DBColumns.PAGE_ID.value: derived_id,
-                            DBColumns.COUNTRY.value: c,
+                            DBColumns.COUNTRY.value: derived_country,
                             DBColumns.DATE.value: base_date.strftime(BWP_DATE_FORMAT),
                             DBColumns.PAGE_URL.value: f"https://peapix.com/bing/{derived_id}",
                         }
@@ -918,7 +953,7 @@ class PeapixDownloadService(DownLoadServiceBase):
         Returns:
             List[Dict[str, str]]: metadata about images to download
         """  # noqa: E501
-        self._logger.debug(f"Received from API: {json.dumps(metadata_list, indent=4)}")
+        self._logger.debug(f"With added date: {json.dumps(metadata_list, indent=4)}")
         return_list: list[ImageDownloadData] = []
         img_region = get_config_img_region()
         self._logger.debug(f"{img_region=}")
