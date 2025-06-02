@@ -34,14 +34,7 @@ from reactivex.scheduler import ThreadPoolScheduler
 # Local imports
 from abk_bwp import abk_common, clo
 from abk_bwp.config import CONSTANT_KW, DESKTOP_IMG_KW, FTV_KW, ROOT_KW, bwp_config
-from abk_bwp.db import (
-    DB_BWP_FILE_NAME,
-    DB_BWP_TABLE,
-    SQL_CREATE_TABLE,
-    SQL_SELECT_EXISTING,
-    DBColumns,
-    DbEntry,
-)
+from abk_bwp.db import DB_BWP_FILE_NAME, DB_BWP_TABLE, SQL_SELECT_EXISTING, DBColumns, DbEntry
 from abk_bwp.fonts import get_text_overlay_font_name
 from abk_bwp.ftv import FTV
 from abk_bwp.lazy_logger import LazyLoggerProxy
@@ -392,9 +385,9 @@ class DownloadServiceType(Enum):
 class DownLoadServiceBase(metaclass=ABCMeta):
     """Class for download service base."""
 
-    def __init__(self, logger: logging.Logger) -> None:
+    def __init__(self, dl_logger: logging.Logger) -> None:
         """Super class init."""
-        self._logger = logger or LazyLoggerProxy(__name__)
+        self._logger = dl_logger or LazyLoggerProxy(__name__)
 
     @abstractmethod
     def download_new_images(self) -> None:
@@ -1398,7 +1391,7 @@ def bingwallpaper(clo: clo.CommandLineOptions) -> None:
             ROOT_KW.DL_SERVICE.value, DownloadServiceType.PEAPIX.value
         )
         if bwp_dl_service == DownloadServiceType.BING.value:
-            dl_service = BingDownloadService(logger=clo.logger)
+            dl_service = BingDownloadService(dl_logger=clo.logger)
         elif bwp_dl_service == DownloadServiceType.PEAPIX.value:
             dl_service = PeapixDownloadService(dls_logger=clo.logger)
         else:

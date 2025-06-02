@@ -37,7 +37,7 @@ class TestBingWallpaper(unittest.TestCase):
         # Assert
         # ----------------------------------
         mock_os_dep.assert_called_once_with(logger=clo.logger)
-        mock_dl.assert_called_once_with(logger=clo.logger)
+        mock_dl.assert_called_once_with(dl_logger=clo.logger)
         mock_bwp.assert_called_once()
         mock_exit.assert_called_once_with(0)
 
@@ -63,7 +63,7 @@ class TestBingWallpaper(unittest.TestCase):
         # Assert
         # ----------------------------------
         mock_os_dep.assert_called_once_with(logger=clo.logger)
-        mock_dl.assert_called_once_with(logger=clo.logger)
+        mock_dl.assert_called_once_with(dl_logger=clo.logger)
         mock_bwp.assert_called_once()
         mock_exit.assert_called_once_with(0)
 
@@ -89,7 +89,7 @@ class TestBingWallpaper(unittest.TestCase):
         # Assert
         # ----------------------------------
         mock_os_dep.assert_called_once_with(logger=clo.logger)
-        mock_dl.assert_called_once_with(logger=clo.logger)
+        mock_dl.assert_called_once_with(dl_logger=clo.logger)
         mock_bwp.assert_called_once()
         mock_exit.assert_called_once_with(0)
 
@@ -250,7 +250,7 @@ class TestBingWallpaper(unittest.TestCase):
         # Assert
         # ----------------------------------
         mock_os_dep.assert_called_once_with(logger=self.clo.logger)
-        mock_dl_service.assert_called_once_with(logger=self.clo.logger)
+        mock_dl_service.assert_called_once_with(dl_logger=self.clo.logger)
         # Assert error logging and exit
         self.clo.logger.error.assert_called()
         mock_exit.assert_called_once_with(1)

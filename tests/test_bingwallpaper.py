@@ -728,7 +728,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
 
         # Act
         # ----------------------------------
-        service = bingwallpaper.BingDownloadService(logger=mock_logger)
+        service = bingwallpaper.BingDownloadService(dl_logger=mock_logger)
         service._download_images(img_data_list)
         time.sleep(1)  # Wait briefly for threads to complete
 
@@ -765,7 +765,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
 
         # Act
         # ----------------------------------
-        service = bingwallpaper.BingDownloadService(logger=mock_logger)
+        service = bingwallpaper.BingDownloadService(dl_logger=mock_logger)
         service._download_images(img_data_list)
         time.sleep(2)  # Wait briefly for threads to complete
 
@@ -801,7 +801,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
 
         # Act
         # ----------------------------------
-        service = bingwallpaper.BingDownloadService(logger=mock_logger)
+        service = bingwallpaper.BingDownloadService(dl_logger=mock_logger)
         service._download_images(img_data_list)
         time.sleep(2)  # Wait briefly for threads to complete
 
@@ -859,7 +859,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
 
         # Act
         # ----------------------------------
-        service = bingwallpaper.BingDownloadService(logger=mock_logger)
+        service = bingwallpaper.BingDownloadService(dl_logger=mock_logger)
         service._process_and_download_image(image_data)
 
         # Asserts
@@ -913,7 +913,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
 
         # Act
         # ----------------------------------
-        service = bingwallpaper.BingDownloadService(logger=mock_logger)
+        service = bingwallpaper.BingDownloadService(dl_logger=mock_logger)
         service._process_and_download_image(image_data)
 
         # Assert
@@ -964,7 +964,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
 
         # Act
         # ----------------------------------
-        service = bingwallpaper.BingDownloadService(logger=mock_logger)
+        service = bingwallpaper.BingDownloadService(dl_logger=mock_logger)
         service._process_and_download_image(image_data)
 
         # Assert
@@ -1022,7 +1022,7 @@ class TestBingDownloadService(unittest.TestCase):
 
         # Act
         # ----------------------------------
-        service = bingwallpaper.BingDownloadService(logger=mock_logger)
+        service = bingwallpaper.BingDownloadService(dl_logger=mock_logger)
         service.download_new_images()
 
         # Asserts
@@ -1046,7 +1046,7 @@ class TestBingDownloadService(unittest.TestCase):
         # Act
         # Asserts
         # ----------------------------------
-        service = bingwallpaper.BingDownloadService(logger=mock_logger)
+        service = bingwallpaper.BingDownloadService(dl_logger=mock_logger)
         with self.assertRaises(ResponseError):
             service.download_new_images()
 
@@ -1078,7 +1078,7 @@ class TestBingDownloadService(unittest.TestCase):
 
         # Act
         # ----------------------------------
-        service = bingwallpaper.BingDownloadService(logger=mock_logger)
+        service = bingwallpaper.BingDownloadService(dl_logger=mock_logger)
         result = service._process_bing_api_data(metadata_list)
 
         # Assert
@@ -1124,7 +1124,7 @@ class TestBingDownloadService(unittest.TestCase):
 
         # Act
         # ----------------------------------
-        service = bingwallpaper.BingDownloadService(logger=mock_logger)
+        service = bingwallpaper.BingDownloadService(dl_logger=mock_logger)
         result = service._process_bing_api_data(metadata_list)
 
         # Assert
@@ -1162,7 +1162,7 @@ class TestBingDownloadService(unittest.TestCase):
             {"startdate": "not-a-date", "copyright": "Test Image", "urlbase": "/testimage"}
         ]
 
-        service = bingwallpaper.BingDownloadService(logger=mock_logger)
+        service = bingwallpaper.BingDownloadService(dl_logger=mock_logger)
         result = service._process_bing_api_data(metadata_list)
 
         self.assertEqual(result, [])
