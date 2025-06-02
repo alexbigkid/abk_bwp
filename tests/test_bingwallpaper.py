@@ -553,6 +553,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
         mock_open.assert_called_once_with(
             "/mocked/path/Please_do_not_modify_anything_in_this_directory.Handled_by_BingWallpaper_automagic",
             "a",
+            encoding='utf-8'
         )
         mock_get_config_img_dir.assert_called_once()
 
@@ -1412,7 +1413,7 @@ class TestMacOSDependent(unittest.TestCase):
     def setUp(self):
         """Test Setup MacOSDependent."""
         self.mock_logger = mock.MagicMock(spec=logging.Logger)
-        self.service = bingwallpaper.MacOSDependent(logger=self.mock_logger)
+        self.service = bingwallpaper.MacOSDependent(macos_logger=self.mock_logger)
 
     # -------------------------------------------------------------------------
     # MacOSDependent.set_desktop_background
@@ -1458,7 +1459,7 @@ class TestLinuxDependent(unittest.TestCase):
     def setUp(self):
         """Setup TestLinuxDependent."""
         self.mock_logger = mock.MagicMock(spec=logging.Logger)
-        self.service = bingwallpaper.LinuxDependent(logger=self.mock_logger)
+        self.service = bingwallpaper.LinuxDependent(ld_logger=self.mock_logger)
 
     # -------------------------------------------------------------------------
     # LinuxDependent.__init__
@@ -1587,7 +1588,7 @@ class TestBingWallPaper(unittest.TestCase):
         self.mock_dl_service = mock.Mock()
 
         self.bwp = bingwallpaper.BingWallPaper(
-            logger=self.mock_logger,
+            bw_logger=self.mock_logger,
             options=self.mock_options,
             os_dependant=self.mock_os_dependent,
             dl_service=self.mock_dl_service,

@@ -36,7 +36,7 @@ class TestBingWallpaper(unittest.TestCase):
 
         # Assert
         # ----------------------------------
-        mock_os_dep.assert_called_once_with(logger=clo.logger)
+        mock_os_dep.assert_called_once_with(macos_logger=clo.logger)
         mock_dl.assert_called_once_with(dl_logger=clo.logger)
         mock_bwp.assert_called_once()
         mock_exit.assert_called_once_with(0)
@@ -62,7 +62,7 @@ class TestBingWallpaper(unittest.TestCase):
 
         # Assert
         # ----------------------------------
-        mock_os_dep.assert_called_once_with(logger=clo.logger)
+        mock_os_dep.assert_called_once_with(ld_logger=clo.logger)
         mock_dl.assert_called_once_with(dl_logger=clo.logger)
         mock_bwp.assert_called_once()
         mock_exit.assert_called_once_with(0)
@@ -130,7 +130,7 @@ class TestBingWallpaper(unittest.TestCase):
 
         # Assert
         # ----------------------------------
-        mock_os_dep.assert_called_once_with(logger=mock_logger)
+        mock_os_dep.assert_called_once_with(macos_logger=mock_logger)
         # Assert PeapixDownloadService was instantiated
         mock_peapix_service.assert_called_once_with(dls_logger=mock_logger)
         # Verify that BingWallPaper was called with the correct dl_service
@@ -213,7 +213,7 @@ class TestBingWallpaper(unittest.TestCase):
             # Assert
             # ----------------------------------
             # Assertions
-            mock_mac_os.assert_called_once_with(logger=mock_logger)
+            mock_mac_os.assert_called_once_with(macos_logger=mock_logger)
             mock_peapix_dl.assert_called_once_with(dls_logger=mock_logger)
             mock_is_enabled.assert_called_once()
             mock_prepare_images.assert_called_once()
@@ -249,7 +249,7 @@ class TestBingWallpaper(unittest.TestCase):
 
         # Assert
         # ----------------------------------
-        mock_os_dep.assert_called_once_with(logger=self.clo.logger)
+        mock_os_dep.assert_called_once_with(macos_logger=self.clo.logger)
         mock_dl_service.assert_called_once_with(dl_logger=self.clo.logger)
         # Assert error logging and exit
         self.clo.logger.error.assert_called()
