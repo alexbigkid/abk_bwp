@@ -920,11 +920,8 @@ class PeapixDownloadService(DownLoadServiceBase):
                 base_date = str_to_date(base_entry[DBColumns.DATE.value])
                 base_id = base_entry[DBColumns.PAGE_ID.value]
 
-                for offset in range(len(countries)):
-                    derived_index = (country_index - offset) % len(countries)
-                    derived_country = countries[derived_index]
-                    derived_id = base_id - offset
-
+                for i, derived_country in enumerate(countries):
+                    derived_id = base_id - (country_index - i)
                     if derived_id in existing:
                         continue
 
