@@ -23,7 +23,7 @@ from requests import Response
 
 # Own modules imports
 from abk_bwp import abk_common, bingwallpaper, config
-from abk_bwp.db import SQL_SELECT_EXISTING, DbEntry
+from abk_bwp.db import SQL_SELECT_EXISTING, DBColumns, DbEntry
 
 
 # =============================================================================
@@ -1508,8 +1508,18 @@ class TestPeapixDownloadService(unittest.TestCase):
         mock_cursor_ctx_mgr.return_value.__enter__.return_value = mock_cursor
         mock_conn = mock.MagicMock()
         entries: list[DbEntry] = [
-            {"pageId": 1001, "country": "us", "date": "2024-01-01", "pageUrl": "https://1001"},
-            {"pageId": 1002, "country": "jp", "date": "2024-01-02", "pageUrl": "https://1002"}
+            {
+                DBColumns.PAGE_ID.value: 1001,
+                DBColumns.COUNTRY.value: "us",
+                DBColumns.DATE.value: "2024-01-01",
+                DBColumns.PAGE_URL.value: "https://1001",
+            },
+            {
+                DBColumns.PAGE_ID.value: 1002,
+                DBColumns.COUNTRY.value: "jp",
+                DBColumns.DATE.value: "2024-01-02",
+                DBColumns.PAGE_URL.value: "https://1002",
+            },
         ]
 
         # Act
@@ -1530,6 +1540,146 @@ class TestPeapixDownloadService(unittest.TestCase):
         mock_cursor.execute.assert_has_calls(expected_calls, any_order=False)
         self.assertEqual(mock_cursor.execute.call_count, 2)
         mock_conn.commit.assert_called_once()
+
+    # -------------------------------------------------------------------------
+    # PeapixDownloadService._add_date_to_peapix_data
+    # -------------------------------------------------------------------------
+    @mock.patch("abk_bwp.bingwallpaper.db_sqlite_connect")
+    @mock.patch.dict(
+        "abk_bwp.bingwallpaper.bwp_config", {"CONSTANT": {"ALT_PEAPIX_REGION": ["us", "jp"]}}
+    )
+    @mock.patch("abk_bwp.bingwallpaper.str_to_date")
+    @mock.patch("abk_bwp.bingwallpaper.PeapixDownloadService._db_insert_metadata")
+    @mock.patch("abk_bwp.bingwallpaper.PeapixDownloadService._extract_image_id")
+    @mock.patch("abk_bwp.bingwallpaper.PeapixDownloadService._db_get_existing_data")
+    def test_add_date_to_peapix_data_happy_path(
+        self, mock_get_existing, mock_extract_id, mock_insert, mock_str_to_date, mock_db_connect
+    ):
+        """Test test_add_date_to_peapix_data_happy_path."""
+        # Arrange
+        # ----------------------------------
+        # Setup
+        mock_logger = mock.MagicMock()
+        service = bingwallpaper.PeapixDownloadService(dls_logger=mock_logger)
+        service._bwp_db_file = "mocked.db"
+        # Input: image items
+        img_items = [
+            {DBColumns.PAGE_URL.value: "https://peapix.com/bing/1002"},
+            {DBColumns.PAGE_URL.value: "https://peapix.com/bing/1001"},
+        ]
+        # Mocked extract_image_id
+        mock_extract_id.side_effect = lambda url: int(url.split("/")[-1])
+        mock_get_existing.return_value = {
+            1000: {DBColumns.COUNTRY.value: "us", DBColumns.DATE.value: "2024-01-01"}
+        }
+        # Mock date parser
+        mock_str_to_date.return_value = datetime.datetime(2024, 1, 1)
+        mock_conn = mock.MagicMock()
+        mock_db_connect.return_value.__enter__.return_value = mock_conn
+
+        # Act
+        # ----------------------------------
+        result = service._add_date_to_peapix_data(img_items, country="us")
+
+        # Assert
+        # ----------------------------------
+        self.assertEqual(len(result), 2)
+        for entry in result:
+            self.assertIn(DBColumns.DATE.value, entry)
+            self.assertEqual(entry[DBColumns.COUNTRY.value], "us")
+
+        mock_insert.assert_called()
+        mock_get_existing.assert_called_once()
+        mock_extract_id.assert_called()
+        mock_str_to_date.assert_has_calls(
+            [mock.call("2024-01-01"), mock.call("2024-01-03"), mock.call("2024-01-02")]
+        )
+        self.assertEqual(mock_str_to_date.call_count, 3)
+
+    @mock.patch("abk_bwp.bingwallpaper.db_sqlite_connect")
+    def test_add_date_to_peapix_data_too_few_images(self, mock_db_connect):
+        """Test test_add_date_to_peapix_data_too_few_images."""
+        service = bingwallpaper.PeapixDownloadService(dls_logger=mock.MagicMock())
+        service._bwp_db_file = "mocked.db"
+        mock_db_connect.return_value.__enter__.return_value = mock.MagicMock()
+
+        with self.assertRaises(RuntimeError) as ctx:
+            service._add_date_to_peapix_data(
+                img_items=[{DBColumns.PAGE_URL.value: "https://peapix.com/bing/1"}], country="us"
+            )
+        self.assertIn("Only 1 image(s) provided", str(ctx.exception))
+
+    @mock.patch("abk_bwp.bingwallpaper.db_sqlite_connect")
+    @mock.patch("abk_bwp.bingwallpaper.PeapixDownloadService._db_get_existing_data")
+    @mock.patch("abk_bwp.bingwallpaper.PeapixDownloadService._extract_image_id")
+    def test_add_date_to_peapix_data_missing_baseline(
+        self, mock_extract, mock_existing, mock_db_connect
+    ):
+        """Test test_add_date_to_peapix_data_missing_baseline."""
+        # Arrange
+        # ----------------------------------
+        service = bingwallpaper.PeapixDownloadService(dls_logger=mock.MagicMock())
+        service._bwp_db_file = "mocked.db"
+        mock_extract.return_value = 1002
+        mock_existing.return_value = {}  # no known entry
+        mock_db_connect.return_value.__enter__.return_value = mock.MagicMock()
+
+        # Act
+        # ----------------------------------
+        with self.assertRaises(RuntimeError) as ctx:
+            service._add_date_to_peapix_data(
+                img_items=[
+                    {DBColumns.PAGE_URL.value: "https://peapix.com/bing/1002"},
+                    {DBColumns.PAGE_URL.value: "https://peapix.com/bing/1001"},
+                ],
+                country="us",
+            )
+
+        # Assert
+        # ----------------------------------
+        self.assertIn("No baseline date found", str(ctx.exception))
+
+    @mock.patch("abk_bwp.bingwallpaper.db_sqlite_connect")
+    @mock.patch("abk_bwp.bingwallpaper.str_to_date")
+    @mock.patch.dict(
+        "abk_bwp.bingwallpaper.bwp_config", {"CONSTANT": {"ALT_PEAPIX_REGION": ["us", "jp"]}}
+    )
+    @mock.patch("abk_bwp.bingwallpaper.PeapixDownloadService._extract_image_id")
+    @mock.patch("abk_bwp.bingwallpaper.PeapixDownloadService._db_get_existing_data")
+    @mock.patch("abk_bwp.bingwallpaper.PeapixDownloadService._db_insert_metadata")
+    def test_add_date_to_peapix_data_country_count_not_even(
+        self, mock_insert, mock_get_existing, mock_extract_id, mock_str_to_date, mock_db_connect
+    ):
+        """Test test_add_date_to_peapix_data_country_count_not_even."""
+        # Arrange
+        # ----------------------------------
+        mock_logger = mock.MagicMock()
+        service = bingwallpaper.PeapixDownloadService(dls_logger=mock_logger)
+        service._bwp_db_file = "mocked.db"
+        img_items = [
+            {DBColumns.PAGE_URL.value: "https://peapix.com/bing/1001"},
+            {DBColumns.PAGE_URL.value: "https://peapix.com/bing/1003"},
+            {DBColumns.PAGE_URL.value: "https://peapix.com/bing/1006"},
+        ]
+        mock_extract_id.side_effect = [1001, 1003, 1006]
+        mock_get_existing.return_value = {
+            1000: {DBColumns.COUNTRY.value: "us", DBColumns.DATE.value: "2024-01-01"}
+        }
+        mock_str_to_date.return_value = datetime.datetime(2024, 1, 1)
+        mock_conn = mock.MagicMock()
+        mock_db_connect.return_value.__enter__.return_value = mock_conn
+
+        # Act
+        # ----------------------------------
+        result = service._add_date_to_peapix_data(img_items, country="us")
+
+        # Assert
+        # ----------------------------------
+        # Should return early without generating full_data
+        self.assertEqual(len(result), 3)
+        mock_insert.assert_called_once()
+        # This assert ensures the early return occurred
+        mock_logger.debug.assert_any_call(mock.ANY)
 
 
 # =============================================================================

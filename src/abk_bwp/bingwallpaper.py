@@ -879,10 +879,6 @@ class PeapixDownloadService(DownLoadServiceBase):
                 entry[DBColumns.COUNTRY.value] = country
                 new_data.append(entry)
 
-            if not new_data:
-                self._logger.debug("No new image entries to insert. Returning empty list.")
-                return []
-
             # check if country count changed
             if observed_span % (len(image_ids) - 1) != 0:
                 self._db_insert_metadata(conn, new_data)
