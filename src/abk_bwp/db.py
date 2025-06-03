@@ -33,6 +33,7 @@ DB_BWP_FILE_NAME = os.getenv("BWP_DB_PATH") or os.path.join(
     os.path.dirname(__file__), DEFAULT_DB_NAME
 )  # noqa: E501
 DB_BWP_TABLE = "pages"
+
 SQL_CREATE_TABLE = f"""
     CREATE TABLE IF NOT EXISTS {DB_BWP_TABLE} (
         {DBColumns.PAGE_ID.value} INTEGER PRIMARY KEY,
@@ -41,7 +42,20 @@ SQL_CREATE_TABLE = f"""
         {DBColumns.PAGE_URL.value} TEXT NOT NULL
     )
 """
-SQL_SELECT_EXISTING = f"SELECT {DBColumns.PAGE_ID.value}, {DBColumns.COUNTRY.value}, {DBColumns.DATE.value} FROM {DB_BWP_TABLE}"  # noqa: E501, S608
+
+SQL_SELECT_EXISTING = f"""
+    SELECT {DBColumns.PAGE_ID.value}, {DBColumns.COUNTRY.value}, {DBColumns.DATE.value}
+    FROM {DB_BWP_TABLE}
+"""  # noqa:  S608
+
+SQL_DELETE_OLD_DATA = f"""
+    DELETE FROM {DB_BWP_TABLE}
+    WHERE {DBColumns.PAGE_ID.value} NOT IN (
+        SELECT {DBColumns.PAGE_ID.value} FROM {DB_BWP_TABLE}
+        ORDER BY {DBColumns.PAGE_ID.value} DESC
+        LIMIT ?
+    )
+"""  # noqa: S608
 
 
 @contextmanager

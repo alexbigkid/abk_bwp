@@ -37,6 +37,7 @@ from abk_bwp.config import CONSTANT_KW, DESKTOP_IMG_KW, FTV_KW, ROOT_KW, bwp_con
 from abk_bwp.db import (
     DB_BWP_FILE_NAME,
     DB_BWP_TABLE,
+    SQL_DELETE_OLD_DATA,
     SQL_SELECT_EXISTING,
     DBColumns,
     DbEntry,
@@ -89,6 +90,8 @@ BWP_TITLE_GLOW_COLOR = (0, 0, 0)
 BWP_TITLE_OUTLINE_AMOUNT = 6
 BWP_REQUEST_TIMEOUT = 5  # timeout in seconds
 BWP_DATE_FORMAT = "%Y-%m-%d"
+DEFAULT_NUMBER_OF_RECORDS_TO_KEEP = 84  # currently supported countries 12 * 7 days (week)
+MIN_NUMBER_OF_RECORDS_TO_KEEP = 24  # currently supported countries 12 * 2 days
 
 
 # -----------------------------------------------------------------------------
@@ -787,12 +790,18 @@ class PeapixDownloadService(DownLoadServiceBase):
         }
 
     @abk_common.function_trace
-    def _db_insert_metadata(self, conn: sqlite3.Connection, entries: list[DbEntry]) -> None:
+    def _db_insert_metadata(
+        self,
+        conn: sqlite3.Connection,
+        entries: list[DbEntry],
+        rec_to_keep: int = MIN_NUMBER_OF_RECORDS_TO_KEEP,
+    ) -> None:
         """Inserts image metadata to DB.
 
         Args:
             conn (sqlite3.Connection): connection
             entries (list[DbEntry]): images metadata
+            rec_to_keep (int): number of records to keep
         """
         # cursor = conn.cursor()
         columns = [col.value for col in DBColumns]
@@ -808,6 +817,9 @@ class PeapixDownloadService(DownLoadServiceBase):
             for entry in entries:
                 values = tuple(entry.get(col) for col in columns)
                 cursor.execute(sql, values)
+            if rec_to_keep > MIN_NUMBER_OF_RECORDS_TO_KEEP:
+                self._logger.debug(f"Keeping num of records: {rec_to_keep = }")
+                cursor.execute(SQL_DELETE_OLD_DATA, (rec_to_keep,))
         conn.commit()
 
     @abk_common.function_trace
@@ -905,7 +917,11 @@ class PeapixDownloadService(DownLoadServiceBase):
                             DBColumns.PAGE_URL.value: f"https://peapix.com/bing/{derived_id}",
                         }
                     )
-            self._db_insert_metadata(conn, full_data)
+            num_rec_to_keep = max(
+                DEFAULT_NUMBER_OF_RECORDS_TO_KEEP, country_count * len(img_items)
+            )
+            self._logger.debug(f"{num_rec_to_keep = }")
+            self._db_insert_metadata(conn, full_data, num_rec_to_keep)
         return new_data
 
     @abk_common.function_trace

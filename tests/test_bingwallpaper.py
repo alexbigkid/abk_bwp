@@ -23,7 +23,7 @@ from requests import Response
 
 # Own modules imports
 from abk_bwp import abk_common, bingwallpaper, config
-from abk_bwp.db import SQL_SELECT_EXISTING, DBColumns, DbEntry
+from abk_bwp.db import SQL_DELETE_OLD_DATA, SQL_SELECT_EXISTING, DBColumns, DbEntry
 
 
 # =============================================================================
@@ -1539,6 +1539,56 @@ class TestPeapixDownloadService(unittest.TestCase):
         ]
         mock_cursor.execute.assert_has_calls(expected_calls, any_order=False)
         self.assertEqual(mock_cursor.execute.call_count, 2)
+        mock_conn.commit.assert_called_once()
+
+    @mock.patch("abk_bwp.bingwallpaper.db_sqlite_cursor")
+    @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
+    def test_db_insert_metadata_with_data_trim(self, mock_get_logger, mock_cursor_ctx_mgr):
+        """Test test_db_insert_metadata_with_data_trim."""
+        # Arrange
+        # ----------------------------------
+        # mock logger
+        mock_logger = mock.MagicMock()
+        mock_get_logger.return_value = mock_logger
+        # mock cursor
+        mock_cursor = mock.MagicMock()
+        mock_cursor_ctx_mgr.return_value.__enter__.return_value = mock_cursor
+        mock_conn = mock.MagicMock()
+        entries: list[DbEntry] = [
+            {
+                DBColumns.PAGE_ID.value: 1001,
+                DBColumns.COUNTRY.value: "us",
+                DBColumns.DATE.value: "2024-01-01",
+                DBColumns.PAGE_URL.value: "https://1001",
+            },
+            {
+                DBColumns.PAGE_ID.value: 1002,
+                DBColumns.COUNTRY.value: "jp",
+                DBColumns.DATE.value: "2024-01-02",
+                DBColumns.PAGE_URL.value: "https://1002",
+            },
+        ]
+
+        # Act
+        # ----------------------------------
+        service = bingwallpaper.PeapixDownloadService(dls_logger=mock_logger)
+        service._db_insert_metadata(
+            mock_conn, entries, rec_to_keep=bingwallpaper.DEFAULT_NUMBER_OF_RECORDS_TO_KEEP
+        )
+
+        # Assert
+        # ----------------------------------
+        expected_sql = """
+            INSERT OR REPLACE INTO pages (pageId, country, date, pageUrl)
+            VALUES (?, ?, ?, ?)
+        """
+        expected_calls = [
+            mock.call(expected_sql, (1001, "us", "2024-01-01", "https://1001")),
+            mock.call(expected_sql, (1002, "jp", "2024-01-02", "https://1002")),
+            mock.call(SQL_DELETE_OLD_DATA, (84,)),
+        ]
+        mock_cursor.execute.assert_has_calls(expected_calls)
+        self.assertEqual(mock_cursor.execute.call_count, 3)
         mock_conn.commit.assert_called_once()
 
     # -------------------------------------------------------------------------
