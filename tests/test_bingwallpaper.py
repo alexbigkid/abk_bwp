@@ -23,6 +23,7 @@ from requests import Response
 
 # Own modules imports
 from abk_bwp import abk_common, bingwallpaper, config
+from abk_bwp.db import SQL_SELECT_EXISTING
 
 
 # =============================================================================
@@ -1453,6 +1454,36 @@ class TestPeapixDownloadService(unittest.TestCase):
             service._extract_image_id(url)
 
         self.assertIn("Invalid page URL format", str(context.exception))
+
+    # -------------------------------------------------------------------------
+    # PeapixDownloadService._db_get_existing_data
+    # -------------------------------------------------------------------------
+    @mock.patch("abk_bwp.bingwallpaper.db_sqlite_cursor")
+    @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
+    def test_db_get_existing_data(self, mock_get_logger, mock_cursor_ctx_mgr):
+        """Test test_db_get_existing_data."""
+        mock_logger = mock.MagicMock()
+        mock_get_logger.return_value = mock_logger
+        # Mock cursor object
+        mock_cursor = mock.MagicMock()
+        mock_cursor.fetchall.return_value = [
+            (1001, "us", "2024-01-01"),
+            (1002, "jp", "2024-01-02"),
+        ]
+        # Set the context manager return value
+        mock_cursor_ctx_mgr.return_value.__enter__.return_value = mock_cursor
+        fake_conn = mock.MagicMock()
+
+        service = bingwallpaper.PeapixDownloadService(dls_logger=mock_logger)
+        result = service._db_get_existing_data(fake_conn)
+        expected = {
+            1001: {"country": "us", "date": "2024-01-01"},
+            1002: {"country": "jp", "date": "2024-01-02"},
+        }
+        self.assertEqual(result, expected)
+        mock_cursor.execute.assert_called_once_with(SQL_SELECT_EXISTING)
+        mock_cursor.fetchall.assert_called_once()
+
 
 # =============================================================================
 # MacOSDependent

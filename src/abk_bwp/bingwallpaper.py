@@ -34,7 +34,15 @@ from reactivex.scheduler import ThreadPoolScheduler
 # Local imports
 from abk_bwp import abk_common, clo
 from abk_bwp.config import CONSTANT_KW, DESKTOP_IMG_KW, FTV_KW, ROOT_KW, bwp_config
-from abk_bwp.db import DB_BWP_FILE_NAME, DB_BWP_TABLE, SQL_SELECT_EXISTING, DBColumns, DbEntry
+from abk_bwp.db import (
+    DB_BWP_FILE_NAME,
+    DB_BWP_TABLE,
+    SQL_SELECT_EXISTING,
+    DBColumns,
+    DbEntry,
+    db_sqlite_connect,
+    db_sqlite_cursor,
+)
 from abk_bwp.fonts import get_text_overlay_font_name
 from abk_bwp.ftv import FTV
 from abk_bwp.lazy_logger import LazyLoggerProxy
@@ -768,10 +776,11 @@ class PeapixDownloadService(DownLoadServiceBase):
         Returns:
             dict[int, str]: existing data
         """
-        cursor = conn.cursor()
-        # cursor.execute(SQL_CREATE_TABLE)
-        cursor.execute(SQL_SELECT_EXISTING)
-        rows = cursor.fetchall()
+        # cursor = conn.cursor()
+        with db_sqlite_cursor(conn) as cursor:
+            # cursor.execute(SQL_CREATE_TABLE)
+            cursor.execute(SQL_SELECT_EXISTING)
+            rows = cursor.fetchall()
         return {
             row[0]: {DBColumns.COUNTRY.value: row[1], DBColumns.DATE.value: row[2]}
             for row in rows
@@ -785,7 +794,7 @@ class PeapixDownloadService(DownLoadServiceBase):
             conn (sqlite3.Connection): connection
             entries (list[DbEntry]): images metadata
         """
-        cursor = conn.cursor()
+        # cursor = conn.cursor()
         columns = [col.value for col in DBColumns]
         column_names = ", ".join(columns)
         placeholders = ", ".join(["?" for _ in columns])
@@ -795,10 +804,10 @@ class PeapixDownloadService(DownLoadServiceBase):
             VALUES ({placeholders})
         """  # noqa: S608
 
-        for entry in entries:
-            values = tuple(entry.get(col) for col in columns)
-            cursor.execute(sql, values)
-
+        with db_sqlite_cursor(conn) as cursor:
+            for entry in entries:
+                values = tuple(entry.get(col) for col in columns)
+                cursor.execute(sql, values)
         conn.commit()
 
     @abk_common.function_trace
@@ -817,8 +826,8 @@ class PeapixDownloadService(DownLoadServiceBase):
         Returns:
             list[dict[str, str]]: json list with date included
         """
-        try:
-            conn = sqlite3.connect(self._bwp_db_file)
+        # conn = sqlite3.connect(self._bwp_db_file)
+        with db_sqlite_connect(self._bwp_db_file) as conn:
             existing = self._db_get_existing_data(conn)
 
             for entry in img_items:
@@ -874,21 +883,15 @@ class PeapixDownloadService(DownLoadServiceBase):
                 self._logger.debug("No new image entries to insert. Returning empty list.")
                 return []
 
-            # determine if country count changed
+            # check if country count changed
             if observed_span % (len(image_ids) - 1) != 0:
                 self._db_insert_metadata(conn, new_data)
                 return new_data
 
-            # determine the position of the given country in the countries list
-            try:
-                country_index = countries.index(country)
-            except ValueError as exc:
-                raise RuntimeError(
-                    f"Country '{country}' not found in configured list: {countries}"
-                ) from exc
+            # check the position of the given country in the countries list
+            country_index = countries.index(country)
 
             full_data = []
-
             for _, base_entry in enumerate(new_data):
                 base_date = str_to_date(base_entry[DBColumns.DATE.value])
                 base_id = base_entry[DBColumns.PAGE_ID.value]
@@ -906,11 +909,8 @@ class PeapixDownloadService(DownLoadServiceBase):
                             DBColumns.PAGE_URL.value: f"https://peapix.com/bing/{derived_id}",
                         }
                     )
-
             self._db_insert_metadata(conn, full_data)
-            return new_data
-        finally:
-            conn.close()
+        return new_data
 
     @abk_common.function_trace
     def _process_image_data(self, metadata_list: list[dict[str, str]]) -> list[ImageDownloadData]:

@@ -47,7 +47,8 @@ SQL_SELECT_EXISTING = f"SELECT {DBColumns.PAGE_ID.value}, {DBColumns.COUNTRY.val
 @contextmanager
 def db_sqlite_connect(db_file_name: str):
     """Connect to the SQLite DB."""
-    db_file = db_file_name or DB_BWP_FILE_NAME
+    conn = None
+    db_file = db_file_name
     try:
         conn = sqlite3.connect(db_file)
         conn.autocommit = False
@@ -60,6 +61,7 @@ def db_sqlite_connect(db_file_name: str):
 @contextmanager
 def db_sqlite_cursor(conn: sqlite3.Connection):
     """Create a cursor for the SQLite DB."""
+    cursor = None
     try:
         cursor = conn.cursor()
         yield cursor
