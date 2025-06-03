@@ -130,6 +130,12 @@ class TestBingwallpaper(unittest.TestCase):
         result = bingwallpaper.get_date_from_img_file_name(img_file_name)
         self.assertIsNone(result)
 
+    def test_get_date_from_img_file_name_success(self):
+        """Test test_get_date_from_img_file_name_success."""
+        img_file_name = "2024-12-25_img001.jpg"
+        result = bingwallpaper.get_date_from_img_file_name(img_file_name)
+        self.assertEqual(result, datetime.date(2024, 12, 25))
+
     # -------------------------------------------------------------------------
     # get_all_background_img_names
     # -------------------------------------------------------------------------
@@ -1408,6 +1414,45 @@ class TestPeapixDownloadService(unittest.TestCase):
         mock_get_dir.assert_not_called()
         mock_get_region.assert_called_once()
 
+    # -------------------------------------------------------------------------
+    # PeapixDownloadService._extract_image_id
+    # -------------------------------------------------------------------------
+    @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
+    def test_extract_image_id_success(self, mock_get_logger):
+        """Test test_extract_image_id_success."""
+        mock_logger = mock.MagicMock()
+        mock_get_logger.return_value = mock_logger
+        url = "https://example.com/bing/12345/"
+
+        service = bingwallpaper.PeapixDownloadService(dls_logger=mock_logger)
+        result = service._extract_image_id(url)
+
+        self.assertEqual(result, 12345)
+
+    @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
+    def test_extract_image_id_success_no_trailing_slash(self, mock_get_logger):
+        """Test test_extract_image_id_success_no_trailing_slash."""
+        mock_logger = mock.MagicMock()
+        mock_get_logger.return_value = mock_logger
+        url = "https://example.com/bing/67890"
+
+        service = bingwallpaper.PeapixDownloadService(dls_logger=mock_logger)
+        result = service._extract_image_id(url)
+
+        self.assertEqual(result, 67890)
+
+    @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
+    def test_extract_image_id_failure(self, mock_get_logger):
+        """Test test_extract_image_id_failure."""
+        mock_logger = mock.MagicMock()
+        mock_get_logger.return_value = mock_logger
+        url = "https://example.com/no-bing-here/abc"
+
+        service = bingwallpaper.PeapixDownloadService(dls_logger=mock_logger)
+        with self.assertRaises(ValueError) as context:
+            service._extract_image_id(url)
+
+        self.assertIn("Invalid page URL format", str(context.exception))
 
 # =============================================================================
 # MacOSDependent
