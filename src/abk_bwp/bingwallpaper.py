@@ -89,6 +89,7 @@ BWP_TITLE_TEXT_COLOR = (255, 255, 255)
 BWP_TITLE_GLOW_COLOR = (0, 0, 0)
 BWP_TITLE_OUTLINE_AMOUNT = 6
 BWP_REQUEST_TIMEOUT = 5  # timeout in seconds
+BWP_IMAGES_DOWNLOAD_TIMEOUT = 10
 BWP_DATE_FORMAT = "%Y-%m-%d"
 DEFAULT_NUMBER_OF_RECORDS_TO_KEEP = 84  # currently supported countries 12 * 7 days (week)
 MIN_NUMBER_OF_RECORDS_TO_KEEP = 24  # currently supported countries 12 * 2 days
@@ -566,6 +567,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
         total = len(img_dl_data_list)
         completed = 0
         lock = threading.Lock()
+        done_event = threading.Event()
 
         def log_progress(_):
             nonlocal completed
@@ -576,19 +578,36 @@ class DownLoadServiceBase(metaclass=ABCMeta):
         def process_img(img_data):
             self._process_and_download_image(img_data)
 
+        def handle_dl_error(e: Exception, data: ImageDownloadData):
+            self._logger.warning(f"⚠️ Failed to download image: {data} ({e})")
+            return rx.empty()
+
+        def _on_completed() -> None:
+            self._logger.info("✅ All image downloads completed.")
+            done_event.set()
+
+        def _on_error(e: Exception) -> None:
+            self._logger.error(f"❌ Stream error: {e}")
+            done_event.set()
+
         rx.from_iterable(img_dl_data_list).pipe(
             ops.flat_map(
                 lambda data: rx.of(data).pipe(
                     ops.subscribe_on(scheduler),
                     ops.do_action(process_img),
                     ops.retry(3),  # retry up to 3 times
+                    ops.catch(lambda e, _: handle_dl_error(e, data)),  # skip if failed item
                     ops.do_action(on_next=log_progress),
                 )
             )
         ).subscribe(
-            on_completed=lambda: self._logger.info("✅ All image downloads completed."),
-            on_error=lambda e: self._logger.error(f"❌ Stream error: {e}"),
+            on_completed=_on_completed,
+            on_error=_on_error
         )
+        # Block until all downloads are complete.
+        # Otherwise background image generation & set will fail, the image might not be available
+        if not done_event.wait(timeout=BWP_IMAGES_DOWNLOAD_TIMEOUT):
+            self._logger.error("❌ Timed out waiting for all downloads to complete.")
 
     def _process_and_download_image(self, img_dl_data: ImageDownloadData):
         """Process and download image.
@@ -1010,7 +1029,7 @@ class MacOSDependent(IOsDependentBase):
         Args:
             file_name (str): file name which should be used to set the background
         """
-        self._logger.debug(f"{file_name=}")
+        self._logger.debug(f"{file_name = }")
         script_mac = """/usr/bin/osascript<<END
 tell application "Finder"
 set desktop picture to POSIX file "%s"
