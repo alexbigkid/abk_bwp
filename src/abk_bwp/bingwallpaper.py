@@ -600,10 +600,7 @@ class DownLoadServiceBase(metaclass=ABCMeta):
                     ops.do_action(on_next=log_progress),
                 )
             )
-        ).subscribe(
-            on_completed=_on_completed,
-            on_error=_on_error
-        )
+        ).subscribe(on_completed=_on_completed, on_error=_on_error)
         # Block until all downloads are complete.
         # Otherwise background image generation & set will fail, the image might not be available
         if not done_event.wait(timeout=BWP_IMAGES_DOWNLOAD_TIMEOUT):

@@ -817,7 +817,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
         # ----------------------------------
         # Called 3 times due to retries
         self.assertEqual(mock_process_image.call_count, 3)
-        mock_logger.error.assert_called_with(mock.ANY)  # Something like "❌ Stream error: ..."
+        mock_logger.warning.assert_called_with(mock.ANY)
 
     # -------------------------------------------------------------------------
     # DownLoadServiceBase._process_and_download_image
@@ -1766,7 +1766,7 @@ class TestMacOSDependent(unittest.TestCase):
         # Asserts
         # ----------------------------------
         # Check debug logging of filename
-        self.mock_logger.debug.assert_any_call(f"file_name='{file_name}'")
+        self.mock_logger.debug.assert_any_call(f"{file_name = }")
         # Check subprocess was called with expected AppleScript
         expected_script = f"""/usr/bin/osascript<<END
 tell application "Finder"
