@@ -41,7 +41,7 @@ region = "us"
 # -----------------------------------------------------------------------------
 # if enabled the app will try to set the image as desktop. If false the image just going to be downloaded but not set as desktop image
 # -----------------------------------------------------------------------------
-enabled = true
+enabled = false
 
 # -----------------------------------------------------------------------------
 # if height or width is configured to not supported size, it will be defaulted to 4K resolution: 3840x2160
