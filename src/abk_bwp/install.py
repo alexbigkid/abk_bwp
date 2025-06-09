@@ -153,6 +153,8 @@ class InstallOnMacOS(IInstallBase):
                 "    </array>\n",
                 "    <key>RunAtLoad</key>\n",
                 "    <true/>\n",
+                "    <key>StartInterval</key>\n",
+                "    <integer>7200</integer>\n",
                 "    <key>StartCalendarInterval</key>\n",
                 "    <dict>\n",
                 "        <key>Hour</key>\n",
