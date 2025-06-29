@@ -57,7 +57,7 @@ jpg_quality = 80
 # -----------------------------------------------------------------------------
 # the alternative sizes are not configurable, there are here just for information what is supported
 # -----------------------------------------------------------------------------
-alt_dimention = [ {"width" = 640, "height" = 480}, {"width" = 1024, "height" = 768}, {"width" = 1600, "height" = 1200}, {"width" = 1920, "height" = 1080}, {"width" = 1920, "height" = 1200}, {"width" = 3840, "height" = 2160} ]
+alt_dimension = [ {"width" = 640, "height" = 480}, {"width" = 1024, "height" = 768}, {"width" = 1600, "height" = 1200}, {"width" = 1920, "height" = 1080}, {"width" = 1920, "height" = 1200}, {"width" = 3840, "height" = 2160} ]
 
 
 
@@ -101,9 +101,9 @@ enabled = false
 
 # -----------------------------------------------------------------------------
 # 70-100. JPEG quality used when resizing to Samsung Frame TV size (3810x2160).
-# Lower number - lower quality image butsmaller file size, larger number better quality larger file sizes
+# Lower number - lower quality image but smaller file size, larger number better quality larger file sizes
 # The image size for ftv is stored in the native 3840x2160 (4K) format.
-# This cannot be changed, because it is the native resilution for Frame TV
+# This cannot be changed, because it is the native resolution for Frame TV
 # -----------------------------------------------------------------------------
 jpg_quality = 80
 

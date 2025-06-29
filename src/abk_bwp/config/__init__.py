@@ -32,7 +32,7 @@ class DESKTOP_IMG_KW(Enum):
     WIDTH = "width"
     HEIGHT = "height"
     JPG_QUALITY = "jpg_quality"
-    ALT_DIMENTION = "alt_dimention"
+    ALT_DIMENSION = "alt_dimension"
 
 
 class CONSTANT_KW(Enum):
