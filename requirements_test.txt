@@ -1,6 +1,0 @@
-# Install dependencies
--r requirements.txt
-
-# Install test dependencies
-coverage
-parameterized
