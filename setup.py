@@ -61,7 +61,7 @@ setup(
             "pip-chill",
             "pipdeptree",
         ],
-        "test": ["coverage", "parameterized", "tox"],
+        "test": ["coverage", "parameterized"],
     },
     zip_safe=False,
 )

@@ -32,7 +32,6 @@ dev = [
     "coverage",
     "parameterized",
     "ruff",
-    "tox",
 ]
 debug = [
     "build",

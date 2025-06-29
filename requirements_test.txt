@@ -4,4 +4,3 @@
 # Install test dependencies
 coverage
 parameterized
-tox

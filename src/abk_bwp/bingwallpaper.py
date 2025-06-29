@@ -22,12 +22,12 @@ from sys import platform as _platform
 from typing import Any
 from xmlrpc.client import ResponseError
 
-import reactivex as rx
 
 # Third party imports
 import requests
 from colorama import Fore, Style
 from PIL import Image, ImageDraw, ImageFont
+import reactivex as rx
 from reactivex import operators as ops
 from reactivex.scheduler import ThreadPoolScheduler
 
