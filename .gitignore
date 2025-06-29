@@ -46,3 +46,4 @@ abk_bwp/com.alexberger.bingwallpaper.sh.plist
 # exclude secrets
 **/*secrets.*
 abk_bwp/ftv_uploaded_image_files.json
+test_frameconnect/
