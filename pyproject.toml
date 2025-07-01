@@ -1,6 +1,6 @@
 [project]
 name = "abk_bwp"
-version = "0.1.0"
+version = "0.1.1"
 description = "Downloads daily Bing images and sets them as desktop wallpaper"
 readme = "README.md"
 requires-python = ">=3.12"
