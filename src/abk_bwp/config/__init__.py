@@ -51,5 +51,6 @@ class FTV_KW(Enum):
 
     FTV = "ftv"
     ENABLED = "enabled"
+    USB_MODE = "usb_mode"
     JPG_QUALITY = "jpg_quality"
     FTV_DATA = "ftv_data"

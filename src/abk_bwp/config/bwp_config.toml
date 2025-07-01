@@ -24,7 +24,7 @@ number_of_images_to_keep = 365
 retain_images = true
 
 # -----------------------------------------------------------------------------
-# peapix is prefered service, since it allows to download better images from different contries
+# peapix is preferred service, since it allows to download better images from different countries
 # -----------------------------------------------------------------------------
 dl_service = "peapix"
 
@@ -98,6 +98,12 @@ bing_url = "http://www.bing.com/HPImageArchive.aspx"
 # if true, images for each day will be produced and pushed to Samsung Frame TV. This is still WIP, though!
 # -----------------------------------------------------------------------------
 enabled = false
+
+# -----------------------------------------------------------------------------
+# if true - images will be copied to ftv_images_today folder (USB mass storage mode for Raspberry Pi)
+# if false - images will be uploaded via HTTP/WebSocket (current implementation)
+# -----------------------------------------------------------------------------
+usb_mode = true
 
 # -----------------------------------------------------------------------------
 # 70-100. JPEG quality used when resizing to Samsung Frame TV size (3810x2160).

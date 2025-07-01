@@ -21,6 +21,7 @@ from samsungtvws import SamsungTVWS
 
 # local imports
 from abk_bwp import abk_common
+from abk_bwp.config import FTV_KW, bwp_config
 
 
 # -----------------------------------------------------------------------------
@@ -715,8 +716,18 @@ class FTV:
         Returns:
             bool: True if the daily images were changed, False otherwise
         """
+        # Check USB mode setting
+        usb_mode = bwp_config.get(FTV_KW.FTV.value, {}).get(FTV_KW.USB_MODE.value, False)
+        
+        if usb_mode:
+            self._logger.info("FTV USB mode enabled - images are already prepared in ftv_images_today directory")
+            self._logger.info("Images will be available to Frame TV via USB mass storage")
+            self._logger.info(f"Processed {len(image_list)} images for USB mass storage")
+            return len(image_list) > 0
+        
+        # HTTP mode - use existing upload logic
         success_count = 0
-        self._logger.info(f"Starting FTV daily image update for {len(self.ftvs)} TV(s)...")
+        self._logger.info(f"Starting FTV HTTP upload for {len(self.ftvs)} TV(s)...")
         self._logger.info(f"Images to process: {image_list}")
 
         for tv_name in self.ftvs:
@@ -751,7 +762,7 @@ class FTV:
                 self._logger.error(f"[{tv_name}]: Error during image update: {exc}")
 
         self._logger.info(
-            f"FTV daily image update completed. Success: {success_count}/{len(self.ftvs)} TVs"
+            f"FTV HTTP upload completed. Success: {success_count}/{len(self.ftvs)} TVs"
         )
         return success_count > 0
 
