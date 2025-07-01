@@ -107,3 +107,13 @@ The project contains com.abk.bingwallpaper_debug.sh.plist file, which can be use
 - [x] Linux latest / Python 3.12.x, 3.13.x
 - [x] MacOS latest / Python 3.12.x, 3.131.x
 - [x] Windows latest / Python 3.12.x, 3.13.x
+
+
+## Git branch rename from master to main
+To simplify my tooling setup, I renmaed the default branch from <code>master</code> to <code>main</code>. If you cloned this repo before that change please do following:
+```shell
+git branch -m master main
+git fetch origin
+git branch -u origin/main main
+git remote set-head origin -a
+```
