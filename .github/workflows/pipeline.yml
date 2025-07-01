@@ -3,7 +3,19 @@ name: BingWallPaper
 on:
     push:
         branches:
-            - master
+            - main
+        tags:
+            - 'rel-patch'
+            - 'rel-minor'
+            - 'rel-major'
+
+permissions:
+    contents: write  # Needed for handle-release-tags job to push tags
+
+# Prevent duplicate runs - prioritize by commit SHA
+concurrency:
+    group: ${{ github.workflow }}-${{ github.sha }}
+    cancel-in-progress: true
 
 env:
     ENV: prod
@@ -19,7 +31,7 @@ jobs:
               with:
                 args: check
 
-    build:
+    unit-tests:
         name: Run on ${{ matrix.py }} - ${{ matrix.os }}
         needs: ruff
         runs-on: ${{ matrix.os }}-latest
@@ -69,3 +81,19 @@ jobs:
                 files: ./coverage.xml
                 flags: unittests
                 name: codecov-coverage
+
+    handle-release-tags:
+        name: Handle Release Tags
+        needs: [ruff, unit-tests]
+        runs-on: ubuntu-latest
+        if: always() && !cancelled()  # Run whether tests pass or fail, but not if cancelled due to concurrency
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+              with:
+                fetch-depth: 0
+                token: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
+                persist-credentials: true
+
+            - name: Handle release tags
+              run: ./.github/scripts/handle_release_tags.sh "${{ needs.ruff.result }}" "${{ needs.unit-tests.result }}" "${{ github.ref_name }}"
