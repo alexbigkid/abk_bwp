@@ -17,6 +17,7 @@ dependencies = [
     { name = "tomlkit" },
     { name = "urllib3" },
     { name = "wakeonlan" },
+    { name = "websocket-client" },
 ]
 
 [package.dev-dependencies]
@@ -49,6 +50,7 @@ requires-dist = [
     { name = "tomlkit" },
     { name = "urllib3" },
     { name = "wakeonlan" },
+    { name = "websocket-client", specifier = ">=1.8.0" },
 ]
 
 [package.metadata.requires-dev]

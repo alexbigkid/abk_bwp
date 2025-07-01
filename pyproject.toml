@@ -23,6 +23,7 @@ dependencies = [
     "tomlkit",
     "urllib3",
     "wakeonlan",
+    "websocket-client>=1.8.0",
 ]
 
 
@@ -48,6 +49,7 @@ debug = [
 
 [project.scripts]
 bwp = "abk_bwp.cli:main"
+ftv-auth = "abk_bwp.config.frame_tv_authenticator:main"
 test = "unittest:main"
 
 

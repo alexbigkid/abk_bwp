@@ -94,3 +94,14 @@ Uses `pyproject.toml` with hatchling build backend. The project is managed with 
   - Connects to Samsung FrameTV
   - Deletes user-defined images from FrameTV
   - Uploads new images for the current day to FrameTV
+
+## Configuration Design Philosophy
+
+- To automate the whole system we should not hard code IP addresses ports or mac addresses. This kind of data configuration should be stored in a file. I created @src/abk_bwp/config/bwp_config.toml where there is a section [ftv] which has setting ftv_data, which gives you the file where the settings for FrameTV are configured.
+
+## Future Development Plans for Samsung Frame TV Integration
+
+- Lets get the node.js samsung-frame-connect library working first
+- If it works we can Enhance existing samsung-tv-ws-api with working upload methods
+- We can fork the samsung-tv-ws-api, enhance it, and create our own library
+- Integrate with the current BWP framework

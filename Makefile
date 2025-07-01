@@ -11,6 +11,9 @@ ftv_enable:
 ftv_disable:
 	cd $(BWP_HOME) && uv run abk_config.py -f disable
 
+ftv_auth:
+	cd $(BWP_HOME)/config && uv run frame_tv_authenticator.py
+
 desktop_enable:
 	cd $(BWP_HOME) && uv run abk_config.py -d enable
 
