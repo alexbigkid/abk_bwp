@@ -102,18 +102,28 @@ class TestAbkConfig(unittest.TestCase):
             desktop_img_enabled (bool): desktop image enabled
             exp_desktop_img_enabled (bool): expected desktop image enabled
         """
-        func_to_call = ("uninstall", "install")[exp_desktop_img_enabled]
+        # Automation setup is now controlled by img_auto_fetch, not desktop_img
+        # For this test, we'll set img_auto_fetch to match the expected behavior
+        img_auto_fetch_enabled = exp_desktop_img_enabled
+        # func_to_call = ("uninstall", "install")[img_auto_fetch_enabled]
+
         with (
-            patch.dict(config.bwp_config, {"desktop_img": {"enabled": desktop_img_enabled}}),
+            patch.dict(
+                config.bwp_config,
+                {
+                    "desktop_img": {"enabled": desktop_img_enabled},
+                    "img_auto_fetch": img_auto_fetch_enabled,
+                },
+            ),
             patch("abk_bwp.abk_config.update_enable_field_in_toml_file") as mock_update_enable,
-            patch(f"abk_bwp.{func_to_call}.bwp_{func_to_call}") as mock_bwp_install_uninstall,
+            patch("abk_bwp.abk_config._handle_automation_setup") as mock_automation_setup,
         ):
             abk_config.handle_desktop_auto_update_option(desktop_img_input)
         mock_update_enable.assert_called_once_with(
             key_to_update=config.DESKTOP_IMG_KW.DESKTOP_IMG.value,
             update_to=exp_desktop_img_enabled,
         )
-        mock_bwp_install_uninstall.assert_called_once_with()
+        mock_automation_setup.assert_called_once_with()
         self.assertTrue(desktop_img_enabled != exp_desktop_img_enabled)
 
     @parameterized.expand(
@@ -149,6 +159,71 @@ class TestAbkConfig(unittest.TestCase):
             abk_config.handle_desktop_auto_update_option(desktop_img_input)
         mock_update_enable.assert_not_called()
         self.assertTrue(desktop_img_enabled == exp_desktop_img_enabled)
+
+    @parameterized.expand(
+        [
+            # input         img_auto_fetch config   # result
+            ["enable", False, True],
+            ["disable", True, False],
+        ]
+    )
+    def test__handle_img_auto_fetch_option__calls_update_root_field_in_toml_file(
+        self,
+        img_auto_fetch_input: str | None,
+        img_auto_fetch_enabled: bool,
+        exp_img_auto_fetch_enabled: bool,
+    ) -> None:
+        """test__handle_img_auto_fetch_option__calls_update_root_field_in_toml_file.
+
+        Args:
+            img_auto_fetch_input (Union[str, None]): img auto fetch input
+            img_auto_fetch_enabled (bool): img auto fetch enabled
+            exp_img_auto_fetch_enabled (bool): expected img auto fetch enabled
+        """
+        # func_to_call = ("uninstall", "install")[exp_img_auto_fetch_enabled]
+
+        with (
+            patch.dict(config.bwp_config, {"img_auto_fetch": img_auto_fetch_enabled}),
+            patch("abk_bwp.abk_config.update_root_field_in_toml_file") as mock_update_root,
+            patch("abk_bwp.abk_config._handle_automation_setup") as mock_automation_setup,
+        ):
+            abk_config.handle_img_auto_fetch_option(img_auto_fetch_input)
+        mock_update_root.assert_called_once_with(
+            key_to_update=config.ROOT_KW.IMG_AUTO_FETCH.value,
+            update_to=exp_img_auto_fetch_enabled,
+        )
+        mock_automation_setup.assert_called_once_with()
+        self.assertTrue(img_auto_fetch_enabled != exp_img_auto_fetch_enabled)
+
+    @parameterized.expand(
+        [
+            # input    img_auto_fetch config   # result
+            ["enable", True, True],
+            ["disable", False, False],
+            [None, False, False],
+            [None, True, True],
+        ]
+    )
+    def test__handle_img_auto_fetch_option__does_not_call_update_root_field_in_toml_file(
+        self,
+        img_auto_fetch_input: str | None,
+        img_auto_fetch_enabled: bool,
+        exp_img_auto_fetch_enabled: bool,
+    ) -> None:
+        """test__handle_img_auto_fetch_option__does_not_call_update_root_field_in_toml_file.
+
+        Args:
+            img_auto_fetch_input (Union[str, None]): img auto fetch input
+            img_auto_fetch_enabled (bool): img auto fetch enabled
+            exp_img_auto_fetch_enabled (bool): expected img auto fetch enabled
+        """
+        with (
+            patch.dict(config.bwp_config, {"img_auto_fetch": img_auto_fetch_enabled}),
+            patch("abk_bwp.abk_config.update_root_field_in_toml_file") as mock_update_root,
+        ):
+            abk_config.handle_img_auto_fetch_option(img_auto_fetch_input)
+        mock_update_root.assert_not_called()
+        self.assertTrue(img_auto_fetch_enabled == exp_img_auto_fetch_enabled)
 
 
 class TestAbkBwp(unittest.TestCase):

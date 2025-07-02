@@ -288,10 +288,10 @@ class InstallOnLinux(IInstallBase):
         # Get current crontab
         try:
             result = subprocess.run(
-                ["crontab", "-l"],
+                ["crontab", "-l"],  # noqa: S607
                 capture_output=True,
                 text=True,
-                check=False,  # noqa: S607
+                check=False,
             )
             current_crontab = result.stdout if result.returncode == 0 else ""
         except Exception as exc:

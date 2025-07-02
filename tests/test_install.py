@@ -395,12 +395,19 @@ class TestInstallOnLinux(unittest.TestCase):
     # -------------------------------------------------------------------------
     # InstallOnLinux.setup_installation
     # -------------------------------------------------------------------------
-    def test_install_on_linux_setup_installation_logs_correct_message(self):
+    @mock.patch("subprocess.run")
+    def test_install_on_linux_setup_installation_logs_correct_message(self, mock_subprocess):
         """Test test_install_on_linux_setup_installation_logs_correct_message."""
         # Arrange
         # ----------------------------------
         mock_logger = mock.Mock()
         installer = InstallOnLinux(mock_logger)
+
+        # Mock subprocess calls for cron operations
+        mock_subprocess.side_effect = [
+            mock.Mock(returncode=0, stdout=""),  # crontab -l (empty crontab)
+            mock.Mock(returncode=0),  # crontab - (install new crontab)
+        ]
 
         # Act
         # ----------------------------------
@@ -409,7 +416,14 @@ class TestInstallOnLinux(unittest.TestCase):
         # Assert
         # ----------------------------------
         self.assertEqual(installer.os_type, abk_common.OsType.LINUX_OS)
-        mock_logger.info.assert_any_call("Linux installation is not supported yet")
+        # Linux installation now creates cron jobs - verify automation setup message
+        found_message = False
+        for call in mock_logger.info.call_args_list:
+            args = call[0]
+            if len(args) > 0 and "Linux cron job created for BWP automation" in args[0]:
+                found_message = True
+                break
+        self.assertTrue(found_message, "Expected Linux cron job creation message not found")
 
 
 # =============================================================================

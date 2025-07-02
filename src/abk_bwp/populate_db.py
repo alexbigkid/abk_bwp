@@ -11,6 +11,7 @@ DB_CSV_FILE = "db.csv"
 
 def main():
     """Main function to create initial values."""
+    conn = None
     try:
         # Connect to SQLite database (or create it if it doesn't exist)
         conn = sqlite3.connect(DB_BWP_FILE_NAME)
@@ -57,7 +58,8 @@ def main():
         # Commit changes
         conn.commit()
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
     print(f"Inserted {len(rows)} rows into the '{DB_BWP_TABLE}' table.")
 

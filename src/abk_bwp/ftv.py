@@ -631,10 +631,10 @@ class FTV:
 
             # Step 1: Remove USB mass storage module (simulates USB removal)
             result = subprocess.run(
-                ["sudo", "rmmod", "g_mass_storage"],
+                ["sudo", "rmmod", "g_mass_storage"],  # noqa: S607
                 capture_output=True,
                 text=True,
-                check=False,  # noqa: S607
+                check=False,
             )
             if result.returncode != 0:
                 self._logger.debug(f"rmmod result: {result.stderr}")
