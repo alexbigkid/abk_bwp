@@ -4,6 +4,7 @@ on:
     push:
         branches:
             - main
+            - rpi
         tags:
             - 'rel-patch'
             - 'rel-minor'
