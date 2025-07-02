@@ -102,7 +102,7 @@ class TestPopulateDbMain(unittest.TestCase):
 
         # Act & Assert
         with self.assertRaises(ValueError) as context:
-            populate_db.main()
+            populate_db.main(verbose=False)
 
         self.assertEqual(str(context.exception), "CSV file is empty or missing headers")
         mock_conn.close.assert_called_once()
@@ -128,7 +128,7 @@ class TestPopulateDbMain(unittest.TestCase):
 
         # Act
         with patch("builtins.print") as mock_print:
-            populate_db.main()
+            populate_db.main()  # Use default verbose=True to test print statement
 
         # Assert
         mock_cursor.execute.assert_called_once()  # CREATE TABLE only
@@ -148,7 +148,7 @@ class TestPopulateDbMain(unittest.TestCase):
 
         # Act & Assert
         with self.assertRaises(sqlite3.Error):
-            populate_db.main()
+            populate_db.main(verbose=False)
 
     # -------------------------------------------------------------------------
     # Test CSV file reading failure
@@ -163,7 +163,7 @@ class TestPopulateDbMain(unittest.TestCase):
 
         # Act & Assert
         with self.assertRaises(FileNotFoundError):
-            populate_db.main()
+            populate_db.main(verbose=False)
 
         # Verify connection is still closed in finally block
         mock_conn.close.assert_called_once()
@@ -201,7 +201,7 @@ class TestPopulateDbMain(unittest.TestCase):
         mock_conn.cursor.return_value = mock_cursor
 
         # Act
-        populate_db.main()
+        populate_db.main(verbose=False)
 
         # Assert - Verify CREATE TABLE handles pageId as PRIMARY KEY
         create_table_call = mock_cursor.execute.call_args_list[0]
@@ -242,7 +242,7 @@ class TestPopulateDbMain(unittest.TestCase):
         mock_conn.cursor.return_value = mock_cursor
 
         # Act
-        populate_db.main()
+        populate_db.main(verbose=False)
 
         # Assert - pageId should be converted to int, others remain strings
         expected_rows = [(54321, "DE", "2024-02-15", "http://example.de")]
@@ -282,7 +282,7 @@ class TestPopulateDbMain(unittest.TestCase):
         mock_conn.cursor.return_value = mock_cursor
 
         # Act
-        populate_db.main()
+        populate_db.main(verbose=False)
 
         # Assert - Verify executemany is used with parameterized query
         executemany_call = mock_cursor.executemany.call_args

@@ -9,9 +9,14 @@ from abk_bwp.db import DB_BWP_FILE_NAME, DB_BWP_TABLE, DBColumns
 DB_CSV_FILE = "db.csv"
 
 
-def main():
-    """Main function to create initial values."""
+def main(verbose: bool = True):
+    """Main function to create initial values.
+    
+    Args:
+        verbose: If True, print insertion statistics
+    """
     conn = None
+    rows = []
     try:
         # Connect to SQLite database (or create it if it doesn't exist)
         conn = sqlite3.connect(DB_BWP_FILE_NAME)
@@ -39,7 +44,6 @@ def main():
             cur.execute(create_stmt)
 
             # Prepare rows
-            rows = []
             for row in reader:
                 values = [
                     int(row[name]) if name == DBColumns.PAGE_ID.value else row[name]
@@ -61,7 +65,8 @@ def main():
         if conn:
             conn.close()
 
-    print(f"Inserted {len(rows)} rows into the '{DB_BWP_TABLE}' table.")
+    if verbose:
+        print(f"Inserted {len(rows)} rows into the '{DB_BWP_TABLE}' table.")
 
 
 if __name__ == "__main__":

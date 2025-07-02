@@ -19,14 +19,15 @@ dependencies = [
     "PyYAML",
     "reactivex>=4.0.4",
     "requests",
-    "samsungtvws[async,encrypted]",
     "tomlkit",
     "urllib3",
     "wakeonlan",
 ]
 
+[project.optional-dependencies]
+# Frame TV HTTP mode support (not needed for USB mode)
+frametv = ["samsungtvws[async,encrypted]"]
 
-# [project.optional-dependencies]
 [dependency-groups]
 dev = [
     "coverage",

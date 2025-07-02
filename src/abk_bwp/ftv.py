@@ -7,14 +7,22 @@ import json
 import os
 import logging
 import time
-from typing import NamedTuple
+from typing import NamedTuple, Any
 import wakeonlan
 
 import tomllib  # type: ignore
 
 # Third party imports
 from jsonschema import validate, exceptions
-from samsungtvws import SamsungTVWS
+
+# Optional Samsung TV import (only needed for HTTP mode, not USB mode)
+try:
+    from samsungtvws import SamsungTVWS
+
+    SAMSUNGTVWS_AVAILABLE = True
+except ImportError:
+    SamsungTVWS = None
+    SAMSUNGTVWS_AVAILABLE = False
 # from samsungtvws.remote import SamsungTVWS
 # from samsungtvws.art import SamsungTVArt
 # from samsungtvws import SamsungTVArt
@@ -50,7 +58,7 @@ class FTVData(NamedTuple):
 class FTVSetting:
     """FTV - Frame TV setting."""
 
-    ftv: SamsungTVWS
+    ftv: Any  # Type annotation that works with optional imports
     img_rate: int
     mac_addr: str
     reachable: bool = False
@@ -176,6 +184,20 @@ class FTV:
     def _load_ftv_settings(self) -> dict:
         """Load Frame TV settings from file."""
         ftv_settings = {}
+
+        # Check if we're in USB mode - if so, no need for samsungtvws
+        from abk_bwp import bingwallpaper
+
+        if bingwallpaper.bwp_config.get("ftv", {}).get("usb_mode", False):
+            self._logger.info("USB mode enabled - skipping Samsung TV HTTP setup")
+            return ftv_settings
+
+        # Check if samsungtvws is available for HTTP mode
+        if not SAMSUNGTVWS_AVAILABLE:
+            raise ImportError(
+                "samsungtvws library is required for Frame TV HTTP mode. "
+                "Install with: uv sync --extra frametv"
+            )
         try:
             ftv_config_name = os.path.join(
                 os.path.dirname(__file__), "config", self._ftv_data_file
@@ -201,9 +223,10 @@ class FTV:
                 self._logger.debug(f"{ftv_name = }, {api_token = }")
 
                 # Create SamsungTVWS instance with proper authentication
+                # At this point we know SamsungTVWS is available due to check above
                 if api_token and os.path.isfile(api_token_full_file_name):
                     # Use token file if available
-                    ftv = SamsungTVWS(
+                    ftv = SamsungTVWS(  # type: ignore
                         host=ip_addr,
                         port=port,
                         token_file=api_token_full_file_name,
@@ -212,12 +235,12 @@ class FTV:
                     )
                 elif api_token:
                     # Use token string directly
-                    ftv = SamsungTVWS(
+                    ftv = SamsungTVWS(  # type: ignore
                         host=ip_addr, port=port, token=api_token, timeout=10, name=ftv_name
                     )
                 else:
                     # No authentication - may require manual pairing
-                    ftv = SamsungTVWS(host=ip_addr, port=port, timeout=10, name=ftv_name)
+                    ftv = SamsungTVWS(host=ip_addr, port=port, timeout=10, name=ftv_name)  # type: ignore
 
                 ftv_settings[ftv_name] = FTVSetting(ftv=ftv, img_rate=img_rate, mac_addr=mac_addr)
         except Exception as exc:

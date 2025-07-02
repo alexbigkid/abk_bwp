@@ -33,7 +33,11 @@ cd abk_bwp
 ```
 - install Python dependencies
 ```bash
+# For basic functionality (USB mode)
 uv sync
+
+# For Frame TV HTTP mode (requires Samsung TV network connection)
+uv sync --extra frametv
 ```
 - and run:
 ```bash
