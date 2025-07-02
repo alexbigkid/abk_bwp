@@ -611,6 +611,70 @@ class FTV:
         return deleted_images
 
     @abk_common.function_trace
+    def _remount_usb_storage_for_tv(self) -> bool:
+        """Remount USB storage to trigger Frame TV detection on Raspberry Pi.
+
+        This method simulates USB device removal and insertion by:
+        1. Removing the g_mass_storage kernel module
+        2. Re-loading it after a brief pause
+
+        This triggers the Samsung Frame TV to detect new images.
+
+        Returns:
+            bool: True if remount successful, False otherwise
+        """
+        import subprocess  # noqa: S404
+        import time
+
+        try:
+            self._logger.debug("Starting USB mass storage remount sequence...")
+
+            # Step 1: Remove USB mass storage module (simulates USB removal)
+            result = subprocess.run(
+                ["sudo", "rmmod", "g_mass_storage"],
+                capture_output=True,
+                text=True,
+                check=False,  # noqa: S607
+            )
+            if result.returncode != 0:
+                self._logger.debug(f"rmmod result: {result.stderr}")
+
+            # Step 2: Wait for system to process removal
+            time.sleep(2)
+
+            # Step 3: Re-load USB mass storage module (simulates USB insertion)
+            usb_storage_file = "/home/pi/ftv_storage.img"
+
+            subprocess.run(  # noqa: S603
+                [  # noqa: S607
+                    "sudo",
+                    "modprobe",
+                    "g_mass_storage",
+                    f"file={usb_storage_file}",
+                    "stall=0",
+                    "removable=1",
+                ],
+                check=True,
+            )
+
+            self._logger.debug("USB mass storage module reloaded successfully")
+
+            # Step 4: Brief pause to allow system to recognize device
+            time.sleep(1)
+
+            return True
+
+        except subprocess.CalledProcessError as e:
+            self._logger.error(f"Failed to remount USB storage: {e}")
+            return False
+        except FileNotFoundError:
+            self._logger.error("sudo or modprobe command not found - not running on Linux?")
+            return False
+        except Exception as e:
+            self._logger.error(f"Unexpected error during USB remount: {e}")
+            return False
+
+    @abk_common.function_trace
     def _list_available_filters(self, tv_name: str) -> list:
         """List available photo filters on Frame TV.
 
@@ -723,7 +787,25 @@ class FTV:
             self._logger.info(
                 "FTV USB mode enabled - images are already prepared in ftv_images_today directory"
             )
-            self._logger.info("Images will be available to Frame TV via USB mass storage")
+
+            # Check if running on Linux (Raspberry Pi)
+            import platform
+
+            if platform.system().lower() == "linux":
+                self._logger.info(
+                    "Linux detected - triggering USB remount for Frame TV detection"
+                )
+                if self._remount_usb_storage_for_tv():
+                    self._logger.info(
+                        "USB remount successful - Frame TV should detect new images"
+                    )
+                else:
+                    self._logger.warning(
+                        "USB remount failed - Frame TV may not detect new images"
+                    )
+            else:
+                self._logger.info("Images will be available to Frame TV via USB mass storage")
+
             self._logger.info(f"Processed {len(image_list)} images for USB mass storage")
             return len(image_list) > 0
 

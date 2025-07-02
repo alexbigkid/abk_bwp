@@ -54,6 +54,12 @@ class CommandLineOptions:
             help="[enable, disable] Frame TV auto update",
         )
         parser.add_argument(
+            "-i",
+            "--img_auto_fetch",
+            choices=["enable", "disable"],
+            help="[enable, disable] automated image download scheduling",
+        )
+        parser.add_argument(
             "-l", "--log_into_file", action="store_true", help="Log into logs/bingwallpaper.log"
         )
         parser.add_argument("-q", "--quiet", action="store_true", help="Suppresses all logs")

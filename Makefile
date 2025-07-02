@@ -1,4 +1,4 @@
-.PHONY:	upgrade_setuptools install install_dev install_nth test test_v test_ff test_vff settings help
+.PHONY:	upgrade_setuptools install install_dev install_nth test test_v test_ff test_vff settings help img_auto_fetch_enable img_auto_fetch_disable
 .SILENT: clean
 BWP_HOME = src/abk_bwp
 
@@ -16,6 +16,12 @@ desktop_enable:
 
 desktop_disable:
 	cd $(BWP_HOME) && uv run abk_config.py -d disable
+
+img_auto_fetch_enable:
+	cd $(BWP_HOME) && uv run abk_config.py -i enable
+
+img_auto_fetch_disable:
+	cd $(BWP_HOME) && uv run abk_config.py -i disable
 
 quiet:
 	uv run bwp -q
@@ -150,22 +156,24 @@ settings:
 help:
 	@echo "Targets:"
 	@echo "--------------------------------------------------------------------------------"
-	@echo "  bwp                - executes the abk_bwp with traces in console"
-	@echo "  quiet              - executes the abk_bwp in quiet mode (no logs)"
-	@echo "  log                - executes the abk_bwp with logging into a file: logs/bingwallpaper.log"
-	@echo "  desktop_enable     - enables auto download (time configured in bwp_config.toml)"
-	@echo "  desktop_disable    - disables auto download (time configured in bwp_config.toml)"
-	@echo "  ftv_enable         - WIP: enables Samsung frame TV support (Not working yet)"
-	@echo "  ftv_disable        - WIP: disables Samsung frame TV support (Not working yet)"
-	@echo "  install            - installs required packages"
-	@echo "  install_debug      - installs required packages for debug session"
-	@echo "  test               - runs test"
-	@echo "  test_v             - runs test with verbose messaging"
-	@echo "  test_ff            - runs test fast fail"
-	@echo "  test_vff           - runs test fast fail with verbose messaging"
+	@echo "  bwp                	- executes the abk_bwp with traces in console"
+	@echo "  quiet              	- executes the abk_bwp in quiet mode (no logs)"
+	@echo "  log                	- executes the abk_bwp with logging into a file: logs/bingwallpaper.log"
+	@echo "  desktop_enable     	- enables desktop background setting feature"
+	@echo "  desktop_disable    	- disables desktop background setting feature"
+	@echo "  img_auto_fetch_enable  - enables automated image download scheduling"
+	@echo "  img_auto_fetch_disable - disables automated image download scheduling"
+	@echo "  ftv_enable         	- enables Samsung Frame TV support"
+	@echo "  ftv_disable        	- disables Samsung Frame TV support"
+	@echo "  install            	- installs required packages"
+	@echo "  install_debug      	- installs required packages for debug session"
+	@echo "  test               	- runs test"
+	@echo "  test_v             	- runs test with verbose messaging"
+	@echo "  test_ff            	- runs test fast fail"
+	@echo "  test_vff           	- runs test fast fail with verbose messaging"
 	@echo "  test_1 <file.class.test> - runs a single test"
-	@echo "  coverage           - runs test, produces coverage and displays it"
-	@echo "  clean              - cleans some auto generated build files"
+	@echo "  coverage           	- runs test, produces coverage and displays it"
+	@echo "  clean              	- cleans some auto generated build files"
 	@echo "--------------------------------------------------------------------------------"
 	@echo "  settings           - outputs current settings"
 	@echo "  help               - outputs this info"

@@ -54,6 +54,23 @@ def update_enable_field_in_toml_file(key_to_update: str, update_to: bool) -> Non
 
 
 @abk_common.function_trace
+def update_root_field_in_toml_file(key_to_update: str, update_to: bool) -> None:
+    """Updates root-level field in config file.
+
+    Args:
+        key_to_update (str): root-level key to update
+        update_to (bool): True to enable, False to disable
+    """
+    logger.debug(f"{key_to_update=}: {update_to=}")
+    config_toml_file_name = os.path.join(os.path.dirname(__file__), BWP_CONFIG_RELATIVE_PATH)
+    with open(config_toml_file_name, encoding="utf-8") as read_fh:
+        config_data = tomlkit.load(read_fh)
+        config_data[key_to_update] = update_to  # type: ignore
+    with open(config_toml_file_name, mode="w", encoding="utf-8") as write_fh:
+        tomlkit.dump(config_data, write_fh)
+
+
+@abk_common.function_trace
 def handle_desktop_auto_update_option(enable_option: str | None) -> None:
     """Handles request to enable/disable auto update desktop image feature.
 
@@ -75,12 +92,31 @@ def handle_desktop_auto_update_option(enable_option: str | None) -> None:
 @abk_common.function_trace
 def _handle_automation_setup() -> None:
     """Handles automation setup based on auto_img_fetch setting."""
-    auto_fetch_enabled = bwp_config.get(ROOT_KW.AUTO_IMG_FETCH.value, False)
+    auto_fetch_enabled = bwp_config.get(ROOT_KW.IMG_AUTO_FETCH.value, False)
 
     if auto_fetch_enabled:
         install.bwp_install()
     else:
         uninstall.bwp_uninstall()
+
+
+@abk_common.function_trace
+def handle_img_auto_fetch_option(enable_option: str | None) -> None:
+    """Handles request to enable/disable automated image download scheduling.
+
+    Args:
+        enable_option (Union[str, None]): enable, disable or None
+    """
+    if enable_option is None:
+        return
+    if (enable := enable_option == BWP_ENABLE) or enable_option == BWP_DISABLE:
+        is_enabled = bwp_config.get(ROOT_KW.IMG_AUTO_FETCH.value, False)
+        if is_enabled != enable:
+            update_root_field_in_toml_file(
+                key_to_update=ROOT_KW.IMG_AUTO_FETCH.value, update_to=enable
+            )
+            # Automation setup is controlled by img_auto_fetch
+            _handle_automation_setup()
 
 
 @abk_common.function_trace
@@ -106,6 +142,7 @@ def abk_bwp(clo: clo.CommandLineOptions) -> None:
         logger.debug(f"{clo._args=}")
         handle_desktop_auto_update_option(clo.options.desktop_auto_update)
         handle_ftv_option(clo.options.frame_tv)
+        handle_img_auto_fetch_option(clo.options.img_auto_fetch)
     except Exception as exception:
         logger.error(f"{Fore.RED}ERROR: executing bingwallpaper")
         logger.exception(f"EXCEPTION: {exception}{Style.RESET_ALL}")

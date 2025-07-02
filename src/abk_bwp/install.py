@@ -288,7 +288,10 @@ class InstallOnLinux(IInstallBase):
         # Get current crontab
         try:
             result = subprocess.run(
-                ["crontab", "-l"], capture_output=True, text=True, check=False
+                ["crontab", "-l"],
+                capture_output=True,
+                text=True,
+                check=False,  # noqa: S607
             )
             current_crontab = result.stdout if result.returncode == 0 else ""
         except Exception as exc:
@@ -304,14 +307,11 @@ class InstallOnLinux(IInstallBase):
             current_crontab = "\n".join(filtered_lines).strip()
 
         # Add new cron entry
-        if current_crontab:
-            new_crontab = current_crontab + "\n" + cron_entry
-        else:
-            new_crontab = cron_entry
+        new_crontab = current_crontab + "\n" + cron_entry if current_crontab else cron_entry
 
         # Install new crontab
         try:
-            subprocess.run(["crontab", "-"], input=new_crontab, text=True, check=True)
+            subprocess.run(["crontab", "-"], input=new_crontab, text=True, check=True)  # noqa: S607
             self._logger.info(f"Cron job installed: {cron_entry}")
         except subprocess.CalledProcessError as exc:
             self._logger.error(f"Failed to install cron job: {exc}")
