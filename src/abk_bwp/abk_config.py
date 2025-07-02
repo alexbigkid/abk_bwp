@@ -10,7 +10,7 @@ from colorama import Fore, Style
 
 # Local imports
 from abk_bwp import abk_common, clo, install, uninstall
-from abk_bwp.config import DESKTOP_IMG_KW, FTV_KW, bwp_config
+from abk_bwp.config import DESKTOP_IMG_KW, FTV_KW, ROOT_KW, bwp_config
 from abk_bwp.lazy_logger import LazyLoggerProxy
 
 
@@ -68,10 +68,19 @@ def handle_desktop_auto_update_option(enable_option: str | None) -> None:
             update_enable_field_in_toml_file(
                 key_to_update=DESKTOP_IMG_KW.DESKTOP_IMG.value, update_to=enable
             )
-            if enable:
-                install.bwp_install()
-            else:
-                uninstall.bwp_uninstall()
+            # Automation setup is now controlled by auto_img_fetch, not desktop_img
+            _handle_automation_setup()
+
+
+@abk_common.function_trace
+def _handle_automation_setup() -> None:
+    """Handles automation setup based on auto_img_fetch setting."""
+    auto_fetch_enabled = bwp_config.get(ROOT_KW.AUTO_IMG_FETCH.value, False)
+
+    if auto_fetch_enabled:
+        install.bwp_install()
+    else:
+        uninstall.bwp_uninstall()
 
 
 @abk_common.function_trace

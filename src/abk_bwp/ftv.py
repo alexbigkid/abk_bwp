@@ -718,13 +718,15 @@ class FTV:
         """
         # Check USB mode setting
         usb_mode = bwp_config.get(FTV_KW.FTV.value, {}).get(FTV_KW.USB_MODE.value, False)
-        
+
         if usb_mode:
-            self._logger.info("FTV USB mode enabled - images are already prepared in ftv_images_today directory")
+            self._logger.info(
+                "FTV USB mode enabled - images are already prepared in ftv_images_today directory"
+            )
             self._logger.info("Images will be available to Frame TV via USB mass storage")
             self._logger.info(f"Processed {len(image_list)} images for USB mass storage")
             return len(image_list) > 0
-        
+
         # HTTP mode - use existing upload logic
         success_count = 0
         self._logger.info(f"Starting FTV HTTP upload for {len(self.ftvs)} TV(s)...")

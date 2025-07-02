@@ -14,6 +14,7 @@ with bwp_file_name.open(mode="rb") as file_handler:
 class ROOT_KW(Enum):
     """Loads root level key words."""
 
+    AUTO_IMG_FETCH = "auto_img_fetch"
     TIME_TO_FETCH = "time_to_fetch"
     IMAGE_DIR = "image_dir"
     STORE_JPG_QUALITY = "store_jpg_quality"

@@ -259,7 +259,63 @@ class InstallOnLinux(IInstallBase):
     @abk_common.function_trace
     def setup_installation(self) -> None:
         """Setup installation on Linux."""
-        self._logger.info(f"{self.os_type.value} installation is not supported yet")
+        time_to_exe: time = bwp_config.get(
+            ROOT_KW.TIME_TO_FETCH.value, datetime.strptime("12:00:00", "%H:%M:%S").time()
+        )
+
+        self._logger.debug(
+            f"{time_to_exe.hour = }, {time_to_exe.minute = }, {time_to_exe.second = }"
+        )
+
+        # Create cron job for Linux automation
+        self._create_cron_job(time_to_exe, self.shell_file_name)
+        self._logger.info(f"Linux cron job created for BWP automation at {time_to_exe}")
+
+    @abk_common.function_trace
+    def _create_cron_job(self, time_to_exe: time, script_name: str) -> None:
+        """Creates cron job for Linux automation.
+
+        Args:
+            time_to_exe (time): time to execute the download of the bing image
+            script_name (str): script name to execute
+        """
+        current_path = os.path.dirname(__file__)
+        full_script_name = os.path.join(current_path, script_name)
+
+        # Create cron entry: minute hour * * * command
+        cron_entry = f"{time_to_exe.minute} {time_to_exe.hour} * * * {full_script_name}"
+
+        # Get current crontab
+        try:
+            result = subprocess.run(
+                ["crontab", "-l"], capture_output=True, text=True, check=False
+            )
+            current_crontab = result.stdout if result.returncode == 0 else ""
+        except Exception as exc:
+            self._logger.warning(f"Could not read existing crontab: {exc}")
+            current_crontab = ""
+
+        # Check if BWP entry already exists
+        if script_name in current_crontab:
+            self._logger.info("BWP cron job already exists, updating...")
+            # Remove existing BWP entries
+            lines = current_crontab.split("\n")
+            filtered_lines = [line for line in lines if script_name not in line]
+            current_crontab = "\n".join(filtered_lines).strip()
+
+        # Add new cron entry
+        if current_crontab:
+            new_crontab = current_crontab + "\n" + cron_entry
+        else:
+            new_crontab = cron_entry
+
+        # Install new crontab
+        try:
+            subprocess.run(["crontab", "-"], input=new_crontab, text=True, check=True)
+            self._logger.info(f"Cron job installed: {cron_entry}")
+        except subprocess.CalledProcessError as exc:
+            self._logger.error(f"Failed to install cron job: {exc}")
+            raise exc
 
 
 class InstallOnWindows(IInstallBase):

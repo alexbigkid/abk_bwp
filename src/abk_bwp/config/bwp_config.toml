@@ -1,4 +1,9 @@
 # -----------------------------------------------------------------------------
+# Sets up automated image download, if enabled
+# -----------------------------------------------------------------------------
+auto_img_fetch = false
+
+# -----------------------------------------------------------------------------
 # if you set the time too early in the day, the API might not have the image yet.
 # -----------------------------------------------------------------------------
 time_to_fetch = 12:08:09
@@ -14,9 +19,9 @@ image_dir = "Pictures/BingWallpapers"
 store_jpg_quality = 89
 
 # -----------------------------------------------------------------------------
-# trim number of images collected always to this number: for 1 year
+# trim number of images collected always to this number: for 30 years = 10950 days
 # -----------------------------------------------------------------------------
-number_of_images_to_keep = 365
+number_of_images_to_keep = 10950
 
 # -----------------------------------------------------------------------------
 # in case you want to uninstall the app, whether the you want to retain the images collected over time.
@@ -39,6 +44,7 @@ region = "us"
 [desktop_img]
 # =============================================================================
 # -----------------------------------------------------------------------------
+# This feature works only on MacOS right now.
 # if enabled the app will try to set the image as desktop. If false the image just going to be downloaded but not set as desktop image
 # -----------------------------------------------------------------------------
 enabled = false
