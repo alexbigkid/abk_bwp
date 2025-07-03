@@ -11,7 +11,7 @@ DB_CSV_FILE = "db.csv"
 
 def main(verbose: bool = True):
     """Main function to create initial values.
-    
+
     Args:
         verbose: If True, print insertion statistics
     """

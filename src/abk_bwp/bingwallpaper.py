@@ -171,6 +171,18 @@ def is_config_ftv_enabled() -> bool:
     return bwp_config.get(FTV_KW.FTV.value, {}).get(FTV_KW.ENABLED.value, False)
 
 
+@lru_cache(maxsize=1)
+def is_config_desktop_img_enabled() -> bool:
+    """Determines whether the desktop image setting is enabled in the config.
+
+    Returns:
+        bool: true if desktop image setting enabled, False otherwise
+    """
+    return bwp_config.get(DESKTOP_IMG_KW.DESKTOP_IMG.value, {}).get(
+        DESKTOP_IMG_KW.ENABLED.value, False
+    )
+
+
 @lru_cache(maxsize=128)
 def get_relative_img_dir(img_date: date) -> str:
     """Gets the image directory structure depending on whether Frame TV feature is enabled.
@@ -1233,7 +1245,8 @@ class BingWallPaper:
                     if f.startswith(BWP_DEFAULT_BACKGROUND_IMG_PREFIX) and f != dst_file_name
                 ]
                 delete_files_in_dir(config_img_dir, old_background_img_list)
-                self.set_desktop_background(dst_img_full_name)
+                if is_config_desktop_img_enabled():
+                    self.set_desktop_background(dst_img_full_name)
 
     @staticmethod
     @abk_common.function_trace

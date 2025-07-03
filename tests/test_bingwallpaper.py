@@ -49,6 +49,7 @@ class TestBingwallpaper(unittest.TestCase):
         bingwallpaper.get_config_ftv_data.cache_clear()
         bingwallpaper.get_full_img_dir_from_date.cache_clear()
         bingwallpaper.get_config_background_img_size.cache_clear()
+        bingwallpaper.is_config_desktop_img_enabled.cache_clear()
         return super().setUp()
 
     # -------------------------------------------------------------------------

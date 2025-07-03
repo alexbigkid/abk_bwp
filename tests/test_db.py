@@ -17,6 +17,7 @@ class TestDbSqliteConnect(unittest.TestCase):
         # ----------------------------------
         # Mock connection object
         mock_conn = mock.MagicMock()
+        mock_conn.autocommit = False
         mock_connect.return_value = mock_conn
         db_file_name = "fake.db"
 
