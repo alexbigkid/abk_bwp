@@ -49,6 +49,9 @@ Please see the file <code>src/abk_bwp/config/bwp_config.toml</code> file. There 
 
 For Uploading the images to TV please see the <code>src/abk_bwp/config/ftv_data.toml</code> configuration.
 
+### Raspberry Pi Zero W Setup
+For running BWP on a Raspberry Pi Zero W with Frame TV integration, see the detailed [Pi Zero Setup Guide](docs/PI_ZERO_SETUP.md).
+
 
 ### Makefile rules
 There are some Makefile rules, which are created for your convenience. For more help with rules type: make help
@@ -102,15 +105,16 @@ The project contains com.abk.bingwallpaper_debug.sh.plist file, which can be use
 
 
 #### App runs on:
-- [x] MacOS Sequoia (local machine) / Python 3.13.3
+- [x] MacOS Sequoia (local machine) / Python 3.13.5
+- [x] Raspberry Pi Zero W / Python 3.11.x ([Setup Guide](docs/PI_ZERO_SETUP.md))
 - [ ] Linux Ubuntu 20.04  / Python 3.12.x
 - [ ] Windows 10 / Python 3.12.x
 
 
 #### Pipeline Unit Tests ran on:
-- [x] Linux latest / Python 3.12.x, 3.13.x
-- [x] MacOS latest / Python 3.12.x, 3.131.x
-- [x] Windows latest / Python 3.12.x, 3.13.x
+- [x] Linux latest / Python 3.11.x, 3.12.x, 3.13.x
+- [x] MacOS latest / Python 3.11.x, 3.12.x, 3.131.x
+- [x] Windows latest / Python 3.11.x, 3.12.x, 3.13.x
 
 
 ## Git branch rename from master to main
