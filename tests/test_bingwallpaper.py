@@ -2150,6 +2150,7 @@ class TestBingWallPaper(unittest.TestCase):
     @mock.patch("os.walk")
     @mock.patch.object(bingwallpaper.BingWallPaper, "_resize_background_image", return_value=True)
     @mock.patch("abk_bwp.bingwallpaper.get_config_background_img_size", return_value=(1920, 1080))
+    @mock.patch("abk_bwp.bingwallpaper.is_config_desktop_img_enabled", return_value=True)
     @mock.patch("os.path.exists", return_value=True)
     @mock.patch("abk_bwp.bingwallpaper.get_config_img_region", return_value="en-US")
     @mock.patch("abk_bwp.bingwallpaper.get_full_img_dir_from_date")
@@ -2160,6 +2161,7 @@ class TestBingWallPaper(unittest.TestCase):
         mock_get_today_img_path,
         mock_get_region,
         mock_exists,
+        mock_desktop_enabled,
         mock_get_size,
         mock_resize,
         mock_walk,
