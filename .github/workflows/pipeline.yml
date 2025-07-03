@@ -55,10 +55,9 @@ jobs:
                 .github/scripts/AgentInfo.sh
             - name: Install uv
               uses: astral-sh/setup-uv@v3
-            - name: Set UV to use system Python
-              run: uv python pin $(which python)
             - name: Python Info
               run: |
+                uv python pin ${{ matrix.py }}
                 echo ""
                 echo "------------------------"
                 echo "Python version"

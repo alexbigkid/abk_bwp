@@ -645,7 +645,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
     # -------------------------------------------------------------------------
     # DownLoadServiceBase._convert_to_date_dir_structure
     # -------------------------------------------------------------------------
-    @mock.patch("abk_bwp.bingwallpaper.logger", new_callable=mock.MagicMock)
+    @mock.patch("abk_bwp.bingwallpaper.logger._resolve")
     @mock.patch("shutil.rmtree")
     @mock.patch("os.renames")
     @mock.patch("os.walk")
@@ -1964,7 +1964,7 @@ class TestBingWallPaper(unittest.TestCase):
         "abk_bwp.abk_common.read_json_file", return_value={"2024-05-01_img.jpg": "Sample Title"}
     )
     @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir", return_value="/images")
-    @mock.patch("abk_bwp.bingwallpaper.logger", new_callable=mock.Mock)
+    @mock.patch("abk_bwp.bingwallpaper.logger._resolve")
     def test_process_manually_downloaded_images(
         self,
         mock_logger,
@@ -2020,7 +2020,7 @@ class TestBingWallPaper(unittest.TestCase):
     @mock.patch("os.walk", return_value=[("/images", [], ["SCALE_2024-05-01_img.jpg"])])
     @mock.patch("abk_bwp.abk_common.read_json_file", return_value={})  # No title in metadata
     @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir", return_value="/images")
-    @mock.patch("abk_bwp.bingwallpaper.logger", new_callable=mock.Mock)
+    @mock.patch("abk_bwp.bingwallpaper.logger._resolve")
     def test_process_manually_downloaded_images_else_branch(
         self,
         mock_logger,
@@ -2080,10 +2080,9 @@ class TestBingWallPaper(unittest.TestCase):
     @mock.patch("os.walk", return_value=[("/images", [], ["SCALE_2024-05-01_img.jpg"])])
     @mock.patch("abk_bwp.abk_common.read_json_file", return_value={})
     @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir", return_value="/images")
-    @mock.patch("abk_bwp.bingwallpaper.logger", new_callable=mock.Mock)
+    @mock.patch("abk_bwp.bingwallpaper.logger", new=mock.Mock())
     def test_process_manually_downloaded_images_exception(
         self,
-        mock_logger,
         mock_get_img_dir,
         mock_read_json,
         mock_walk,
@@ -2106,7 +2105,7 @@ class TestBingWallPaper(unittest.TestCase):
             os.path.join(mock_get_img_dir.return_value, "SCALE_2024-05-01_img.jpg")
         )
         mock_get_quality.assert_not_called()  # It should fail before this
-        mock_logger.exception.assert_called_once()
+        bingwallpaper.logger.exception.assert_called_once()
 
     # -------------------------------------------------------------------------
     # TestBingWallPaper._calculate_image_resizing
@@ -2212,7 +2211,7 @@ class TestBingWallPaper(unittest.TestCase):
     @mock.patch("abk_bwp.bingwallpaper.get_config_desktop_jpg_quality", return_value=85)
     @mock.patch("abk_bwp.bingwallpaper.BingWallPaper.add_outline_text")
     @mock.patch("abk_bwp.bingwallpaper.abk_common.ensure_dir")
-    @mock.patch("abk_bwp.bingwallpaper.logger", new_callable=mock.Mock)
+    @mock.patch("abk_bwp.bingwallpaper.logger._resolve")
     def test_resize_background_image_with_resize_and_exif(
         self, mock_logger, mock_ensure_dir, mock_add_text, mock_quality
     ):
@@ -2256,7 +2255,7 @@ class TestBingWallPaper(unittest.TestCase):
     @mock.patch("abk_bwp.bingwallpaper.BingWallPaper.add_outline_text")
     @mock.patch("abk_bwp.bingwallpaper.Image.open")
     @mock.patch("abk_bwp.bingwallpaper.abk_common.ensure_dir")
-    @mock.patch("abk_bwp.bingwallpaper.logger", new_callable=mock.Mock)
+    @mock.patch("abk_bwp.bingwallpaper.logger._resolve")
     def test_resize_background_image_no_resize_needed(
         self, mock_logger, mock_ensure_dir, mock_image_open, mock_add_text, mock_get_quality
     ):
@@ -2293,9 +2292,9 @@ class TestBingWallPaper(unittest.TestCase):
     @mock.patch("abk_bwp.bingwallpaper.get_config_desktop_jpg_quality", return_value=75)
     @mock.patch("abk_bwp.bingwallpaper.BingWallPaper.add_outline_text")
     @mock.patch("abk_bwp.bingwallpaper.abk_common.ensure_dir")
-    @mock.patch("abk_bwp.bingwallpaper.logger", new_callable=mock.Mock)
+    @mock.patch("abk_bwp.bingwallpaper.logger", new=mock.Mock())
     def test_resize_background_image_with_exception(
-        self, mock_logger, mock_ensure_dir, mock_add_text, mock_quality
+        self, mock_ensure_dir, mock_add_text, mock_quality
     ):
         """Test test_resize_background_image_with_exception."""
         # Arrange
@@ -2316,7 +2315,7 @@ class TestBingWallPaper(unittest.TestCase):
         mock_ensure_dir.assert_called_once_with(fake_dst_dir)
         mock_add_text.assert_not_called()
         mock_quality.assert_not_called()
-        mock_logger.exception.assert_called_once()
+        bingwallpaper.logger.exception.assert_called_once()
 
     # -------------------------------------------------------------------------
     # TestBingWallPaper.add_outline_text
@@ -2390,7 +2389,7 @@ class TestBingWallPaper(unittest.TestCase):
         return_value=["img1", "img2", "img3", "img4", "img5"],
     )
     @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir", return_value="/images")
-    @mock.patch("abk_bwp.bingwallpaper.logger", new_callable=mock.Mock)
+    @mock.patch("abk_bwp.bingwallpaper.logger._resolve")
     def test_trim_number_of_images(
         self,
         mock_logger,
@@ -2447,7 +2446,7 @@ class TestBingWallPaper(unittest.TestCase):
     @mock.patch("abk_bwp.bingwallpaper.os.walk")
     @mock.patch("abk_bwp.bingwallpaper.abk_common.ensure_dir")
     @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir", return_value="/images")
-    @mock.patch("abk_bwp.bingwallpaper.logger", new_callable=mock.Mock)
+    @mock.patch("abk_bwp.bingwallpaper.logger._resolve")
     def test_prepare_ftv_images(
         self,
         mock_logger,
