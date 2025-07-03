@@ -1,4 +1,4 @@
-.PHONY:	upgrade_setuptools install install_dev install_nth test test_v test_ff test_vff settings help img_auto_fetch_enable img_auto_fetch_disable
+.PHONY:	upgrade_setuptools install install_dev install_nth test test_v test_ff test_vff settings help img_auto_fetch_enable img_auto_fetch_disable usb_mode_enable usb_mode_disable
 .SILENT: clean
 BWP_HOME = src/abk_bwp
 
@@ -22,6 +22,12 @@ img_auto_fetch_enable:
 
 img_auto_fetch_disable:
 	cd $(BWP_HOME) && uv run abk_config.py -i disable
+
+usb_mode_enable:
+	cd $(BWP_HOME) && uv run abk_config.py -u enable
+
+usb_mode_disable:
+	cd $(BWP_HOME) && uv run abk_config.py -u disable
 
 quiet:
 	uv run bwp -q
@@ -165,6 +171,8 @@ help:
 	@echo "  img_auto_fetch_disable - disables automated image download scheduling"
 	@echo "  ftv_enable         	- enables Samsung Frame TV support"
 	@echo "  ftv_disable        	- disables Samsung Frame TV support"
+	@echo "  usb_mode_enable    	- enables Frame TV USB mass storage mode"
+	@echo "  usb_mode_disable   	- disables Frame TV USB mass storage mode"
 	@echo "  install            	- installs required packages"
 	@echo "  install_debug      	- installs required packages for debug session"
 	@echo "  test               	- runs test"

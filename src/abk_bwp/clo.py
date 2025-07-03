@@ -60,6 +60,12 @@ class CommandLineOptions:
             help="[enable, disable] automated image download scheduling",
         )
         parser.add_argument(
+            "-u",
+            "--usb_mode",
+            choices=["enable", "disable"],
+            help="[enable, disable] Frame TV USB mass storage mode",
+        )
+        parser.add_argument(
             "-l", "--log_into_file", action="store_true", help="Log into logs/bingwallpaper.log"
         )
         parser.add_argument("-q", "--quiet", action="store_true", help="Suppresses all logs")

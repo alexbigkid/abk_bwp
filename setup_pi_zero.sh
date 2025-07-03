@@ -272,26 +272,26 @@ configure_bwp() {
         cp "$config_file" "${config_file}.backup"
         log "Created backup: ${config_file}.backup"
 
-        # Configure BWP for USB mass storage mode on Raspberry Pi
+        # Configure BWP for USB mass storage mode using Makefile rules
         log "Configuring BWP for USB mass storage mode..."
         
-        # Enable auto image fetch (already true by default)
-        sed -i 's/^img_auto_fetch = false/img_auto_fetch = true/' "$config_file"
+        # Enable auto image fetch (automatic daily downloads)
+        make img_auto_fetch_enable
+        log "  • Enabled automatic image fetch"
         
         # Disable desktop image setting (not applicable on headless Pi)
-        sed -i '/^\[desktop_img\]/,/^enabled = / s/^enabled = true/enabled = false/' "$config_file"
+        make desktop_disable
+        log "  • Disabled desktop wallpaper setting (headless Pi)"
         
         # Enable Frame TV support
-        sed -i '/^\[ftv\]/,/^enabled = / s/^enabled = false/enabled = true/' "$config_file"
+        make ftv_enable
+        log "  • Enabled Frame TV support"
         
-        # Ensure USB mode is enabled (already true by default)
-        sed -i '/^\[ftv\]/,/^usb_mode = / s/^usb_mode = false/usb_mode = true/' "$config_file"
+        # Ensure USB mode is enabled (USB mass storage mode)
+        make usb_mode_enable
+        log "  • Enabled USB mass storage mode"
 
-        log "BWP configured for USB mass storage mode:"
-        log "  • img_auto_fetch = true (automatic daily downloads)"
-        log "  • desktop_img.enabled = false (headless Pi setup)"
-        log "  • ftv.enabled = true (Frame TV support enabled)"
-        log "  • ftv.usb_mode = true (USB mass storage mode)"
+        log "BWP configured for USB mass storage mode on Raspberry Pi Zero W"
     else
         log_error "Configuration file not found: $config_file"
         return 1

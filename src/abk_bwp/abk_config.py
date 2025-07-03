@@ -37,18 +37,21 @@ def get_config_enabled_setting(key_to_read: str) -> bool:
 
 
 @abk_common.function_trace
-def update_enable_field_in_toml_file(key_to_update: str, update_to: bool) -> None:
-    """Updates enable field in desktop_img or ftv section.
+def update_enable_field_in_toml_file(
+    key_to_update: str, update_to: bool, field: str = "enabled"
+) -> None:
+    """Updates field in desktop_img or ftv section.
 
     Args:
         key_to_update (str): desktop_img or ftv
         update_to (bool): True to enable, False to disable
+        field (str): field name to update (default: "enabled")
     """
-    logger.debug(f"{key_to_update=}: {update_to=}")
+    logger.debug(f"{key_to_update}.{field}: {update_to=}")
     config_toml_file_name = os.path.join(os.path.dirname(__file__), BWP_CONFIG_RELATIVE_PATH)
     with open(config_toml_file_name, encoding="utf-8") as read_fh:
         config_data = tomlkit.load(read_fh)
-        config_data[key_to_update]["enabled"] = update_to  # type: ignore
+        config_data[key_to_update][field] = update_to  # type: ignore
     with open(config_toml_file_name, mode="w", encoding="utf-8") as write_fh:
         tomlkit.dump(config_data, write_fh)
 
@@ -134,6 +137,23 @@ def handle_ftv_option(enable_option: str | None) -> None:
             update_enable_field_in_toml_file(key_to_update=FTV_KW.FTV.value, update_to=enable)
 
 
+@abk_common.function_trace
+def handle_usb_mode_option(enable_option: str | None) -> None:
+    """Handles request to enable/disable USB mass storage mode for Frame TV.
+
+    Args:
+        enable_option (Union[str, None]): enable, disable or None
+    """
+    if enable_option is None:
+        return
+    if (enable := enable_option == BWP_ENABLE) or enable_option == BWP_DISABLE:
+        is_enabled = bwp_config.get(FTV_KW.FTV.value, {}).get(FTV_KW.USB_MODE.value, True)
+        if is_enabled != enable:
+            update_enable_field_in_toml_file(
+                key_to_update=FTV_KW.FTV.value, update_to=enable, field=FTV_KW.USB_MODE.value
+            )
+
+
 def abk_bwp(clo: clo.CommandLineOptions) -> None:
     """Basically the main function of the package."""
     exit_code = 0
@@ -143,6 +163,7 @@ def abk_bwp(clo: clo.CommandLineOptions) -> None:
         handle_desktop_auto_update_option(clo.options.desktop_auto_update)
         handle_ftv_option(clo.options.frame_tv)
         handle_img_auto_fetch_option(clo.options.img_auto_fetch)
+        handle_usb_mode_option(clo.options.usb_mode)
     except Exception as exception:
         logger.error(f"{Fore.RED}ERROR: executing bingwallpaper")
         logger.exception(f"EXCEPTION: {exception}{Style.RESET_ALL}")
