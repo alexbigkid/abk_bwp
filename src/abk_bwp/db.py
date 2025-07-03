@@ -64,7 +64,7 @@ def db_sqlite_connect(db_file_name: str):
     conn = None
     db_file = db_file_name
     try:
-        conn = sqlite3.connect(db_file, autocommit=False)
+        conn = sqlite3.connect(db_file)
         yield conn
     finally:
         if conn:
