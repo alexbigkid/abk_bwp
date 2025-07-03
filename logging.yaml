@@ -25,13 +25,6 @@ handlers:
         encoding: utf-8
         delay: true
         mode: a
-    queueHandler:
-        class: logging.handlers.QueueHandler
-        handlers:
-          - consoleHandler
-          - fileHandler
-        queue: ext://queue.Queue
-        respect_handler_level: true
 
 loggers:
     root:
