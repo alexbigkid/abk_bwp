@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # Sets up automated image download, if enabled
 # -----------------------------------------------------------------------------
-img_auto_fetch = true
+img_auto_fetch = false
 
 # -----------------------------------------------------------------------------
 # if you set the time too early in the day, the API might not have the image yet.
