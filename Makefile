@@ -5,11 +5,11 @@ BWP_HOME = src/abk_bwp
 # -----------------------------------------------------------------------------
 # BingWallPaper Makefile rules
 # -----------------------------------------------------------------------------
-ftv_enable:
-	cd $(BWP_HOME) && uv run abk_config.py -f enable
+img_auto_fetch_enable:
+	cd $(BWP_HOME) && uv run abk_config.py -i enable
 
-ftv_disable:
-	cd $(BWP_HOME) && uv run abk_config.py -f disable
+img_auto_fetch_disable:
+	cd $(BWP_HOME) && uv run abk_config.py -i disable
 
 desktop_enable:
 	cd $(BWP_HOME) && uv run abk_config.py -d enable
@@ -17,11 +17,11 @@ desktop_enable:
 desktop_disable:
 	cd $(BWP_HOME) && uv run abk_config.py -d disable
 
-img_auto_fetch_enable:
-	cd $(BWP_HOME) && uv run abk_config.py -i enable
+ftv_enable:
+	cd $(BWP_HOME) && uv run abk_config.py -f enable
 
-img_auto_fetch_disable:
-	cd $(BWP_HOME) && uv run abk_config.py -i disable
+ftv_disable:
+	cd $(BWP_HOME) && uv run abk_config.py -f disable
 
 usb_mode_enable:
 	cd $(BWP_HOME) && uv run abk_config.py -u enable
