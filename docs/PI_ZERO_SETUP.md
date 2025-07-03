@@ -14,13 +14,16 @@ This guide helps you set up BWP (Bing Wallpaper) on a Raspberry Pi Zero W with F
 
 ## Quick Setup (Automated)
 
-### 1. Download and Run Setup Script
+### 1. Clone Repository and Run Setup Script
 
 ```bash
-# Download the setup script
-wget https://raw.githubusercontent.com/alexbigkid/abk_bwp/master/setup_pi_zero.sh
+# Clone the BWP repository
+git clone https://github.com/alexbigkid/abk_bwp.git
 
-# Make it executable
+# Change to the repository directory
+cd abk_bwp
+
+# Make the setup script executable
 chmod +x setup_pi_zero.sh
 
 # Run the setup (will take 30-60 minutes on Pi Zero W)
@@ -33,8 +36,8 @@ chmod +x setup_pi_zero.sh
 # Reboot to activate USB gadget mode
 sudo reboot
 
-# After reboot, test BWP
-cd ~/abk_bwp
+# After reboot, test BWP (from the repository directory)
+cd abk_bwp
 uv run bwp --help
 ```
 

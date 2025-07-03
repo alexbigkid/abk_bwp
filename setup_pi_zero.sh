@@ -22,8 +22,7 @@ NC='\033[0m' # No Color
 
 # Script configuration
 SCRIPT_NAME="BWP Pi Zero Setup"
-BWP_REPO="https://github.com/alexbigkid/abk_bwp.git"
-BWP_DIR="$HOME/abk_bwp"
+BWP_DIR=""  # Will be set to current directory
 LOG_FILE="/tmp/bwp_setup.log"
 
 # =============================================================================
@@ -224,18 +223,23 @@ install_uv() {
 # BWP Application Setup
 # =============================================================================
 
-clone_bwp() {
-    log_step "Cloning BWP repository..."
+setup_bwp_directory() {
+    log_step "Setting up BWP directory..."
 
-    if [ -d "$BWP_DIR" ]; then
-        log "BWP directory exists, pulling latest changes..."
-        cd "$BWP_DIR"
-        git pull
-    else
-        log "Cloning BWP from $BWP_REPO..."
-        git clone "$BWP_REPO" "$BWP_DIR"
-        cd "$BWP_DIR"
+    # Verify we're in the BWP repository directory
+    if [ ! -f "setup_pi_zero.sh" ] || [ ! -d "src/abk_bwp" ]; then
+        log_error "This script must be run from the BWP repository directory"
+        log_error "Please run: cd abk_bwp && ./setup_pi_zero.sh"
+        exit 1
     fi
+
+    # Use current directory as BWP directory
+    BWP_DIR="$(pwd)"
+    log "Using BWP directory: $BWP_DIR"
+
+    # Update repository to latest
+    log "Pulling latest changes from repository..."
+    git pull
 
     log "BWP repository ready at: $BWP_DIR"
 }
@@ -243,54 +247,54 @@ clone_bwp() {
 install_bwp_dependencies() {
     log_step "Installing BWP dependencies..."
 
-    cd "$BWP_DIR"
-
-    # Check if user wants Frame TV HTTP mode
+    # Install BWP in USB mode (optimal for Raspberry Pi Zero W)
     echo
-    log_info "BWP Installation Options:"
-    echo "  1) USB Mode Only (for Frame TV USB connection) - Lightweight"
-    echo "  2) Full Mode (USB + HTTP for Frame TV network connection)"
+    log_info "Installing BWP in USB mode (optimal for Raspberry Pi Zero W)..."
+    log_info "USB mode provides:"
+    echo "  • Lower memory usage"
+    echo "  • Faster performance on Pi Zero W"
+    echo "  • No network dependency for Frame TV connection"
+    echo "  • Direct USB mass storage emulation"
     echo
-    read -r -p "Select installation type [1-2]: " install_choice
 
-    case $install_choice in
-        1)
-            log "Installing BWP in USB mode (lightweight)..."
-            uv sync
-            ;;
-        2)
-            log "Installing BWP with Frame TV HTTP support..."
-            uv sync --extra frametv
-            ;;
-        *)
-            log_warning "Invalid choice, defaulting to USB mode..."
-            uv sync
-            ;;
-    esac
+    log "Installing BWP dependencies (USB mode)..."
+    uv sync
 
     log "BWP dependencies installed successfully"
 }
 
 configure_bwp() {
-    log_step "Configuring BWP for Pi Zero W..."
+    log_step "Configuring BWP for Pi Zero W USB mode..."
 
-    cd "$BWP_DIR"
-
-    # Copy default configuration if not exists
     local config_file="src/abk_bwp/config/bwp_config.toml"
     if [ -f "$config_file" ]; then
-        # Enable USB mode by default for Pi Zero
-        log "Configuring BWP for USB mode..."
-
-        # Create a backup and enable USB mode
+        # Create a backup of original configuration
         cp "$config_file" "${config_file}.backup"
+        log "Created backup: ${config_file}.backup"
 
-        # Enable USB mode in FTV config (if not already enabled)
-        if ! grep -q "usb_mode.*=.*true" "$config_file"; then
-            log "Enabling USB mode in BWP configuration..."
-            # This would need to be adjusted based on actual config structure
-            log_info "Please manually enable usb_mode = true in $config_file"
-        fi
+        # Configure BWP for USB mass storage mode on Raspberry Pi
+        log "Configuring BWP for USB mass storage mode..."
+        
+        # Enable auto image fetch (already true by default)
+        sed -i 's/^img_auto_fetch = false/img_auto_fetch = true/' "$config_file"
+        
+        # Disable desktop image setting (not applicable on headless Pi)
+        sed -i '/^\[desktop_img\]/,/^enabled = / s/^enabled = true/enabled = false/' "$config_file"
+        
+        # Enable Frame TV support
+        sed -i '/^\[ftv\]/,/^enabled = / s/^enabled = false/enabled = true/' "$config_file"
+        
+        # Ensure USB mode is enabled (already true by default)
+        sed -i '/^\[ftv\]/,/^usb_mode = / s/^usb_mode = false/usb_mode = true/' "$config_file"
+
+        log "BWP configured for USB mass storage mode:"
+        log "  • img_auto_fetch = true (automatic daily downloads)"
+        log "  • desktop_img.enabled = false (headless Pi setup)"
+        log "  • ftv.enabled = true (Frame TV support enabled)"
+        log "  • ftv.usb_mode = true (USB mass storage mode)"
+    else
+        log_error "Configuration file not found: $config_file"
+        return 1
     fi
 
     log "BWP configuration completed"
@@ -302,8 +306,6 @@ configure_bwp() {
 
 setup_automation() {
     log_step "Setting up BWP automation..."
-
-    cd "$BWP_DIR"
 
     # Install BWP automation (cron job)
     log "Setting up automated daily wallpaper download..."
@@ -341,8 +343,6 @@ cleanup() {
 
 verify_installation() {
     log_step "Verifying BWP installation..."
-
-    cd "$BWP_DIR"
 
     # Test BWP import
     if uv run python -c "from abk_bwp import bingwallpaper; print('BWP import successful')"; then
@@ -422,20 +422,21 @@ main() {
     # USB gadget setup for Frame TV
     setup_usb_gadget
 
-    # Package manager and BWP installation
+    # Package manager installation
     install_uv
-    clone_bwp
-    install_bwp_dependencies
-    configure_bwp
+    
+    # Setup and configure BWP (run in BWP directory)
+    setup_bwp_directory
+    (
+        cd "$BWP_DIR"
+        install_bwp_dependencies
+        configure_bwp
+        setup_automation
+        verify_installation
+    )
 
-    # Automation setup
-    setup_automation
-
-    # Cleanup and verification
+    # Cleanup and final summary
     cleanup
-    verify_installation
-
-    # Final summary
     print_summary
 
     log "Setup completed successfully!"

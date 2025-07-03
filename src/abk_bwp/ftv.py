@@ -666,7 +666,7 @@ class FTV:
             time.sleep(2)
 
             # Step 3: Re-load USB mass storage module (simulates USB insertion)
-            usb_storage_file = "/home/pi/ftv_storage.img"
+            usb_storage_file = os.path.expanduser("~/ftv_images/ftv_disk.img")
 
             subprocess.run(  # noqa: S603
                 [  # noqa: S607
