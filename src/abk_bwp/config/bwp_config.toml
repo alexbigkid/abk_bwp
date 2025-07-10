@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # Sets up automated image download, if enabled
 # -----------------------------------------------------------------------------
-img_auto_fetch = true
+img_auto_fetch = false
 
 # -----------------------------------------------------------------------------
 # if you set the time too early in the day, the API might not have the image yet.
@@ -47,7 +47,7 @@ region = "us"
 # This feature works only on MacOS right now.
 # if enabled the app will try to set the image as desktop. If false the image just going to be downloaded but not set as desktop image
 # -----------------------------------------------------------------------------
-enabled = true
+enabled = false
 
 # -----------------------------------------------------------------------------
 # if height or width is configured to not supported size, it will be defaulted to 4K resolution: 3840x2160
@@ -132,7 +132,7 @@ require_all_operations_success = true
 # -----------------------------------------------------------------------------
 # if true, images for each day will be produced and pushed to Samsung Frame TV. This is still WIP, though!
 # -----------------------------------------------------------------------------
-enabled = true
+enabled = false
 
 # -----------------------------------------------------------------------------
 # if true - images will be copied to ftv_images_today folder (USB mass storage mode for Raspberry Pi)
