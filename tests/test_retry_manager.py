@@ -30,7 +30,7 @@ class TestRetryManager(unittest.TestCase):
                 "enabled": True,
                 "max_attempts_per_day": 12,
                 "daily_reset_time": "06:00:00",
-                "require_all_operations_success": True
+                "require_all_operations_success": True,
             }
         }
 
@@ -100,7 +100,7 @@ class TestRetryManager(unittest.TestCase):
                 "enabled": True,
                 "max_attempts_per_day": 8,
                 "daily_reset_time": "invalid_time",
-                "require_all_operations_success": False
+                "require_all_operations_success": False,
             }
         }
         mock_bwp_config.update(invalid_config)
@@ -109,9 +109,7 @@ class TestRetryManager(unittest.TestCase):
 
         # Should use default time and log warning
         self.assertEqual(retry_manager.daily_reset_time, time(6, 0, 0))
-        self.mock_logger.warning.assert_called_once_with(
-            "Invalid daily_reset_time format: invalid_time, using 06:00:00"
-        )
+        self.mock_logger.warning.assert_called_once_with("Invalid daily_reset_time format: invalid_time, using 06:00:00")
         # Other values should be preserved
         self.assertEqual(retry_manager.max_attempts_per_day, 8)
         self.assertFalse(retry_manager.require_all_operations_success)
@@ -124,7 +122,7 @@ class TestRetryManager(unittest.TestCase):
         partial_config = {
             "retry": {
                 "enabled": False,
-                "max_attempts_per_day": 5
+                "max_attempts_per_day": 5,
                 # Missing daily_reset_time and require_all_operations_success
             }
         }
@@ -239,7 +237,7 @@ class TestRetryManager(unittest.TestCase):
         expected_state = {
             "last_run_date": None,
             "success_today": True,  # From file
-            "attempts_today": 2,    # From file
+            "attempts_today": 2,  # From file
             "last_attempt_time": None,
             "last_success_time": None,
             "failure_reasons": [],
@@ -258,11 +256,7 @@ class TestRetryManager(unittest.TestCase):
         mock_bwp_config.update(self.mock_config)
 
         retry_manager = RetryManager(self.mock_logger)
-        test_state = {
-            "success_today": True,
-            "attempts_today": 1,
-            "last_run_date": "2024-01-01"
-        }
+        test_state = {"success_today": True, "attempts_today": 1, "last_run_date": "2024-01-01"}
 
         retry_manager._save_state(test_state)
 
@@ -377,7 +371,7 @@ class TestRetryManager(unittest.TestCase):
 
             state = {
                 "last_run_date": "2024-01-01T04:00:00",
-                "last_reset_date": "2024-01-01"  # Already reset today
+                "last_reset_date": "2024-01-01",  # Already reset today
             }
             result = retry_manager._is_new_day(state)
 
@@ -453,17 +447,13 @@ class TestRetryManager(unittest.TestCase):
         mock_bwp_config.update(self.mock_config)
 
         # Create state file with success
-        success_state = {
-            "last_run_date": "2024-01-01",
-            "success_today": True,
-            "attempts_today": 1,
-        }
+        success_state = {"last_run_date": "2024-01-01", "success_today": True, "attempts_today": 1}
         with open(self.state_file_path, "w") as f:
             json.dump(success_state, f)
 
         retry_manager = RetryManager(self.mock_logger)
 
-        with patch.object(retry_manager, '_is_new_day', return_value=False):
+        with patch.object(retry_manager, "_is_new_day", return_value=False):
             result = retry_manager.should_run_today()
 
         self.assertFalse(result)
@@ -487,7 +477,7 @@ class TestRetryManager(unittest.TestCase):
 
         retry_manager = RetryManager(self.mock_logger)
 
-        with patch.object(retry_manager, '_is_new_day', return_value=False):
+        with patch.object(retry_manager, "_is_new_day", return_value=False):
             result = retry_manager.should_run_today()
 
         self.assertFalse(result)
@@ -511,7 +501,7 @@ class TestRetryManager(unittest.TestCase):
 
         retry_manager = RetryManager(self.mock_logger)
 
-        with patch.object(retry_manager, '_is_new_day', return_value=False):
+        with patch.object(retry_manager, "_is_new_day", return_value=False):
             result = retry_manager.should_run_today()
 
         self.assertTrue(result)
@@ -526,10 +516,11 @@ class TestRetryManager(unittest.TestCase):
 
         retry_manager = RetryManager(self.mock_logger)
 
-        with patch.object(retry_manager, '_is_new_day', return_value=True), \
-             patch.object(retry_manager, '_reset_daily_state') as mock_reset, \
-             patch.object(retry_manager, '_save_state') as mock_save:
-
+        with (
+            patch.object(retry_manager, "_is_new_day", return_value=True),
+            patch.object(retry_manager, "_reset_daily_state") as mock_reset,
+            patch.object(retry_manager, "_save_state") as mock_save,
+        ):
             mock_reset.return_value = {"success_today": False, "attempts_today": 0}
             result = retry_manager.should_run_today()
 
@@ -551,7 +542,7 @@ class TestRetryManager(unittest.TestCase):
 
         retry_manager = RetryManager(self.mock_logger)
 
-        with patch.object(retry_manager, '_save_state') as mock_save:
+        with patch.object(retry_manager, "_save_state") as mock_save:
             retry_manager.mark_attempt_start()
 
         mock_save.assert_not_called()
@@ -597,7 +588,7 @@ class TestRetryManager(unittest.TestCase):
 
         retry_manager = RetryManager(self.mock_logger)
 
-        with patch.object(retry_manager, '_save_state') as mock_save:
+        with patch.object(retry_manager, "_save_state") as mock_save:
             retry_manager.mark_operation_result("download", True)
 
         mock_save.assert_not_called()
@@ -636,10 +627,7 @@ class TestRetryManager(unittest.TestCase):
         self.assertFalse(state["operations_status"]["ftv_success"])
         self.assertIn("ftv: TV not responding", state["failure_reasons"])
 
-        expected_calls = [
-            mock.call("Operation ftv: FAILED"),
-            mock.call("Failure reason: TV not responding")
-        ]
+        expected_calls = [mock.call("Operation ftv: FAILED"), mock.call("Failure reason: TV not responding")]
         self.mock_logger.info.assert_has_calls(expected_calls)
 
     @patch("abk_bwp.retry_manager.bwp_config", new_callable=dict)
@@ -696,7 +684,7 @@ class TestRetryManager(unittest.TestCase):
 
         retry_manager = RetryManager(self.mock_logger)
 
-        with patch.object(retry_manager, '_save_state') as mock_save:
+        with patch.object(retry_manager, "_save_state") as mock_save:
             retry_manager.mark_run_complete(True)
 
         mock_save.assert_not_called()
@@ -757,17 +745,13 @@ class TestRetryManager(unittest.TestCase):
         mock_bwp_config.update(self.mock_config)
 
         # Create test state
-        test_state = {
-            "success_today": True,
-            "attempts_today": 2,
-            "last_run_date": "2024-01-01"
-        }
+        test_state = {"success_today": True, "attempts_today": 2, "last_run_date": "2024-01-01"}
         with open(self.state_file_path, "w") as f:
             json.dump(test_state, f)
 
         retry_manager = RetryManager(self.mock_logger)
 
-        with patch.object(retry_manager, 'should_run_today', return_value=False) as mock_should_run:
+        with patch.object(retry_manager, "should_run_today", return_value=False) as mock_should_run:
             status = retry_manager.get_retry_status()
 
         # The _load_state method merges with default state, so we expect the full state
