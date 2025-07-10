@@ -51,16 +51,7 @@ setup(
         "urllib3",
     ],
     extras_require={  # Optional
-        "dev": [
-            "build",
-            "setuptools",
-            "twine",
-            "wheel",
-            "pip-check",
-            "pip-date",
-            "pip-chill",
-            "pipdeptree",
-        ],
+        "dev": ["build", "setuptools", "twine", "wheel", "pip-check", "pip-date", "pip-chill", "pipdeptree"],
         "test": ["coverage", "parameterized"],
     },
     zip_safe=False,
