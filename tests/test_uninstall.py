@@ -2,6 +2,7 @@
 
 # Standard library imports
 import logging
+import os
 import subprocess  # noqa: S404
 import unittest
 from unittest import mock
@@ -395,7 +396,9 @@ class TestUninstallOnLinux(unittest.TestCase):
         uninstall.cleanup_image_dir(image_dir)
 
         # The actual implementation calls _delete_image_dir which logs images_dir, not image_dir
-        mock_logger.debug.assert_called_once_with(f"images_dir='/home/testuser/{image_dir}'")
+        # Use os.path.join to get platform-appropriate path separator
+        expected_path = os.path.join("/home/testuser", image_dir)
+        mock_logger.debug.assert_called_once_with(f"images_dir='{expected_path}'")
 
 
 # =============================================================================
