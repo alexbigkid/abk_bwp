@@ -18,6 +18,7 @@ import shutil
 import subprocess  # noqa: S404
 import sys
 from abc import ABCMeta, abstractmethod
+from pathlib import Path
 from sys import platform as _platform
 
 
@@ -109,7 +110,7 @@ class UninstallOnMacOS(IUninstallBase):
         Args:
             image_dir (str): image directory name
         """
-        image_full_path = os.path.join(abk_common.get_home_dir(), image_dir)
+        image_full_path = str(Path(abk_common.get_home_dir()).joinpath(image_dir))
         self._delete_image_dir(image_full_path)
 
     @abk_common.function_trace
@@ -259,7 +260,7 @@ class UninstallOnLinux(IUninstallBase):
         Args:
             image_dir (str): image directory name
         """
-        image_full_path = os.path.join(abk_common.get_home_dir(), image_dir)
+        image_full_path = str(Path(abk_common.get_home_dir()).joinpath(image_dir))
         self._delete_image_dir(image_full_path)
 
     @abk_common.function_trace

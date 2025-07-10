@@ -2,7 +2,6 @@
 
 # Standard library imports
 import logging
-import os
 import subprocess  # noqa: S404
 import unittest
 from pathlib import Path
@@ -171,8 +170,7 @@ class TestUninstallOnMacOS(unittest.TestCase):
     # UninstallOnMacOS.cleanup_image_dir
     # -------------------------------------------------------------------------
     @mock.patch("abk_bwp.abk_common.get_home_dir", return_value="/Users/testuser")
-    @mock.patch("os.path.join", side_effect=lambda *args: "/".join(args))
-    def test_cleanup_image_dir(self, mock_join, mock_get_home_dir):
+    def test_cleanup_image_dir(self, mock_get_home_dir):
         """Test cleanup_image_dir calls _delete_image_dir with correct path."""
         # Arrange
         # ----------------------------------
@@ -186,8 +184,10 @@ class TestUninstallOnMacOS(unittest.TestCase):
         # Assert
         # ----------------------------------
         mock_get_home_dir.assert_called_once()
-        mock_join.assert_called_once_with("/Users/testuser", "Pictures/BingWallpapers")
-        uninstall._delete_image_dir.assert_called_once_with("/Users/testuser/Pictures/BingWallpapers")
+        # The actual implementation uses Path(home_dir).joinpath(image_dir)
+        # Match exactly what the actual code does
+        expected_path = str(Path("/Users/testuser").joinpath("Pictures/BingWallpapers"))
+        uninstall._delete_image_dir.assert_called_once_with(expected_path)
 
     # -------------------------------------------------------------------------
     # UninstallOnMacOS._delete_image_dir
@@ -397,9 +397,9 @@ class TestUninstallOnLinux(unittest.TestCase):
 
         uninstall.cleanup_image_dir(image_dir)
 
-        # The actual implementation uses os.path.join(abk_common.get_home_dir(), image_dir)
+        # The actual implementation uses Path(home_dir).joinpath(image_dir)
         # Match exactly what the actual code does
-        expected_path = os.path.join(home_dir, image_dir)
+        expected_path = str(Path(home_dir).joinpath(image_dir))
         mock_logger.debug.assert_called_once_with(f"images_dir='{expected_path}'")
 
 
