@@ -2,6 +2,7 @@
 
 # Standard library imports
 import logging
+import os
 import subprocess  # noqa: S404
 import unittest
 from pathlib import Path
@@ -396,9 +397,9 @@ class TestUninstallOnLinux(unittest.TestCase):
 
         uninstall.cleanup_image_dir(image_dir)
 
-        # The actual implementation calls _delete_image_dir which logs images_dir, not image_dir
-        # Use pathlib.Path for platform-appropriate path handling
-        expected_path = str(Path(home_dir) / image_dir)
+        # The actual implementation uses os.path.join(abk_common.get_home_dir(), image_dir)
+        # Match exactly what the actual code does
+        expected_path = os.path.join(home_dir, image_dir)
         mock_logger.debug.assert_called_once_with(f"images_dir='{expected_path}'")
 
 
