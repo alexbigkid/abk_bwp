@@ -6,7 +6,7 @@
                to the plist in current directory
         2.1.3. delete a plist file for scheduled job in current directory
     2.2 Linux
-        2.2.1. NOT READY YET
+        2.2.1. Remove cron job entries for BWP automation
     2.3 Windows
         2.3.1. NOT READY YET.
 """  # noqa: D205, D208, D210
@@ -201,17 +201,80 @@ class UninstallOnLinux(IUninstallBase):
     def teardown_installation(self) -> None:
         """Cleans up installation of the bing wall paper downloader on Linux."""
         self._logger.debug(f"{self.shell_file_name=}")
-        self._logger.info(f"{self.os_type.value} uninstallation is not supported yet")
+
+        # Remove cron job for Linux automation
+        self._remove_cron_job(self.shell_file_name)
+        self._logger.info("Linux cron job removed for BWP automation")
+
+    @abk_common.function_trace
+    def _remove_cron_job(self, script_name: str) -> None:
+        """Removes cron job for Linux automation.
+
+        Args:
+            script_name (str): script name to remove from cron
+        """
+        # Get current crontab
+        try:
+            result = subprocess.run(
+                ["crontab", "-l"],  # noqa: S607
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            current_crontab = result.stdout if result.returncode == 0 else ""
+        except Exception as exc:
+            self._logger.warning(f"Could not read existing crontab: {exc}")
+            current_crontab = ""
+
+        # Check if BWP entry exists
+        if script_name not in current_crontab:
+            self._logger.info("BWP cron job does not exist, nothing to remove")
+            return
+
+        # Remove BWP entries
+        lines = current_crontab.split("\n")
+        filtered_lines = [line for line in lines if script_name not in line]
+        new_crontab = "\n".join(filtered_lines).strip()
+
+        # Install new crontab (or remove all if no other entries)
+        try:
+            if new_crontab:
+                subprocess.run(["crontab", "-"], input=new_crontab, text=True, check=True)  # noqa: S607
+                self._logger.info(f"BWP cron job removed. Remaining crontab: {new_crontab}")
+            else:
+                # Try to remove crontab, but don't fail if it doesn't exist
+                result = subprocess.run(["crontab", "-r"], check=False)  # noqa: S607
+                if result.returncode == 0:
+                    self._logger.info("All cron jobs removed (crontab cleared)")
+                else:
+                    self._logger.info("No crontab to remove")
+        except subprocess.CalledProcessError as exc:
+            self._logger.error(f"Failed to remove cron job: {exc}")
+            raise exc
 
     @abk_common.function_trace
     def cleanup_image_dir(self, image_dir: str) -> None:
-        """Cleans up image directory.
+        """Cleans up image directory, deletes all downloaded images.
 
         Args:
-            image_dir (str): image directory
+            image_dir (str): image directory name
         """
-        self._logger.debug(f"{image_dir=}")
-        self._logger.info(f"{self.os_type.value} cleanup_image_dir is not supported yet")
+        image_full_path = os.path.join(abk_common.get_home_dir(), image_dir)
+        self._delete_image_dir(image_full_path)
+
+    @abk_common.function_trace
+    def _delete_image_dir(self, images_dir: str) -> None:
+        """Deletes image directory and all downloaded images.
+
+        Args:
+            images_dir (str): image directory name
+        """
+        self._logger.debug(f"{images_dir=}")
+        if os.path.isdir(images_dir):
+            try:
+                shutil.rmtree(images_dir)
+            except Exception:
+                self._logger.exception(f"deleting image directory {images_dir} failed")
 
 
 class UninstallOnWindows(IUninstallBase):
