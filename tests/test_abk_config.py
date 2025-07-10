@@ -111,7 +111,8 @@ class TestAbkConfig(unittest.TestCase):
         mock_update_enable.assert_called_once_with(
             key_to_update=config.DESKTOP_IMG_KW.DESKTOP_IMG.value, update_to=exp_desktop_img_enabled
         )
-        mock_automation_setup.assert_called_once_with()
+        # Desktop automation no longer calls _handle_automation_setup
+        mock_automation_setup.assert_not_called()
         self.assertTrue(desktop_img_enabled != exp_desktop_img_enabled)
 
     @parameterized.expand(

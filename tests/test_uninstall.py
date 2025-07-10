@@ -382,18 +382,20 @@ class TestUninstallOnLinux(unittest.TestCase):
         uninstall.teardown_installation()
 
         mock_logger.debug.assert_called_once()
-        mock_logger.info.assert_any_call("Linux uninstallation is not supported yet")
+        mock_logger.info.assert_any_call("Linux cron job removed for BWP automation")
 
-    def test_cleanup_image_dir_logs_message(self):
+    @mock.patch("abk_bwp.uninstall.abk_common.get_home_dir")
+    def test_cleanup_image_dir_logs_message(self, mock_get_home_dir):
         """Test test_cleanup_image_dir_logs_message."""
         mock_logger = mock.Mock()
+        mock_get_home_dir.return_value = "/home/testuser"
         uninstall = UninstallOnLinux(logger=mock_logger)
-        image_dir = "/home/testuser/Pictures/BingWallpapers"
+        image_dir = "Pictures/BingWallpapers"
 
         uninstall.cleanup_image_dir(image_dir)
 
-        mock_logger.debug.assert_called_once_with(f"{image_dir=}")
-        mock_logger.info.assert_any_call("Linux cleanup_image_dir is not supported yet")
+        # The actual implementation calls _delete_image_dir which logs images_dir, not image_dir
+        mock_logger.debug.assert_called_once_with(f"images_dir='/home/testuser/{image_dir}'")
 
 
 # =============================================================================

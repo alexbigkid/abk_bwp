@@ -6,7 +6,7 @@ import pathlib
 import tomllib  # type: ignore
 
 
-bwp_file_name = pathlib.Path(__file__).parent / "bwp_config.toml"
+bwp_file_name = pathlib.Path(__file__).parent.joinpath("bwp_config.toml")
 with bwp_file_name.open(mode="rb") as file_handler:
     bwp_config = tomllib.load(file_handler)
 

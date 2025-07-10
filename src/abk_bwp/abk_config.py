@@ -94,7 +94,8 @@ def _handle_automation_setup() -> None:
     # Reload config to get the updated value after file modification
     import tomllib
     import pathlib
-    config_file = pathlib.Path(__file__).parent / BWP_CONFIG_RELATIVE_PATH
+
+    config_file = pathlib.Path(__file__).parent.joinpath(BWP_CONFIG_RELATIVE_PATH)
     with config_file.open(mode="rb") as fh:
         updated_config = tomllib.load(fh)
 

@@ -48,3 +48,6 @@ abk_bwp/com.alexberger.bingwallpaper.sh.plist
 abk_bwp/ftv_uploaded_image_files.json
 test_frameconnect/
 dev_tools/
+
+# retry state file (runtime data, not to be committed)
+src/abk_bwp/retry_state.json

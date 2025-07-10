@@ -20,7 +20,7 @@ class RetryManager:
             logger: Logger instance, defaults to module logger
         """
         self._logger = logger or logging.getLogger(__name__)
-        self._state_file = Path.home() / ".abk_bwp_retry_state.json"
+        self._state_file = Path(__file__).parent.joinpath("retry_state.json")
         self._load_config()
 
     def _load_config(self) -> None:
