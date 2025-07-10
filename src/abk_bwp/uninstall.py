@@ -52,9 +52,7 @@ class IUninstallBase(metaclass=ABCMeta):
     def __init__(self, logger: logging.Logger = None) -> None:  # type: ignore
         """Super class init."""
         self._logger = logger or logging.getLogger(__name__)
-        self._logger.info(
-            f"({__class__.__name__}) Initializing {self.os_type} uninstallation environment ..."
-        )
+        self._logger.info(f"({__class__.__name__}) Initializing {self.os_type} uninstallation environment ...")
 
     @abstractmethod
     def teardown_installation(self) -> None:
@@ -181,9 +179,7 @@ class UninstallOnMacOS(IUninstallBase):
                 os.unlink(script_name)
                 self._logger.info(f"deleted file {script_name}")
             except OSError as error:
-                self._logger.exception(
-                    f"failed to delete file {script_name}, with error = {error.errno}"
-                )
+                self._logger.exception(f"failed to delete file {script_name}, with error = {error.errno}")
         else:
             self._logger.info(f"file {script_name} does not exist")
 

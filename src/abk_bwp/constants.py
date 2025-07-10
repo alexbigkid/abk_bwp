@@ -50,9 +50,7 @@ class _Const:
                 object.__setattr__(self, "_license", project.get("license", self._license))
                 object.__setattr__(self, "_keywords", project.get("keywords", self._keywords))
                 object.__setattr__(self, "_authors", project.get("authors", self._authors))
-                object.__setattr__(
-                    self, "_maintainers", project.get("maintainers", self._maintainers)
-                )
+                object.__setattr__(self, "_maintainers", project.get("maintainers", self._maintainers))
         except Exception as e:
             print(f"Warning: failed to load pyproject.toml metadata: {e}")
 

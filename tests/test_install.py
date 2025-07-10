@@ -178,9 +178,7 @@ class TestInstallOnMacOS(unittest.TestCase):
         #     args, kwargs = call
         #     print("Args:", args)
         #     print("Kwargs:", kwargs)
-        mock_logger.debug.assert_any_call(
-            f"{time_to_exe.hour=}, {time_to_exe.minute=}, {script_name=}"
-        )
+        mock_logger.debug.assert_any_call(f"{time_to_exe.hour=}, {time_to_exe.minute=}, {script_name=}")
         mock_logger.debug.assert_any_call(f"{script_name = }")
         mock_logger.debug.assert_any_call(f"{plist_label = }")
         # Return value can be validated using another mock
@@ -196,14 +194,7 @@ class TestInstallOnMacOS(unittest.TestCase):
     @mock.patch("abk_bwp.abk_common.ensure_link_exists")
     @mock.patch("os.path.basename", return_value="com.testuser.bingwallpaper.sh.plist")
     @mock.patch("os.path.join", side_effect=lambda *args: "/".join(args))  # preserve join logic
-    def test_create_plist_link(
-        self,
-        mock_path_join,
-        mock_basename,
-        mock_ensure_link_exists,
-        mock_ensure_dir,
-        mock_get_home_dir,
-    ):
+    def test_create_plist_link(self, mock_path_join, mock_basename, mock_ensure_link_exists, mock_ensure_dir, mock_get_home_dir):
         """Test test_create_plist_link."""
         # Arrange
         # ----------------------------------
@@ -211,9 +202,7 @@ class TestInstallOnMacOS(unittest.TestCase):
         installer = InstallOnMacOS(mock_logger)
         expected_file_name = "com.testuser.bingwallpaper.sh.plist"
         full_file_name = os.path.join("/some", "fake", "path", expected_file_name)
-        expected_dst = os.path.join(
-            mock_get_home_dir.return_value, "Library", "LaunchAgents", expected_file_name
-        )
+        expected_dst = os.path.join(mock_get_home_dir.return_value, "Library", "LaunchAgents", expected_file_name)
 
         # Act
         # ----------------------------------
@@ -231,9 +220,7 @@ class TestInstallOnMacOS(unittest.TestCase):
         # mock_logger.debug.assert_any_call(f"{expected_dst=}")
         # Validate abk_common calls
         mock_get_home_dir.assert_called_once()
-        mock_ensure_dir.assert_called_once_with(
-            os.path.join(mock_get_home_dir.return_value, "Library/LaunchAgents")
-        )
+        mock_ensure_dir.assert_called_once_with(os.path.join(mock_get_home_dir.return_value, "Library/LaunchAgents"))
         mock_ensure_link_exists.assert_called_once_with(full_file_name, expected_dst)
         # Validate result using a mock
         mock_result_checker = mock.Mock()
@@ -250,13 +237,7 @@ class TestInstallOnMacOS(unittest.TestCase):
         # ----------------------------------
         mock_logger = mock.Mock()
         test_user = "testuser"
-        plist_name = os.path.join(
-            "/Users",
-            test_user,
-            "Library",
-            "LaunchAgents",
-            f"com.{test_user}.bingwallpaper.sh.plist",
-        )
+        plist_name = os.path.join("/Users", test_user, "Library", "LaunchAgents", f"com.{test_user}.bingwallpaper.sh.plist")
         plist_label = f"com.{test_user}.bingwallpaper.sh.plist"
         expected_commands = [
             f"launchctl list | grep {plist_label}",
@@ -291,9 +272,7 @@ class TestInstallOnMacOS(unittest.TestCase):
         mock_logger = mock.Mock()
         installer = InstallOnMacOS(mock_logger)
         test_user = "testuser"
-        plist_name = os.path.join(
-            "/Users", test_user, "Library", f"LaunchAgentscom.{test_user}.bingwallpaper.sh.plist"
-        )
+        plist_name = os.path.join("/Users", test_user, "Library", f"LaunchAgentscom.{test_user}.bingwallpaper.sh.plist")
         plist_label = f"com.{test_user}.bingwallpaper.sh.plist"
 
         # Raise CalledProcessError on second command
@@ -311,9 +290,7 @@ class TestInstallOnMacOS(unittest.TestCase):
 
         # Assert
         # ----------------------------------
-        mock_logger.info.assert_any_call(
-            "error: e.returncode=1. It is expected though, not all cmds exec successfully."
-        )
+        mock_logger.info.assert_any_call("error: e.returncode=1. It is expected though, not all cmds exec successfully.")
 
     # -------------------------------------------------------------------------
     # InstallOnMacOS._load_and_start_bingwallpaper_job

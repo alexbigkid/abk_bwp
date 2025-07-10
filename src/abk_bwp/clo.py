@@ -34,44 +34,21 @@ class CommandLineOptions:
 
     def handle_options(self) -> None:
         """Handles user specified options and arguments."""
-        parser = ArgumentParser(
-            prog="bwp",
-            description="Downloads daily Bing images and sets them as desktop wallpaper",
+        parser = ArgumentParser(prog="bwp", description="Downloads daily Bing images and sets them as desktop wallpaper")
+        parser.add_argument("-a", "--about", action="store_true", help="Show detailed project metadata")
+        parser.add_argument(
+            "-d", "--desktop_auto_update", choices=["enable", "disable"], help="[enable, disable] desktop auto update"
+        )
+        parser.add_argument("-f", "--frame_tv", choices=["enable", "disable"], help="[enable, disable] Frame TV auto update")
+        parser.add_argument(
+            "-i", "--img_auto_fetch", choices=["enable", "disable"], help="[enable, disable] automated image download scheduling"
         )
         parser.add_argument(
-            "-a", "--about", action="store_true", help="Show detailed project metadata"
+            "-u", "--usb_mode", choices=["enable", "disable"], help="[enable, disable] Frame TV USB mass storage mode"
         )
-        parser.add_argument(
-            "-d",
-            "--desktop_auto_update",
-            choices=["enable", "disable"],
-            help="[enable, disable] desktop auto update",
-        )
-        parser.add_argument(
-            "-f",
-            "--frame_tv",
-            choices=["enable", "disable"],
-            help="[enable, disable] Frame TV auto update",
-        )
-        parser.add_argument(
-            "-i",
-            "--img_auto_fetch",
-            choices=["enable", "disable"],
-            help="[enable, disable] automated image download scheduling",
-        )
-        parser.add_argument(
-            "-u",
-            "--usb_mode",
-            choices=["enable", "disable"],
-            help="[enable, disable] Frame TV USB mass storage mode",
-        )
-        parser.add_argument(
-            "-l", "--log_into_file", action="store_true", help="Log into logs/bingwallpaper.log"
-        )
+        parser.add_argument("-l", "--log_into_file", action="store_true", help="Log into logs/bingwallpaper.log")
         parser.add_argument("-q", "--quiet", action="store_true", help="Suppresses all logs")
-        parser.add_argument(
-            "-v", "--version", action="store_true", help="Show version info and exit"
-        )
+        parser.add_argument("-v", "--version", action="store_true", help="Show version info and exit")
         self.options = parser.parse_args()
 
         if self.options.version:
@@ -91,9 +68,7 @@ class CommandLineOptions:
                 print(f"  - {m.get('name', '?')} <{m.get('email', '?')}>")
             sys.exit(0)
 
-        LoggerManager().configure(
-            log_into_file=self.options.log_into_file, quiet=self.options.quiet
-        )
+        LoggerManager().configure(log_into_file=self.options.log_into_file, quiet=self.options.quiet)
         self.logger = LoggerManager().get_logger(__name__)
         self.logger.info(f"{self.options=}")
         self.logger.info(f"{self._args=}")

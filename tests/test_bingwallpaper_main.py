@@ -50,9 +50,7 @@ class TestBingWallpaper(unittest.TestCase):
     @mock.patch("abk_bwp.bingwallpaper._platform", "linux")
     @mock.patch("abk_bwp.bingwallpaper.LinuxDependent")
     @mock.patch("abk_bwp.bingwallpaper.is_config_ftv_enabled", return_value=False)
-    def test_linux_bing_success(
-        self, mock_ftv_enabled, mock_os_dep, mock_dl, mock_bwp, mock_exit
-    ):
+    def test_linux_bing_success(self, mock_ftv_enabled, mock_os_dep, mock_dl, mock_bwp, mock_exit):
         """Test test_linux_bing_success."""
         # Arrange
         # ----------------------------------
@@ -79,9 +77,7 @@ class TestBingWallpaper(unittest.TestCase):
     @mock.patch("abk_bwp.bingwallpaper._platform", "win64")
     @mock.patch("abk_bwp.bingwallpaper.WindowsDependent")
     @mock.patch("abk_bwp.bingwallpaper.is_config_ftv_enabled", return_value=False)
-    def test_windows_bing_success(
-        self, mock_ftv_enabled, mock_os_dep, mock_dl, mock_bwp, mock_exit
-    ):
+    def test_windows_bing_success(self, mock_ftv_enabled, mock_os_dep, mock_dl, mock_bwp, mock_exit):
         """Test test_windows_bing_success."""
         # Arrange
         # ----------------------------------
@@ -157,10 +153,7 @@ class TestBingWallpaper(unittest.TestCase):
         """Test invalid download service raises ValueError and exits with 1."""
         # Arrange
         # ----------------------------------
-        with (
-            mock.patch("abk_bwp.bingwallpaper.BingWallPaper"),
-            mock.patch("abk_bwp.bingwallpaper.clo.CommandLineOptions"),
-        ):
+        with mock.patch("abk_bwp.bingwallpaper.BingWallPaper"), mock.patch("abk_bwp.bingwallpaper.clo.CommandLineOptions"):
             from abk_bwp import bingwallpaper
 
             # Act
@@ -174,9 +167,7 @@ class TestBingWallpaper(unittest.TestCase):
 
     @mock.patch("abk_bwp.bingwallpaper.FTV")
     @mock.patch("abk_bwp.bingwallpaper.get_config_ftv_data", return_value="mocked_ftv_data_file")
-    @mock.patch(
-        "abk_bwp.bingwallpaper.BingWallPaper.prepare_ftv_images", return_value=["img1", "img2"]
-    )
+    @mock.patch("abk_bwp.bingwallpaper.BingWallPaper.prepare_ftv_images", return_value=["img1", "img2"])
     @mock.patch("abk_bwp.bingwallpaper.is_config_ftv_enabled", return_value=True)
     @mock.patch("abk_bwp.bingwallpaper.BingWallPaper")
     @mock.patch("abk_bwp.bingwallpaper.PeapixDownloadService")
@@ -226,9 +217,7 @@ class TestBingWallpaper(unittest.TestCase):
             mock_is_enabled.assert_called_once()
             mock_prepare_images.assert_called_once()
             mock_get_ftv_data.assert_called_once()
-            mock_ftv_class.assert_called_once_with(
-                logger=mock_logger, ftv_data_file="mocked_ftv_data_file"
-            )
+            mock_ftv_class.assert_called_once_with(logger=mock_logger, ftv_data_file="mocked_ftv_data_file")
             mock_ftv_instance.change_daily_images.assert_called_once_with(["img1", "img2"])
             mock_exit.assert_called_once_with(0)
 
@@ -239,9 +228,7 @@ class TestBingWallpaper(unittest.TestCase):
     @mock.patch("abk_bwp.bingwallpaper._platform", "darwin")
     @mock.patch("abk_bwp.bingwallpaper.MacOSDependent")
     @mock.patch("abk_bwp.bingwallpaper.is_config_ftv_enabled", return_value=False)
-    def test_exception_logging(
-        self, mock_ftv_enabled, mock_os_dep, mock_bing_wallpaper, mock_dl_service, mock_exit
-    ):
+    def test_exception_logging(self, mock_ftv_enabled, mock_os_dep, mock_bing_wallpaper, mock_dl_service, mock_exit):
         """Test that if an exception occurs, it is logged and exit code is 1."""
         # Arrange
         # ----------------------------------

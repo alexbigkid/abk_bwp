@@ -25,18 +25,8 @@ class TestPopulateDbMain(unittest.TestCase):
         """Test successful database population from CSV."""
         # Arrange - Mock CSV data
         mock_csv_data = [
-            {
-                "pageId": "12345",
-                "country": "US",
-                "date": "2024-01-01",
-                "pageUrl": "http://example.com/1",
-            },
-            {
-                "pageId": "12346",
-                "country": "UK",
-                "date": "2024-01-02",
-                "pageUrl": "http://example.com/2",
-            },
+            {"pageId": "12345", "country": "US", "date": "2024-01-01", "pageUrl": "http://example.com/1"},
+            {"pageId": "12346", "country": "UK", "date": "2024-01-02", "pageUrl": "http://example.com/2"},
         ]
         mock_reader_instance = MagicMock()
         mock_reader_instance.fieldnames = ["pageId", "country", "date", "pageUrl"]
@@ -58,9 +48,7 @@ class TestPopulateDbMain(unittest.TestCase):
         mock_conn.cursor.assert_called_once()
 
         # Verify CREATE TABLE was called
-        create_table_calls = [
-            call for call in mock_cursor.execute.call_args_list if "CREATE TABLE" in str(call)
-        ]
+        create_table_calls = [call for call in mock_cursor.execute.call_args_list if "CREATE TABLE" in str(call)]
         self.assertEqual(len(create_table_calls), 1)
         create_table_sql = create_table_calls[0][0][0]
         self.assertIn("CREATE TABLE IF NOT EXISTS", create_table_sql)
@@ -68,10 +56,7 @@ class TestPopulateDbMain(unittest.TestCase):
         self.assertIn("country TEXT NOT NULL", create_table_sql)
 
         # Verify INSERT statements
-        expected_rows = [
-            (12345, "US", "2024-01-01", "http://example.com/1"),
-            (12346, "UK", "2024-01-02", "http://example.com/2"),
-        ]
+        expected_rows = [(12345, "US", "2024-01-01", "http://example.com/1"), (12346, "UK", "2024-01-02", "http://example.com/2")]
         mock_cursor.executemany.assert_called_once()
         executemany_call = mock_cursor.executemany.call_args
         self.assertIn("INSERT OR IGNORE INTO", executemany_call[0][0])
@@ -177,21 +162,9 @@ class TestPopulateDbMain(unittest.TestCase):
     def test_main_handles_different_field_types(self, mock_csv_reader, mock_connect, mock_file):
         """Test handling of different field configurations."""
         # Arrange - CSV with different column order
-        mock_csv_data = [
-            {
-                "country": "CA",
-                "pageId": "98765",
-                "pageUrl": "http://example.ca",
-                "date": "2024-03-01",
-            }
-        ]
+        mock_csv_data = [{"country": "CA", "pageId": "98765", "pageUrl": "http://example.ca", "date": "2024-03-01"}]
         mock_reader_instance = MagicMock()
-        mock_reader_instance.fieldnames = [
-            "country",
-            "pageId",
-            "pageUrl",
-            "date",
-        ]  # Different order
+        mock_reader_instance.fieldnames = ["country", "pageId", "pageUrl", "date"]  # Different order
         mock_reader_instance.__iter__ = lambda self: iter(mock_csv_data)
         mock_csv_reader.return_value = mock_reader_instance
 
@@ -223,14 +196,7 @@ class TestPopulateDbMain(unittest.TestCase):
     def test_main_converts_page_id_to_integer(self, mock_csv_reader, mock_connect, mock_file):
         """Test that pageId is properly converted to integer."""
         # Arrange
-        mock_csv_data = [
-            {
-                "pageId": "54321",
-                "country": "DE",
-                "date": "2024-02-15",
-                "pageUrl": "http://example.de",
-            }
-        ]
+        mock_csv_data = [{"pageId": "54321", "country": "DE", "date": "2024-02-15", "pageUrl": "http://example.de"}]
         mock_reader_instance = MagicMock()
         mock_reader_instance.fieldnames = ["pageId", "country", "date", "pageUrl"]
         mock_reader_instance.__iter__ = lambda self: iter(mock_csv_data)
@@ -264,12 +230,7 @@ class TestPopulateDbMain(unittest.TestCase):
         """Test that the function uses parameterized queries for SQL injection protection."""
         # Arrange
         mock_csv_data = [
-            {
-                "pageId": "1",
-                "country": "'; DROP TABLE pages; --",
-                "date": "2024-01-01",
-                "pageUrl": "http://evil.com",
-            }
+            {"pageId": "1", "country": "'; DROP TABLE pages; --", "date": "2024-01-01", "pageUrl": "http://evil.com"}
         ]
         mock_reader_instance = MagicMock()
         mock_reader_instance.fieldnames = ["pageId", "country", "date", "pageUrl"]

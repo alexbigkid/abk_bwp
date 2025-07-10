@@ -41,10 +41,7 @@ class TestGetpassGetuser(unittest.TestCase):
         """test_Getuser__username_priorities_of_env_values."""
         environ.get.return_value = None
         self.abk_common.get_user_name()
-        self.assertEqual(
-            [mock.call(x) for x in ("LOGNAME", "USER", "LNAME", "USERNAME")],
-            environ.get.call_args_list,
-        )
+        self.assertEqual([mock.call(x) for x in ("LOGNAME", "USER", "LNAME", "USERNAME")], environ.get.call_args_list)
 
     def test_Getuser__username_falls_back_to_pwd(self, environ) -> None:
         """test_Getuser__username_falls_back_to_pwd."""
@@ -115,9 +112,7 @@ class TestGetParentDir(unittest.TestCase):
 
         self.assertEqual(result, "/mock/child")
         self.assertEqual(mock_dirname.call_count, 2)
-        mock_dirname.assert_has_calls(
-            [mock.call("/mock/parent/child/file.txt"), mock.call("/mock/parent")]
-        )
+        mock_dirname.assert_has_calls([mock.call("/mock/parent/child/file.txt"), mock.call("/mock/parent")])
 
 
 class TestEnsureDir(unittest.TestCase):
@@ -255,9 +250,7 @@ class TestRemoveLink(unittest.TestCase):
         mock_islink.assert_called_once_with("link.txt")
         mock_unlink.assert_called_once_with("link.txt")
 
-    @mock.patch(
-        "abk_bwp.abk_common.os.unlink", side_effect=OSError(errno.EPERM, "permission denied")
-    )
+    @mock.patch("abk_bwp.abk_common.os.unlink", side_effect=OSError(errno.EPERM, "permission denied"))
     @mock.patch("abk_bwp.abk_common.os.path.islink", return_value=True)
     def test_logs_error_when_unlink_fails(self, mock_islink, mock_unlink):
         """Test that remove_link logs an error if unlink fails."""
@@ -312,22 +305,16 @@ class TestDeleteDir(unittest.TestCase):
         mock_logger.debug.assert_any_call("fileName='file2'")
         mock_isdir.assert_called_once_with("/mock/non_empty_dir")
         self.assertEqual(mock_listdir.call_count, 2)
-        mock_listdir.assert_has_calls(
-            [mock.call("/mock/non_empty_dir"), mock.call("/mock/non_empty_dir")]
-        )
+        mock_listdir.assert_has_calls([mock.call("/mock/non_empty_dir"), mock.call("/mock/non_empty_dir")])
 
     @mock.patch("abk_bwp.abk_common.logger")
     @mock.patch("abk_bwp.abk_common.os.rmdir", side_effect=OSError(errno.ENOTEMPTY, "not empty"))
     @mock.patch("abk_bwp.abk_common.os.listdir", return_value=[])
     @mock.patch("abk_bwp.abk_common.os.path.isdir", return_value=True)
-    def test_logs_error_if_rmdir_fails_due_to_not_empty(
-        self, mock_isdir, mock_listdir, mock_rmdir, mock_logger
-    ):
+    def test_logs_error_if_rmdir_fails_due_to_not_empty(self, mock_isdir, mock_listdir, mock_rmdir, mock_logger):
         """Test that delete_dir logs an error if rmdir fails due to directory not being empty."""
         self.abk_common.delete_dir("/mock/failure_dir")
-        mock_logger.error.assert_called_with(
-            "ERROR:delete_dir: directory /mock/failure_dir is not empty"
-        )
+        mock_logger.error.assert_called_with("ERROR:delete_dir: directory /mock/failure_dir is not empty")
         mock_isdir.assert_called_once_with("/mock/failure_dir")
         mock_listdir.assert_called_once_with("/mock/failure_dir")
         mock_rmdir.assert_called_once_with("/mock/failure_dir")
@@ -385,9 +372,7 @@ class TestDeleteFile(unittest.TestCase):
     @mock.patch("abk_bwp.abk_common.os.remove", side_effect=OSError("delete failed"))
     @mock.patch("abk_bwp.abk_common.os.path.isfile", return_value=True)
     @mock.patch("abk_bwp.abk_common.os.path.exists", return_value=True)
-    def test_logs_error_on_remove_exception(
-        self, mock_exists, mock_isfile, mock_remove, mock_logger
-    ):
+    def test_logs_error_on_remove_exception(self, mock_exists, mock_isfile, mock_remove, mock_logger):
         """Test that delete_file logs an error if an OSError occurs during file deletion."""
         mock_remove.side_effect = OSError("delete failed")
         self.abk_common.delete_file("/mock/bad_file.txt")
@@ -412,9 +397,7 @@ class TestReadJsonFile(unittest.TestCase):
 
         self.abk_common = abk_common
 
-    @mock.patch(
-        "abk_bwp.abk_common.open", new_callable=mock.mock_open, read_data='{"key": "value"}'
-    )
+    @mock.patch("abk_bwp.abk_common.open", new_callable=mock.mock_open, read_data='{"key": "value"}')
     @mock.patch("abk_bwp.abk_common.os.path.isfile", return_value=True)
     @mock.patch("abk_bwp.abk_common.os.path.exists", return_value=True)
     def test_reads_valid_json_file(self, mock_exists, mock_isfile, mock_open_file):
@@ -445,18 +428,11 @@ class TestReadJsonFile(unittest.TestCase):
     @mock.patch("abk_bwp.abk_common.open", new_callable=mock.mock_open)
     @mock.patch("abk_bwp.abk_common.os.path.isfile", return_value=True)
     @mock.patch("abk_bwp.abk_common.os.path.exists", return_value=True)
-    def test_logs_error_on_json_parse_exception(
-        self, mock_exists, mock_isfile, mock_open_file, mock_logger
-    ):
+    def test_logs_error_on_json_parse_exception(self, mock_exists, mock_isfile, mock_open_file, mock_logger):
         """Test that read_json_file logs an error when JSON parsing fails."""
         mock_open_file.return_value.__enter__.return_value.read.return_value = "bad json"
-        mock_open_file.return_value.__enter__.return_value.read.side_effect = (
-            json.JSONDecodeError("Expecting value", "", 0)
-        )
-        with mock.patch(
-            "abk_bwp.abk_common.json.load",
-            side_effect=json.JSONDecodeError("Expecting value", "", 0),
-        ):
+        mock_open_file.return_value.__enter__.return_value.read.side_effect = json.JSONDecodeError("Expecting value", "", 0)
+        with mock.patch("abk_bwp.abk_common.json.load", side_effect=json.JSONDecodeError("Expecting value", "", 0)):
             result = self.abk_common.read_json_file("bad.json")
             self.assertEqual(result, {})
             mock_logger.error.assert_called()

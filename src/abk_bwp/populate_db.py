@@ -45,10 +45,7 @@ def main(verbose: bool = True):
 
             # Prepare rows
             for row in reader:
-                values = [
-                    int(row[name]) if name == DBColumns.PAGE_ID.value else row[name]
-                    for name in fieldnames
-                ]
+                values = [int(row[name]) if name == DBColumns.PAGE_ID.value else row[name] for name in fieldnames]
                 rows.append(tuple(values))
 
         # Use INSERT OR IGNORE to avoid duplicates based on pageId

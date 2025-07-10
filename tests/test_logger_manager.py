@@ -50,9 +50,7 @@ class TestLoggerManager(unittest.TestCase):
     @patch("abk_bwp.logger_manager.logging.config.dictConfig")
     @patch("abk_bwp.logger_manager.Path.open", new_callable=mock_open, read_data="version: 1")
     @patch("abk_bwp.logger_manager.Path.exists", return_value=True)
-    def test_configure_console_logger(
-        self, mock_exists, mock_open_file, mock_dict_config, mock_yaml
-    ):
+    def test_configure_console_logger(self, mock_exists, mock_open_file, mock_dict_config, mock_yaml):
         """Test that console logger is configured correctly."""
         t_log_into_file = False
         t_quiet = False
@@ -77,9 +75,7 @@ class TestLoggerManager(unittest.TestCase):
     @patch("abk_bwp.logger_manager.logging.config.dictConfig")
     @patch("abk_bwp.logger_manager.Path.open", new_callable=mock_open, read_data="version: 1")
     @patch("abk_bwp.logger_manager.Path.exists", return_value=True)
-    def test_configure_file_logger_creates_logs_dir(
-        self, mock_exists, mock_open_file, mock_dict_config, mock_yaml
-    ):
+    def test_configure_file_logger_creates_logs_dir(self, mock_exists, mock_open_file, mock_dict_config, mock_yaml):
         """Test that file logger is configured and logs directory is created."""
         t_log_into_file = True
         t_quiet = False
@@ -135,9 +131,7 @@ class TestLoggerManager(unittest.TestCase):
     @patch("abk_bwp.logger_manager.logging.config.dictConfig")
     @patch("abk_bwp.logger_manager.Path.open", new_callable=mock_open, read_data="version: 1")
     @patch("abk_bwp.logger_manager.Path.exists", return_value=True)
-    def test_configure_quiet_mode_with_file_logger(
-        self, mock_exists, mock_open_file, mock_dict_config, mock_yaml
-    ):
+    def test_configure_quiet_mode_with_file_logger(self, mock_exists, mock_open_file, mock_dict_config, mock_yaml):
         """Test that quiet mode disables logging even if file logging is requested."""
         t_log_into_file = True
         t_quiet = True
@@ -165,24 +159,14 @@ class TestLoggerManager(unittest.TestCase):
         return_value={
             "version": 1,
             "formatters": {"simple": {"format": "%(message)s"}},
-            "handlers": {
-                "console": {
-                    "class": "logging.StreamHandler",
-                    "formatter": "simple",
-                    "level": "DEBUG",
-                }
-            },
-            "loggers": {
-                "fileLogger": {"level": "DEBUG", "handlers": ["console"], "propagate": False}
-            },
+            "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "simple", "level": "DEBUG"}},
+            "loggers": {"fileLogger": {"level": "DEBUG", "handlers": ["console"], "propagate": False}},
         },
     )
     @patch("abk_bwp.logger_manager.logging.config.dictConfig")
     @patch("abk_bwp.logger_manager.Path.open", new_callable=mock_open, read_data="version: 1")
     @patch("abk_bwp.logger_manager.Path.exists", return_value=True)
-    def test_configure_file_logging_logger_selected(
-        self, mock_exists, mock_open_file, mock_dict_config, mock_yaml
-    ):
+    def test_configure_file_logging_logger_selected(self, mock_exists, mock_open_file, mock_dict_config, mock_yaml):
         """Test that configure() correctly sets fileLogger from logging.yaml."""
         logger_mgr = LoggerManager()
         with patch("abk_bwp.logger_manager.logging.getLogger") as mock_get_logger:
@@ -203,9 +187,7 @@ class TestLoggerManager(unittest.TestCase):
 
         with (
             patch("abk_bwp.logger_manager.Path.exists", return_value=True),
-            patch(
-                "abk_bwp.logger_manager.Path.open", side_effect=FileNotFoundError("No such file")
-            ),
+            patch("abk_bwp.logger_manager.Path.open", side_effect=FileNotFoundError("No such file")),
         ):
             with self.assertRaises(FileNotFoundError) as context:
                 logger_mgr.configure(log_into_file=True, quiet=False)
@@ -218,9 +200,7 @@ class TestLoggerManager(unittest.TestCase):
 
         with (
             patch("abk_bwp.logger_manager.Path.exists", return_value=True),
-            patch(
-                "abk_bwp.logger_manager.Path.open", side_effect=Exception("Unexpected failure")
-            ),
+            patch("abk_bwp.logger_manager.Path.open", side_effect=Exception("Unexpected failure")),
             patch("abk_bwp.logger_manager.logging.getLogger") as mock_get_logger,
         ):
             mock_logger = MagicMock()

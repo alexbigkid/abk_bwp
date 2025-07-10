@@ -7,12 +7,7 @@ import unittest
 from unittest import mock
 
 from abk_bwp import abk_common
-from abk_bwp.uninstall import (
-    IUninstallBase,
-    UninstallOnLinux,
-    UninstallOnMacOS,
-    UninstallOnWindows,
-)
+from abk_bwp.uninstall import IUninstallBase, UninstallOnLinux, UninstallOnMacOS, UninstallOnWindows
 
 # Third party imports
 
@@ -142,9 +137,7 @@ class TestUninstallOnMacOS(unittest.TestCase):
         mock_shell_file_name.return_value = "bingwallpaper.sh"
         mock_logger = mock.Mock()
         uninstall = UninstallOnMacOS(logger=mock_logger)
-        uninstall._get_plist_names = mock.Mock(
-            return_value=("com.bwp.agent", "com.bwp.agent.plist")
-        )
+        uninstall._get_plist_names = mock.Mock(return_value=("com.bwp.agent", "com.bwp.agent.plist"))
 
         # Act
         # ----------------------------------
@@ -165,12 +158,8 @@ class TestUninstallOnMacOS(unittest.TestCase):
         mock_dirname.assert_called_once_with("/path/to/bingwallpaper.sh")
         uninstall._get_plist_names.assert_called_once_with("bingwallpaper.sh")
         mock_get_home_dir.assert_called_once()
-        mock_stop_and_unload.assert_called_once_with(
-            "/Users/testuser/Library/LaunchAgents/com.bwp.agent.plist", "com.bwp.agent"
-        )
-        mock_remove_link.assert_called_once_with(
-            "/Users/testuser/Library/LaunchAgents/com.bwp.agent.plist"
-        )
+        mock_stop_and_unload.assert_called_once_with("/Users/testuser/Library/LaunchAgents/com.bwp.agent.plist", "com.bwp.agent")
+        mock_remove_link.assert_called_once_with("/Users/testuser/Library/LaunchAgents/com.bwp.agent.plist")
         mock_delete_file.assert_called_once_with("/path/to/com.bwp.agent.plist")
         # Assert: logging occurred
         mock_logger.info.assert_called()
@@ -196,9 +185,7 @@ class TestUninstallOnMacOS(unittest.TestCase):
         # ----------------------------------
         mock_get_home_dir.assert_called_once()
         mock_join.assert_called_once_with("/Users/testuser", "Pictures/BingWallpapers")
-        uninstall._delete_image_dir.assert_called_once_with(
-            "/Users/testuser/Pictures/BingWallpapers"
-        )
+        uninstall._delete_image_dir.assert_called_once_with("/Users/testuser/Pictures/BingWallpapers")
 
     # -------------------------------------------------------------------------
     # UninstallOnMacOS._delete_image_dir
@@ -239,9 +226,7 @@ class TestUninstallOnMacOS(unittest.TestCase):
         # ----------------------------------
         mock_isdir.assert_called_once_with("/path/to/images")
         mock_rmtree.assert_called_once_with("/path/to/images")
-        logger.exception.assert_called_once_with(
-            "deleting image directory /path/to/images failed"
-        )
+        logger.exception.assert_called_once_with("deleting image directory /path/to/images failed")
 
     # -------------------------------------------------------------------------
     # UninstallOnMacOS._get_plist_names
@@ -260,9 +245,7 @@ class TestUninstallOnMacOS(unittest.TestCase):
 
         # Assert
         # ----------------------------------
-        self.assertEqual(
-            result, ("com.testuser.bingwallpaper.sh", "com.testuser.bingwallpaper.sh.plist")
-        )
+        self.assertEqual(result, ("com.testuser.bingwallpaper.sh", "com.testuser.bingwallpaper.sh.plist"))
         logger.debug.assert_any_call("script_name='bingwallpaper.sh'")
         logger.debug.assert_any_call(
             "plist_label='com.testuser.bingwallpaper.sh', plist_file_name='com.testuser.bingwallpaper.sh.plist'"  # noqa: E501
@@ -296,10 +279,7 @@ class TestUninstallOnMacOS(unittest.TestCase):
         self.assertEqual(mock_check_call.call_args_list, expected_calls)
         self.assertEqual(mock_check_call.call_count, 3)
 
-    @mock.patch(
-        "abk_bwp.uninstall.subprocess.check_call",
-        side_effect=subprocess.CalledProcessError(1, "launchctl"),
-    )
+    @mock.patch("abk_bwp.uninstall.subprocess.check_call", side_effect=subprocess.CalledProcessError(1, "launchctl"))
     def test_stop_and_unload_bingwallpaper_job_failure(self, mock_check_call):
         """Test error handling when command fails."""
         # Arrange
@@ -359,9 +339,7 @@ class TestUninstallOnMacOS(unittest.TestCase):
         mock_isfile.assert_called_once_with(script_name)
         mock_unlink.assert_called_once_with(script_name)
         mock_logger.exception.assert_called_once()
-        mock_logger.exception.assert_called_once_with(
-            f"failed to delete file {script_name}, with error = 13"
-        )
+        mock_logger.exception.assert_called_once_with(f"failed to delete file {script_name}, with error = 13")
 
     @mock.patch("abk_bwp.uninstall.os.path.isfile", return_value=False)
     def test_delete_plist_file_does_not_exist(self, mock_isfile):

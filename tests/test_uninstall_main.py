@@ -105,9 +105,7 @@ class TestBwpUninstall(unittest.TestCase):
 
     @mock.patch("sys.exit")
     @mock.patch("abk_bwp.uninstall.UninstallOnLinux")
-    @mock.patch(
-        "abk_bwp.uninstall.bwp_config", {"retain_images": False, "image_dir": "/fake/image/dir"}
-    )
+    @mock.patch("abk_bwp.uninstall.bwp_config", {"retain_images": False, "image_dir": "/fake/image/dir"})
     def test_bwp_uninstall_calls_cleanup_image_dir(self, mock_uninstall_on_linux, mock_exit):
         """Ensure cleanup_image_dir() is called when retain_images is False."""
         # Arrange
@@ -123,9 +121,7 @@ class TestBwpUninstall(unittest.TestCase):
 
         # Assert
         # ----------------------------------
-        mock_uninstall_on_linux.return_value.cleanup_image_dir.assert_called_once_with(
-            "/fake/image/dir"
-        )
+        mock_uninstall_on_linux.return_value.cleanup_image_dir.assert_called_once_with("/fake/image/dir")
         mock_uninstall_on_linux.return_value.teardown_installation.assert_called_once()
         mock_uninstall_on_linux.assert_called_once_with(logger=mock_logger)
         mock_exit.assert_called_once_with(0)

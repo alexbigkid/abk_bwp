@@ -133,9 +133,7 @@ def ensure_link_exists(src: str, dst: str) -> None:
             logger.info(f"created link {dst=} to {src=}")
         except OSError as error:
             if error.errno != errno.EEXIST:
-                logger.error(
-                    f"ERROR:ensure_link_exists: create link failed with error = {error.errno}"
-                )
+                logger.error(f"ERROR:ensure_link_exists: create link failed with error = {error.errno}")
                 raise
     else:
         logger.info(f"link {dst=} exists, do nothing")
@@ -154,9 +152,7 @@ def remove_link(fileName: str) -> None:
             os.unlink(fileName)
             logger.info(f"deleted link {fileName}")
         except OSError as error:
-            logger.error(
-                f"ERROR:remove_link: failed to delete link {fileName}, with error={error.errno}"
-            )
+            logger.error(f"ERROR:remove_link: failed to delete link {fileName}, with error={error.errno}")
             pass
     else:
         logger.info(f"link {fileName} does not exist, do nothing")

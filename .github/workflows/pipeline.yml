@@ -4,7 +4,6 @@ on:
     push:
         branches:
             - main
-            - rpi
         tags:
             - 'rel-patch'
             - 'rel-minor'
@@ -51,8 +50,7 @@ jobs:
                 python-version: ${{ matrix.py }}
             - name: Check runner
               if: ${{ !contains(matrix.os, 'windows') }}
-              run: |
-                .github/scripts/AgentInfo.sh
+              run: .github/scripts/AgentInfo.sh
             - name: Install uv
               uses: astral-sh/setup-uv@v3
             - name: Python Info

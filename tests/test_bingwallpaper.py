@@ -72,12 +72,8 @@ class TestBingwallpaper(unittest.TestCase):
     # -------------------------------------------------------------------------
     # get_config_img_region
     # -------------------------------------------------------------------------
-    @parameterized.expand(
-        [["notValidReg", "bing"], ["notValidReg", "peapix"], ["NotValidReg", "NotValidService"]]
-    )
-    def test__get_img_region__given_an_invalid_setting_returns_default_region(
-        self, img_region: str, img_dl_service: str
-    ) -> None:
+    @parameterized.expand([["notValidReg", "bing"], ["notValidReg", "peapix"], ["NotValidReg", "NotValidService"]])
+    def test__get_img_region__given_an_invalid_setting_returns_default_region(self, img_region: str, img_dl_service: str) -> None:
         """test__get_img_region__given_an_invalid_setting_returns_default_region.
 
         Args:
@@ -85,9 +81,7 @@ class TestBingwallpaper(unittest.TestCase):
             img_dl_service (str): image download service
         """
         exp_region = "us"
-        with mock.patch.dict(
-            config.bwp_config, {"region": img_region, "dl_service": img_dl_service}
-        ):
+        with mock.patch.dict(config.bwp_config, {"region": img_region, "dl_service": img_dl_service}):
             act_region = bingwallpaper.get_config_img_region()
         self.assertEqual(act_region, exp_region)
 
@@ -97,18 +91,12 @@ class TestBingwallpaper(unittest.TestCase):
     @mock.patch("abk_bwp.bingwallpaper.get_relative_img_dir")
     @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir")
     @mock.patch("abk_bwp.bingwallpaper.get_date_from_img_file_name")
-    def test_get_full_img_dir_from_file_name(
-        self, mock_get_date, mock_get_config_dir, mock_get_relative_dir
-    ):
+    def test_get_full_img_dir_from_file_name(self, mock_get_date, mock_get_config_dir, mock_get_relative_dir):
         """Test get_full_img_dir_from_file_name returns correct path."""
         mock_get_date.return_value = datetime.date(2025, 5, 24)
-        mock_get_config_dir.return_value = os.path.join(
-            "C:", os.sep, "Users", "runneradmin", "Pictures", "BingWallpapers"
-        )
+        mock_get_config_dir.return_value = os.path.join("C:", os.sep, "Users", "runneradmin", "Pictures", "BingWallpapers")
         mock_get_relative_dir.return_value = os.path.join("2025", "05", "24")
-        expected_path = os.path.join(
-            mock_get_config_dir.return_value, mock_get_relative_dir.return_value
-        )
+        expected_path = os.path.join(mock_get_config_dir.return_value, mock_get_relative_dir.return_value)
 
         result = bingwallpaper.get_full_img_dir_from_file_name("bing_20250524.jpg")
 
@@ -149,9 +137,7 @@ class TestBingwallpaper(unittest.TestCase):
         # Arrange
         # ---------------------------------------------------------------------
         mock_isdir.return_value = True
-        mock_walk.return_value = [
-            ("/mocked/path", ["subdir"], ["2025-05-25_image.jpg", "invalid_file.txt"])
-        ]
+        mock_walk.return_value = [("/mocked/path", ["subdir"], ["2025-05-25_image.jpg", "invalid_file.txt"])]
 
         def side_effect(filename):
             return filename == "2025-05-25_image.jpg"
@@ -211,18 +197,14 @@ class TestBingwallpaper(unittest.TestCase):
             ["us", "bing"],
         ]
     )
-    def test__get_img_region__given_a_valid_setting_returns_defined_region(
-        self, img_region: str, img_dl_service: str
-    ) -> None:
+    def test__get_img_region__given_a_valid_setting_returns_defined_region(self, img_region: str, img_dl_service: str) -> None:
         """test__get_img_region__given_a_valid_setting_returns_defined_region.
 
         Args:
             img_region (str): image region
             img_dl_service (str): image download service
         """
-        with mock.patch.dict(
-            config.bwp_config, {"region": img_region, "dl_service": img_dl_service}
-        ):
+        with mock.patch.dict(config.bwp_config, {"region": img_region, "dl_service": img_dl_service}):
             act_region = bingwallpaper.get_config_img_region()
         self.assertEqual(act_region, img_region)
 
@@ -256,27 +238,19 @@ class TestBingwallpaper(unittest.TestCase):
             img_dl_service (str): image download service
             exp_bing_region (str): expected bing region
         """
-        with mock.patch.dict(
-            config.bwp_config, {"region": img_region, "dl_service": img_dl_service}
-        ):
+        with mock.patch.dict(config.bwp_config, {"region": img_region, "dl_service": img_dl_service}):
             act_bing_region = bingwallpaper.get_config_bing_img_region()
         self.assertEqual(act_bing_region, exp_bing_region)
 
     # -------------------------------------------------------------------------
     # is_config_ftv_enabled
     # -------------------------------------------------------------------------
-    @mock.patch.dict(
-        config.bwp_config,
-        {bingwallpaper.FTV_KW.FTV.value: {bingwallpaper.FTV_KW.ENABLED.value: True}},
-    )
+    @mock.patch.dict(config.bwp_config, {bingwallpaper.FTV_KW.FTV.value: {bingwallpaper.FTV_KW.ENABLED.value: True}})
     def test_ftv_enabled_true(self):
         """Test FTV enabled true."""
         self.assertTrue(bingwallpaper.is_config_ftv_enabled())
 
-    @mock.patch.dict(
-        config.bwp_config,
-        {bingwallpaper.FTV_KW.FTV.value: {bingwallpaper.FTV_KW.ENABLED.value: False}},
-    )
+    @mock.patch.dict(config.bwp_config, {bingwallpaper.FTV_KW.FTV.value: {bingwallpaper.FTV_KW.ENABLED.value: False}})
     def test_ftv_enabled_false(self):
         """Test FTV enabled false."""
         self.assertFalse(bingwallpaper.is_config_ftv_enabled())
@@ -485,9 +459,7 @@ class TestBingwallpaper(unittest.TestCase):
             cnf_height (int): config height
             exp_size (Tuple[int, int]): expected size
         """
-        with mock.patch.dict(
-            config.bwp_config, {"desktop_img": {"width": cnf_width, "height": cnf_height}}
-        ):
+        with mock.patch.dict(config.bwp_config, {"desktop_img": {"width": cnf_width, "height": cnf_height}}):
             act_size = bingwallpaper.get_config_background_img_size()
         self.assertEqual(act_size, exp_size)
 
@@ -503,10 +475,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
         """Test setup class."""
         # Suppress only reactivex warnings
         warnings.filterwarnings(
-            "ignore",
-            message="datetime.datetime.utcnow\\(\\) is deprecated",
-            category=DeprecationWarning,
-            module="reactivex.*",
+            "ignore", message="datetime.datetime.utcnow\\(\\) is deprecated", category=DeprecationWarning, module="reactivex.*"
         )
 
     # -------------------------------------------------------------------------
@@ -516,9 +485,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
     @mock.patch("abk_bwp.bingwallpaper.is_config_ftv_enabled", return_value=True)
     @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir", return_value="/mocked/path")
     @mock.patch("os.walk")
-    def test_convert_to_ftv_structure(
-        self, mock_walk, mock_get_config_img_dir, mock_is_config_ftv_enabled, mock_convert_to_ftv
-    ):
+    def test_convert_to_ftv_structure(self, mock_walk, mock_get_config_img_dir, mock_is_config_ftv_enabled, mock_convert_to_ftv):
         """Test convert_dir_structure_if_needed with FTV enabled."""
         # Simulate os.walk returning an iterator with a single tuple
         mock_walk.return_value = iter([("/mocked/path", ["2021", "2022"], [])])
@@ -549,9 +516,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
     @mock.patch("builtins.open", new_callable=mock.mock_open)
     @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir", return_value="/mocked/path")
     @mock.patch("os.walk")
-    def test_empty_directory_creates_warning_file(
-        self, mock_walk, mock_get_config_img_dir, mock_open
-    ):
+    def test_empty_directory_creates_warning_file(self, mock_walk, mock_get_config_img_dir, mock_open):
         """Test test_empty_directory_creates_warning_file."""
         # Simulate os.walk returning an empty directory
         mock_walk.return_value = iter([("/mocked/path", [], [])])
@@ -572,9 +537,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
     @mock.patch("os.renames")
     @mock.patch("os.walk")
     @mock.patch.dict(config.bwp_config, {"alt_peapix_region": ["us"]})
-    def test_convert_to_ftv_dir_structure(
-        self, mock_os_walk, mock_os_renames, mock_shutil_rmtree
-    ):
+    def test_convert_to_ftv_dir_structure(self, mock_os_walk, mock_os_renames, mock_shutil_rmtree):
         """Test test_convert_to_ftv_dir_structure."""
         root_image_dir = "/mocked/path"
         year_list = ["2021"]
@@ -597,18 +560,14 @@ class TestDownLoadServiceBase(unittest.TestCase):
         expected_src = os.path.join(root_image_dir, "2021", "01", "2021-01-01_us.jpg")
         expected_dst = os.path.join(root_image_dir, "01", "01", "2021-01-01_us.jpg")
         mock_os_renames.assert_called_once_with(expected_src, expected_dst)
-        mock_shutil_rmtree.assert_called_once_with(
-            os.path.join(root_image_dir, "2021"), ignore_errors=True
-        )
+        mock_shutil_rmtree.assert_called_once_with(os.path.join(root_image_dir, "2021"), ignore_errors=True)
 
     @mock.patch("abk_bwp.bingwallpaper.logger._resolve")
     @mock.patch("shutil.rmtree")
     @mock.patch("os.renames", side_effect=OSError("Simulated error during renaming"))
     @mock.patch("os.walk")
     @mock.patch.dict("abk_bwp.bingwallpaper.bwp_config", {"alt_peapix_region": ["us"]})
-    def test_convert_to_ftv_dir_structure_exception(
-        self, mock_os_walk, mock_os_renames, mock_shutil_rmtree, mock_logger_resolve
-    ):
+    def test_convert_to_ftv_dir_structure_exception(self, mock_os_walk, mock_os_renames, mock_shutil_rmtree, mock_logger_resolve):
         """Test exception handling in _convert_to_ftv_dir_structure."""
         # Set up a dummy logger for lazy resolution.
         dummy_logger = mock.Mock()
@@ -631,9 +590,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
 
         # Call the method and assert that an OSError is raised.
         with self.assertRaises(OSError) as cm:
-            bingwallpaper.DownLoadServiceBase._convert_to_ftv_dir_structure(
-                root_image_dir, year_list
-            )
+            bingwallpaper.DownLoadServiceBase._convert_to_ftv_dir_structure(root_image_dir, year_list)
 
         self.assertIn("Simulated error during renaming", str(cm.exception))
         # Assert that our dummy logger’s error method was called.
@@ -650,9 +607,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
     @mock.patch("os.renames")
     @mock.patch("os.walk")
     @mock.patch.dict("abk_bwp.bingwallpaper.bwp_config", {"alt_peapix_region": ["us"]})
-    def test_convert_to_date_dir_structure(
-        self, mock_os_walk, mock_os_renames, mock_shutil_rmtree, mock_logger
-    ):
+    def test_convert_to_date_dir_structure(self, mock_os_walk, mock_os_renames, mock_shutil_rmtree, mock_logger):
         """Test test_convert_to_date_dir_structure."""
         root_image_dir = "/mocked/path"
         month_list = ["01"]
@@ -671,25 +626,19 @@ class TestDownLoadServiceBase(unittest.TestCase):
         mock_os_walk.side_effect = os_walk_side_effect
 
         # Call the method under test
-        bingwallpaper.DownLoadServiceBase._convert_to_date_dir_structure(
-            root_image_dir, month_list
-        )
+        bingwallpaper.DownLoadServiceBase._convert_to_date_dir_structure(root_image_dir, month_list)
 
         expected_src = os.path.join(root_image_dir, "01", "01", "2021-01-01_us.jpg")
         expected_dst = os.path.join(root_image_dir, "2021", "01", "2021-01-01_us.jpg")
         mock_os_renames.assert_called_once_with(expected_src, expected_dst)
-        mock_shutil_rmtree.assert_called_once_with(
-            os.path.join(root_image_dir, "01"), ignore_errors=True
-        )
+        mock_shutil_rmtree.assert_called_once_with(os.path.join(root_image_dir, "01"), ignore_errors=True)
 
     @mock.patch("abk_bwp.bingwallpaper.logger._resolve")
     @mock.patch("shutil.rmtree")
     @mock.patch("os.renames", side_effect=OSError("Simulated error during renaming"))
     @mock.patch("os.walk")
     @mock.patch.dict("abk_bwp.bingwallpaper.bwp_config", {"alt_peapix_region": ["us"]})
-    def test_convert_to_date_dir_structure_exception(
-        self, mock_os_walk, mock_os_renames, mock_shutil_rmtree, mock_logger
-    ):
+    def test_convert_to_date_dir_structure_exception(self, mock_os_walk, mock_os_renames, mock_shutil_rmtree, mock_logger):
         """Test test_convert_to_date_dir_structure_exception."""
         root_image_dir = "/mocked/path"
         month_list = ["01"]
@@ -709,9 +658,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
 
         # Call the method under test and assert that it raises an exception
         with self.assertRaises(OSError):
-            bingwallpaper.DownLoadServiceBase._convert_to_date_dir_structure(
-                root_image_dir, month_list
-            )
+            bingwallpaper.DownLoadServiceBase._convert_to_date_dir_structure(root_image_dir, month_list)
 
     # -------------------------------------------------------------------------
     # DownLoadServiceBase._download_images
@@ -727,12 +674,8 @@ class TestDownLoadServiceBase(unittest.TestCase):
         mock_get_logger.return_value = mock_logger
         # Setup image data list
         img_data_list = [
-            bingwallpaper.ImageDownloadData(
-                datetime.date(2025, 1, 2), b"title2", b"copy2", ["url2"], "img/path", "img2.jpg"
-            ),
-            bingwallpaper.ImageDownloadData(
-                datetime.date(2025, 1, 1), b"title1", b"copy1", ["url1"], "img/path", "img1.jpg"
-            ),
+            bingwallpaper.ImageDownloadData(datetime.date(2025, 1, 2), b"title2", b"copy2", ["url2"], "img/path", "img2.jpg"),
+            bingwallpaper.ImageDownloadData(datetime.date(2025, 1, 1), b"title1", b"copy1", ["url1"], "img/path", "img1.jpg"),
         ]
 
         # Act
@@ -764,12 +707,8 @@ class TestDownLoadServiceBase(unittest.TestCase):
         mock_process_image.side_effect = side_effects + [None]  # img2 succeeds immediately
         # Setup image data list
         img_data_list = [
-            bingwallpaper.ImageDownloadData(
-                datetime.date(2025, 1, 2), b"title2", b"copy2", ["url2"], "img/path", "img2.jpg"
-            ),
-            bingwallpaper.ImageDownloadData(
-                datetime.date(2025, 1, 1), b"title1", b"copy1", ["url1"], "img/path", "img1.jpg"
-            ),
+            bingwallpaper.ImageDownloadData(datetime.date(2025, 1, 2), b"title2", b"copy2", ["url2"], "img/path", "img2.jpg"),
+            bingwallpaper.ImageDownloadData(datetime.date(2025, 1, 1), b"title1", b"copy1", ["url1"], "img/path", "img1.jpg"),
         ]
 
         # Act
@@ -784,9 +723,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
         mock_logger.info.assert_any_call("✅ All image downloads completed.")
 
     @mock.patch.object(
-        bingwallpaper.BingDownloadService,
-        "_process_and_download_image",
-        side_effect=Exception("permanent failure"),
+        bingwallpaper.BingDownloadService, "_process_and_download_image", side_effect=Exception("permanent failure")
     )
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
     def test_download_images_failure_after_retries(self, mock_get_logger, mock_process_image):
@@ -799,12 +736,7 @@ class TestDownLoadServiceBase(unittest.TestCase):
         # Setup image data list
         img_data_list = [
             bingwallpaper.ImageDownloadData(
-                datetime.date(2025, 1, 1),
-                b"title1",
-                b"copy1",
-                ["url1"],
-                os.path.join("img", "path"),
-                "img1.jpg",
+                datetime.date(2025, 1, 1), b"title1", b"copy1", ["url1"], os.path.join("img", "path"), "img1.jpg"
             )
         ]
 
@@ -827,19 +759,10 @@ class TestDownLoadServiceBase(unittest.TestCase):
     @mock.patch("PIL.Image.open")
     @mock.patch("requests.get")
     @mock.patch("abk_bwp.abk_common.ensure_dir")
-    @mock.patch(
-        "abk_bwp.bingwallpaper.get_full_img_dir_from_file_name",
-        return_value=os.path.join("mocked", "path"),
-    )
+    @mock.patch("abk_bwp.bingwallpaper.get_full_img_dir_from_file_name", return_value=os.path.join("mocked", "path"))
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
     def test_process_and_download_image_success(
-        self,
-        mock_get_logger,
-        mock_get_path,
-        mock_ensure_dir,
-        mock_requests_get,
-        mock_image_open,
-        mock_get_quality,
+        self, mock_get_logger, mock_get_path, mock_ensure_dir, mock_requests_get, mock_image_open, mock_get_quality
     ):
         """Test test_process_and_download_image_success."""
         # Arrange
@@ -875,13 +798,9 @@ class TestDownLoadServiceBase(unittest.TestCase):
         # ----------------------------------
         mock_get_path.assert_called_once_with("test.jpg")
         mock_ensure_dir.assert_called_once_with(os.path.join("mocked", "path"))
-        mock_requests_get.assert_called_once_with(
-            "http://example.com/image.jpg", stream=True, timeout=mock.ANY
-        )
+        mock_requests_get.assert_called_once_with("http://example.com/image.jpg", stream=True, timeout=mock.ANY)
         mock_image_open.assert_called_once()
-        mock_image.resize.assert_called_once_with(
-            bingwallpaper.BWP_DEFAULT_IMG_SIZE, Image.Resampling.LANCZOS
-        )
+        mock_image.resize.assert_called_once_with(bingwallpaper.BWP_DEFAULT_IMG_SIZE, Image.Resampling.LANCZOS)
         mock_get_quality.assert_called_once()
         mock_image.save.assert_called_once()
         mock_logger.exception.assert_not_called()
@@ -890,19 +809,10 @@ class TestDownLoadServiceBase(unittest.TestCase):
     @mock.patch("PIL.Image.open")
     @mock.patch("requests.get", return_value=mock.Mock(status_code=404))
     @mock.patch("abk_bwp.abk_common.ensure_dir")
-    @mock.patch(
-        "abk_bwp.bingwallpaper.get_full_img_dir_from_file_name",
-        return_value=os.path.join("mocked", "path"),
-    )
+    @mock.patch("abk_bwp.bingwallpaper.get_full_img_dir_from_file_name", return_value=os.path.join("mocked", "path"))
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
     def test_process_and_download_image_http_error(
-        self,
-        mock_get_logger,
-        mock_get_path,
-        mock_ensure_dir,
-        mock_requests_get,
-        mock_image_open,
-        mock_get_quality,
+        self, mock_get_logger, mock_get_path, mock_ensure_dir, mock_requests_get, mock_image_open, mock_get_quality
     ):
         """Test image download error."""
         # Arrange
@@ -938,19 +848,10 @@ class TestDownLoadServiceBase(unittest.TestCase):
     @mock.patch("PIL.Image.open", side_effect=Exception("Image error"))
     @mock.patch("requests.get")
     @mock.patch("abk_bwp.abk_common.ensure_dir")
-    @mock.patch(
-        "abk_bwp.bingwallpaper.get_full_img_dir_from_file_name",
-        return_value=os.path.join("mocked", "path"),
-    )
+    @mock.patch("abk_bwp.bingwallpaper.get_full_img_dir_from_file_name", return_value=os.path.join("mocked", "path"))
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
     def test_process_and_download_image_raises_exception(
-        self,
-        mock_get_logger,
-        mock_get_path,
-        mock_ensure_dir,
-        mock_requests_get,
-        mock_image_open,
-        mock_get_quality,
+        self, mock_get_logger, mock_get_path, mock_ensure_dir, mock_requests_get, mock_image_open, mock_get_quality
     ):
         """Test test_process_and_download_image_raises_exception."""
         # Arrange
@@ -982,16 +883,12 @@ class TestDownLoadServiceBase(unittest.TestCase):
         mock_ensure_dir.assert_called_once_with(os.path.join("mocked", "path"))
         mock_requests_get.assert_called_once()
         mock_requests_get.assert_called_once_with(
-            "http://example.com/corrupt.jpg",
-            stream=True,
-            timeout=bingwallpaper.BWP_REQUEST_TIMEOUT,
+            "http://example.com/corrupt.jpg", stream=True, timeout=bingwallpaper.BWP_REQUEST_TIMEOUT
         )
         mock_image_open.assert_called_once()
         mock_get_quality.assert_not_called()
         expected_path = os.path.join("mocked", "path", "test.jpg")
-        mock_logger.exception.assert_called_once_with(
-            f"ERROR: exp=Exception('Image error'), downloading image: {expected_path}"
-        )
+        mock_logger.exception.assert_called_once_with(f"ERROR: exp=Exception('Image error'), downloading image: {expected_path}")
 
 
 # =============================================================================
@@ -1006,9 +903,7 @@ class TestBingDownloadService(unittest.TestCase):
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
     @mock.patch("requests.get")
     @mock.patch.object(bingwallpaper.BingDownloadService, "_download_images")
-    def test_download_new_images_success(
-        self, mock_download_images, mock_requests_get, mock_get_logger
-    ):
+    def test_download_new_images_success(self, mock_download_images, mock_requests_get, mock_get_logger):
         """Test test_download_new_images_success."""
         # Arrange
         # ----------------------------------
@@ -1018,14 +913,7 @@ class TestBingDownloadService(unittest.TestCase):
         mock_response = mock.Mock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
-            "images": [
-                {
-                    "startdate": "20250525",
-                    "title": "Sample Image",
-                    "copyright": "Sample Copyright",
-                    "url": "/sample.jpg",
-                }
-            ]
+            "images": [{"startdate": "20250525", "title": "Sample Image", "copyright": "Sample Copyright", "url": "/sample.jpg"}]
         }
         mock_requests_get.return_value = mock_response
 
@@ -1063,14 +951,9 @@ class TestBingDownloadService(unittest.TestCase):
     # BingDownloadService._process_bing_api_data
     # -------------------------------------------------------------------------
     @mock.patch("os.path.exists", return_value=False)
-    @mock.patch(
-        "abk_bwp.bingwallpaper.get_full_img_dir_from_date",
-        return_value=os.path.join("mocked", "path"),
-    )
+    @mock.patch("abk_bwp.bingwallpaper.get_full_img_dir_from_date", return_value=os.path.join("mocked", "path"))
     @mock.patch("abk_bwp.bingwallpaper.get_config_img_region", return_value="en-US")
-    @mock.patch(
-        "abk_bwp.bingwallpaper.get_config_img_dir", return_value=os.path.join("mock", "imgdir")
-    )
+    @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir", return_value=os.path.join("mock", "imgdir"))
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
     def test_process_valid_metadata_image_not_exists(
         self, mock_get_logger, mock_get_img_dir, mock_get_region, mock_get_full_path, mock_exists
@@ -1081,9 +964,7 @@ class TestBingDownloadService(unittest.TestCase):
         mock_logger = mock.MagicMock()
         mock_get_logger.return_value = mock_logger
 
-        metadata_list = [
-            {"startdate": "20250102", "copyright": "Test Image", "urlbase": "/testimage"}
-        ]
+        metadata_list = [{"startdate": "20250102", "copyright": "Test Image", "urlbase": "/testimage"}]
 
         # Act
         # ----------------------------------
@@ -1103,19 +984,12 @@ class TestBingDownloadService(unittest.TestCase):
         mock_get_img_dir.assert_called_once_with()
         mock_get_region.assert_called_once_with()
         mock_get_full_path.assert_called_once_with(datetime.date(2025, 1, 2))
-        mock_exists.assert_called_once_with(
-            os.path.join("mocked", "path", "2025-01-02_en-US.jpg")
-        )
+        mock_exists.assert_called_once_with(os.path.join("mocked", "path", "2025-01-02_en-US.jpg"))
 
     @mock.patch("os.path.exists", return_value=True)
-    @mock.patch(
-        "abk_bwp.bingwallpaper.get_full_img_dir_from_date",
-        return_value=os.path.join("mocked", "path"),
-    )
+    @mock.patch("abk_bwp.bingwallpaper.get_full_img_dir_from_date", return_value=os.path.join("mocked", "path"))
     @mock.patch("abk_bwp.bingwallpaper.get_config_img_region", return_value="en-US")
-    @mock.patch(
-        "abk_bwp.bingwallpaper.get_config_img_dir", return_value=os.path.join("mock", "imgdir")
-    )
+    @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir", return_value=os.path.join("mock", "imgdir"))
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
     def test_process_image_already_exists(
         self, mock_get_logger, mock_get_img_dir, mock_get_region, mock_get_full_path, mock_exists
@@ -1127,9 +1001,7 @@ class TestBingDownloadService(unittest.TestCase):
         mock_logger = mock.MagicMock()
         mock_get_logger.return_value = mock_logger
         # Setup Metadata list
-        metadata_list = [
-            {"startdate": "20250102", "copyright": "Test Image", "urlbase": "/testimage"}
-        ]
+        metadata_list = [{"startdate": "20250102", "copyright": "Test Image", "urlbase": "/testimage"}]
 
         # Act
         # ----------------------------------
@@ -1143,19 +1015,12 @@ class TestBingDownloadService(unittest.TestCase):
         mock_get_img_dir.assert_called_once_with()
         mock_get_region.assert_called_once_with()
         mock_get_full_path.assert_called_once_with(datetime.date(2025, 1, 2))
-        mock_exists.assert_called_once_with(
-            os.path.join("mocked", "path", "2025-01-02_en-US.jpg")
-        )
+        mock_exists.assert_called_once_with(os.path.join("mocked", "path", "2025-01-02_en-US.jpg"))
 
     @mock.patch("os.path.exists", return_value=False)
-    @mock.patch(
-        "abk_bwp.bingwallpaper.get_full_img_dir_from_date",
-        return_value=os.path.join("mocked", "path"),
-    )
+    @mock.patch("abk_bwp.bingwallpaper.get_full_img_dir_from_date", return_value=os.path.join("mocked", "path"))
     @mock.patch("abk_bwp.bingwallpaper.get_config_img_region", return_value="en-US")
-    @mock.patch(
-        "abk_bwp.bingwallpaper.get_config_img_dir", return_value=os.path.join("mock", "imgdir")
-    )
+    @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir", return_value=os.path.join("mock", "imgdir"))
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
     def test_process_invalid_metadata_logs_exception(
         self, mock_get_logger, mock_get_img_dir, mock_get_region, mock_get_full_path, mock_exists
@@ -1167,9 +1032,7 @@ class TestBingDownloadService(unittest.TestCase):
         mock_logger = mock.MagicMock()
         mock_get_logger.return_value = mock_logger
         # Malformed date should raise in datetime.strptime
-        metadata_list = [
-            {"startdate": "not-a-date", "copyright": "Test Image", "urlbase": "/testimage"}
-        ]
+        metadata_list = [{"startdate": "not-a-date", "copyright": "Test Image", "urlbase": "/testimage"}]
 
         service = bingwallpaper.BingDownloadService(dl_logger=mock_logger)
         result = service._process_bing_api_data(metadata_list)
@@ -1192,26 +1055,15 @@ class TestPeapixDownloadService(unittest.TestCase):
     # -------------------------------------------------------------------------
     # PeapixDownloadService.download_new_images
     # -------------------------------------------------------------------------
-    @mock.patch(
-        "abk_bwp.bingwallpaper.get_config_img_dir", return_value=os.path.join("mock", "dir")
-    )
-    @mock.patch.dict(
-        "abk_bwp.bingwallpaper.bwp_config",
-        {"CONSTANT": {"PEAPIX_URL": "https://api.peapix.com"}, "REGION": "us"},
-    )
+    @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir", return_value=os.path.join("mock", "dir"))
+    @mock.patch.dict("abk_bwp.bingwallpaper.bwp_config", {"CONSTANT": {"PEAPIX_URL": "https://api.peapix.com"}, "REGION": "us"})
     @mock.patch("requests.get")
     @mock.patch.object(bingwallpaper.PeapixDownloadService, "_add_date_to_peapix_data")
     @mock.patch.object(bingwallpaper.PeapixDownloadService, "_process_image_data")
     @mock.patch.object(bingwallpaper.PeapixDownloadService, "_download_images")
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
     def test_download_new_images_success(
-        self,
-        mock_get_logger,
-        mock_download,
-        mock_process,
-        mock_add_date,
-        mock_requests_get,
-        mock_img_dir,
+        self, mock_get_logger, mock_download, mock_process, mock_add_date, mock_requests_get, mock_img_dir
     ):
         """Test test_download_new_images_success."""
         # Arrange
@@ -1239,30 +1091,17 @@ class TestPeapixDownloadService(unittest.TestCase):
         mock_add_date.assert_called_once_with({"data": "mocked"}, "us")
         mock_process.assert_called_once_with([{"pageUrl": "123456", "date": "2025-05-31"}])
         mock_download.assert_called_once_with(["image1", "image2"])
-        mock_logger.debug.assert_any_call(
-            "Getting Image info from: get_metadata_url='https://peapix.com/bing/feed?country=us'"
-        )
+        mock_logger.debug.assert_any_call("Getting Image info from: get_metadata_url='https://peapix.com/bing/feed?country=us'")
 
-    @mock.patch(
-        "abk_bwp.bingwallpaper.get_config_img_dir", return_value=os.path.join("mock", "dir")
-    )
-    @mock.patch.dict(
-        "abk_bwp.bingwallpaper.bwp_config",
-        {"CONSTANT": {"PEAPIX_URL": "https://api.peapix.com"}, "REGION": "us"},
-    )
+    @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir", return_value=os.path.join("mock", "dir"))
+    @mock.patch.dict("abk_bwp.bingwallpaper.bwp_config", {"CONSTANT": {"PEAPIX_URL": "https://api.peapix.com"}, "REGION": "us"})
     @mock.patch("requests.get")
     @mock.patch.object(bingwallpaper.PeapixDownloadService, "_add_date_to_peapix_data")
     @mock.patch.object(bingwallpaper.PeapixDownloadService, "_process_image_data")
     @mock.patch.object(bingwallpaper.PeapixDownloadService, "_download_images")
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
     def test_download_new_images_http_error(
-        self,
-        mock_get_logger,
-        mock_download,
-        mock_process,
-        mock_add_date,
-        mock_requests_get,
-        mock_img_dir,
+        self, mock_get_logger, mock_download, mock_process, mock_add_date, mock_requests_get, mock_img_dir
     ):
         """Test test_download_new_images_success."""
         # Arrange
@@ -1292,15 +1131,10 @@ class TestPeapixDownloadService(unittest.TestCase):
     # PeapixDownloadService._process_image_data
     # -------------------------------------------------------------------------
     @mock.patch("abk_bwp.bingwallpaper.get_config_img_region", return_value="EN-US")
-    @mock.patch(
-        "abk_bwp.bingwallpaper.get_full_img_dir_from_date",
-        return_value=os.path.join("mocked", "path"),
-    )
+    @mock.patch("abk_bwp.bingwallpaper.get_full_img_dir_from_date", return_value=os.path.join("mocked", "path"))
     @mock.patch("os.path.exists", return_value=False)
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
-    def test_returns_images_to_download(
-        self, mock_get_logger, mock_exists, mock_get_dir, mock_get_region
-    ):
+    def test_returns_images_to_download(self, mock_get_logger, mock_exists, mock_get_dir, mock_get_region):
         """Test test_returns_images_to_download."""
         # Arrange
         # ----------------------------------
@@ -1329,22 +1163,15 @@ class TestPeapixDownloadService(unittest.TestCase):
         self.assertIsInstance(result[0], bingwallpaper.ImageDownloadData)
         self.assertEqual(result[0].imageDate, datetime.date(2025, 5, 25))
         self.assertEqual(result[0].imageName, "2025-05-25_EN-US.jpg")
-        mock_exists.assert_called_once_with(
-            os.path.join("mocked", "path", "2025-05-25_EN-US.jpg")
-        )
+        mock_exists.assert_called_once_with(os.path.join("mocked", "path", "2025-05-25_EN-US.jpg"))
         mock_get_dir.assert_called_once_with(datetime.date(2025, 5, 25))
         mock_get_region.assert_called_once()
 
     @mock.patch("abk_bwp.bingwallpaper.get_config_img_region", return_value="EN-US")
-    @mock.patch(
-        "abk_bwp.bingwallpaper.get_full_img_dir_from_date",
-        return_value=os.path.join("mocked", "path"),
-    )
+    @mock.patch("abk_bwp.bingwallpaper.get_full_img_dir_from_date", return_value=os.path.join("mocked", "path"))
     @mock.patch("os.path.exists", return_value=True)
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
-    def test_skips_existing_images(
-        self, mock_get_logger, mock_exists, mock_get_dir, mock_get_region
-    ):
+    def test_skips_existing_images(self, mock_get_logger, mock_exists, mock_get_dir, mock_get_region):
         """Test test_skips_existing_images."""
         # Arrange
         # ----------------------------------
@@ -1353,14 +1180,7 @@ class TestPeapixDownloadService(unittest.TestCase):
         mock_get_logger.return_value = mock_logger
         # Setup metadata
         metadata = [
-            {
-                "date": "2025-05-25",
-                "title": "Already Exists",
-                "copyright": "",
-                "imageUrl": "",
-                "fullUrl": "",
-                "thumbUrl": "",
-            }
+            {"date": "2025-05-25", "title": "Already Exists", "copyright": "", "imageUrl": "", "fullUrl": "", "thumbUrl": ""}
         ]
 
         # Act
@@ -1371,37 +1191,22 @@ class TestPeapixDownloadService(unittest.TestCase):
         # Asserts
         # ----------------------------------
         self.assertEqual(result, [])
-        mock_exists.assert_called_once_with(
-            os.path.join("mocked", "path", "2025-05-25_EN-US.jpg")
-        )
+        mock_exists.assert_called_once_with(os.path.join("mocked", "path", "2025-05-25_EN-US.jpg"))
         mock_get_dir.assert_called_once_with(datetime.date(2025, 5, 25))
         mock_get_region.assert_called_once()
 
     @mock.patch("abk_bwp.bingwallpaper.get_config_img_region", return_value="EN-US")
-    @mock.patch(
-        "abk_bwp.bingwallpaper.get_full_img_dir_from_date",
-        return_value=os.path.join("mocked", "path"),
-    )
+    @mock.patch("abk_bwp.bingwallpaper.get_full_img_dir_from_date", return_value=os.path.join("mocked", "path"))
     @mock.patch("os.path.exists", return_value=False)
     @mock.patch("abk_bwp.logger_manager.LoggerManager.get_logger")
-    def test_handles_invalid_date(
-        self, mock_get_logger, mock_exists, mock_get_dir, mock_get_region
-    ):
+    def test_handles_invalid_date(self, mock_get_logger, mock_exists, mock_get_dir, mock_get_region):
         """Test test_handles_invalid_date."""
         # Arrange
         # ----------------------------------
         # Setup logger mock
         mock_logger = mock.MagicMock()
         mock_get_logger.return_value = mock_logger
-        bad_metadata = [
-            {
-                "date": "not-a-date",
-                "title": "Invalid Date",
-                "imageUrl": "",
-                "fullUrl": "",
-                "thumbUrl": "",
-            }
-        ]
+        bad_metadata = [{"date": "not-a-date", "title": "Invalid Date", "imageUrl": "", "fullUrl": "", "thumbUrl": ""}]
 
         # Act
         # ----------------------------------
@@ -1469,10 +1274,7 @@ class TestPeapixDownloadService(unittest.TestCase):
         mock_get_logger.return_value = mock_logger
         # Mock cursor object
         mock_cursor = mock.MagicMock()
-        mock_cursor.fetchall.return_value = [
-            (1001, "us", "2024-01-01"),
-            (1002, "jp", "2024-01-02"),
-        ]
+        mock_cursor.fetchall.return_value = [(1001, "us", "2024-01-01"), (1002, "jp", "2024-01-02")]
         # Set the context manager return value
         mock_cursor_ctx_mgr.return_value.__enter__.return_value = mock_cursor
         mock_conn = mock.MagicMock()
@@ -1484,10 +1286,7 @@ class TestPeapixDownloadService(unittest.TestCase):
 
         # Assert
         # ----------------------------------
-        expected = {
-            1001: {"country": "us", "date": "2024-01-01"},
-            1002: {"country": "jp", "date": "2024-01-02"},
-        }
+        expected = {1001: {"country": "us", "date": "2024-01-01"}, 1002: {"country": "jp", "date": "2024-01-02"}}
         self.assertEqual(result, expected)
         mock_cursor.execute.assert_called_once_with(SQL_SELECT_EXISTING)
         mock_cursor.fetchall.assert_called_once()
@@ -1573,9 +1372,7 @@ class TestPeapixDownloadService(unittest.TestCase):
         # Act
         # ----------------------------------
         service = bingwallpaper.PeapixDownloadService(dls_logger=mock_logger)
-        service._db_insert_metadata(
-            mock_conn, entries, rec_to_keep=bingwallpaper.DEFAULT_NUMBER_OF_RECORDS_TO_KEEP
-        )
+        service._db_insert_metadata(mock_conn, entries, rec_to_keep=bingwallpaper.DEFAULT_NUMBER_OF_RECORDS_TO_KEEP)
 
         # Assert
         # ----------------------------------
@@ -1596,9 +1393,7 @@ class TestPeapixDownloadService(unittest.TestCase):
     # PeapixDownloadService._add_date_to_peapix_data
     # -------------------------------------------------------------------------
     @mock.patch("abk_bwp.bingwallpaper.db_sqlite_connect")
-    @mock.patch.dict(
-        "abk_bwp.bingwallpaper.bwp_config", {"CONSTANT": {"ALT_PEAPIX_REGION": ["us", "jp"]}}
-    )
+    @mock.patch.dict("abk_bwp.bingwallpaper.bwp_config", {"CONSTANT": {"ALT_PEAPIX_REGION": ["us", "jp"]}})
     @mock.patch("abk_bwp.bingwallpaper.str_to_date")
     @mock.patch("abk_bwp.bingwallpaper.PeapixDownloadService._db_insert_metadata")
     @mock.patch("abk_bwp.bingwallpaper.PeapixDownloadService._extract_image_id")
@@ -1620,9 +1415,7 @@ class TestPeapixDownloadService(unittest.TestCase):
         ]
         # Mocked extract_image_id
         mock_extract_id.side_effect = lambda url: int(url.split("/")[-1])
-        mock_get_existing.return_value = {
-            1000: {DBColumns.COUNTRY.value: "us", DBColumns.DATE.value: "2024-01-01"}
-        }
+        mock_get_existing.return_value = {1000: {DBColumns.COUNTRY.value: "us", DBColumns.DATE.value: "2024-01-01"}}
         # Mock date parser
         mock_str_to_date.return_value = datetime.datetime(2024, 1, 1)
         mock_conn = mock.MagicMock()
@@ -1642,9 +1435,7 @@ class TestPeapixDownloadService(unittest.TestCase):
         mock_insert.assert_called()
         mock_get_existing.assert_called_once()
         mock_extract_id.assert_called()
-        mock_str_to_date.assert_has_calls(
-            [mock.call("2024-01-01"), mock.call("2024-01-03"), mock.call("2024-01-02")]
-        )
+        mock_str_to_date.assert_has_calls([mock.call("2024-01-01"), mock.call("2024-01-03"), mock.call("2024-01-02")])
         self.assertEqual(mock_str_to_date.call_count, 3)
 
     @mock.patch("abk_bwp.bingwallpaper.db_sqlite_connect")
@@ -1655,17 +1446,13 @@ class TestPeapixDownloadService(unittest.TestCase):
         mock_db_connect.return_value.__enter__.return_value = mock.MagicMock()
 
         with self.assertRaises(RuntimeError) as ctx:
-            service._add_date_to_peapix_data(
-                img_items=[{DBColumns.PAGE_URL.value: "https://peapix.com/bing/1"}], country="us"
-            )
+            service._add_date_to_peapix_data(img_items=[{DBColumns.PAGE_URL.value: "https://peapix.com/bing/1"}], country="us")
         self.assertIn("Only 1 image(s) provided", str(ctx.exception))
 
     @mock.patch("abk_bwp.bingwallpaper.db_sqlite_connect")
     @mock.patch("abk_bwp.bingwallpaper.PeapixDownloadService._db_get_existing_data")
     @mock.patch("abk_bwp.bingwallpaper.PeapixDownloadService._extract_image_id")
-    def test_add_date_to_peapix_data_missing_baseline(
-        self, mock_extract, mock_existing, mock_db_connect
-    ):
+    def test_add_date_to_peapix_data_missing_baseline(self, mock_extract, mock_existing, mock_db_connect):
         """Test test_add_date_to_peapix_data_missing_baseline."""
         # Arrange
         # ----------------------------------
@@ -1692,9 +1479,7 @@ class TestPeapixDownloadService(unittest.TestCase):
 
     @mock.patch("abk_bwp.bingwallpaper.db_sqlite_connect")
     @mock.patch("abk_bwp.bingwallpaper.str_to_date")
-    @mock.patch.dict(
-        "abk_bwp.bingwallpaper.bwp_config", {"CONSTANT": {"ALT_PEAPIX_REGION": ["us", "jp"]}}
-    )
+    @mock.patch.dict("abk_bwp.bingwallpaper.bwp_config", {"CONSTANT": {"ALT_PEAPIX_REGION": ["us", "jp"]}})
     @mock.patch("abk_bwp.bingwallpaper.PeapixDownloadService._extract_image_id")
     @mock.patch("abk_bwp.bingwallpaper.PeapixDownloadService._db_get_existing_data")
     @mock.patch("abk_bwp.bingwallpaper.PeapixDownloadService._db_insert_metadata")
@@ -1713,9 +1498,7 @@ class TestPeapixDownloadService(unittest.TestCase):
             {DBColumns.PAGE_URL.value: "https://peapix.com/bing/1006"},
         ]
         mock_extract_id.side_effect = [1001, 1003, 1006]
-        mock_get_existing.return_value = {
-            1000: {DBColumns.COUNTRY.value: "us", DBColumns.DATE.value: "2024-01-01"}
-        }
+        mock_get_existing.return_value = {1000: {DBColumns.COUNTRY.value: "us", DBColumns.DATE.value: "2024-01-01"}}
         mock_str_to_date.return_value = datetime.datetime(2024, 1, 1)
         mock_conn = mock.MagicMock()
         mock_db_connect.return_value.__enter__.return_value = mock_conn
@@ -1849,12 +1632,8 @@ class TestWindowsDependent(unittest.TestCase):
         """Test setting background on Windows 10+."""
         # Arrange
         # ----------------------------------
-        UnameResult = namedtuple(
-            "uname_result", ["system", "node", "release", "version", "machine", "processor"]
-        )
-        mock_uname.return_value = UnameResult(
-            "Windows", "Host", "10", "10.0.19041", "AMD64", "Intel64"
-        )
+        UnameResult = namedtuple("uname_result", ["system", "node", "release", "version", "machine", "processor"])
+        mock_uname.return_value = UnameResult("Windows", "Host", "10", "10.0.19041", "AMD64", "Intel64")
         file_name = "C:\\path\\to\\image.jpg"
 
         # Act
@@ -1871,9 +1650,7 @@ class TestWindowsDependent(unittest.TestCase):
         """Test setting background on unsupported Windows version (< 10)."""
         # Arrange
         # ----------------------------------
-        Uname = namedtuple(
-            "Uname", ["system", "node", "release", "version", "machine", "processor"]
-        )
+        Uname = namedtuple("Uname", ["system", "node", "release", "version", "machine", "processor"])
         mock_uname.return_value = Uname("Windows", "my-host", "6", "6.1.7601", "AMD64", "Intel64")
         file_name = "C:\\Users\\Test\\Pictures\\image.jpg"
 
@@ -1886,21 +1663,11 @@ class TestWindowsDependent(unittest.TestCase):
         # print("LOGGER CALLS:")
         # for call in self.mock_logger.error.call_args_list:
         #     print(call)
-        self.assertTrue(
-            any(
-                "Windows 10 and above is supported" in str(call)
-                for call in self.mock_logger.error.call_args_list
-            )
-        )
+        self.assertTrue(any("Windows 10 and above is supported" in str(call) for call in self.mock_logger.error.call_args_list))
         mock_spi.assert_not_called()
-        self.mock_logger.error.assert_any_call(
-            "Windows 10 and above is supported, you are using Windows 6"
-        )
+        self.mock_logger.error.assert_any_call("Windows 10 and above is supported, you are using Windows 6")
         self.assertTrue(
-            any(
-                "Windows 10 and above is supported" in call.args[0]
-                for call in self.mock_logger.error.call_args_list
-            )
+            any("Windows 10 and above is supported" in call.args[0] for call in self.mock_logger.error.call_args_list)
         )
 
 
@@ -1955,14 +1722,9 @@ class TestBingWallPaper(unittest.TestCase):
     @mock.patch("abk_bwp.bingwallpaper.get_config_store_jpg_quality", return_value=85)
     @mock.patch("abk_bwp.bingwallpaper.Image.open")
     @mock.patch("abk_bwp.abk_common.ensure_dir")
-    @mock.patch(
-        "abk_bwp.bingwallpaper.get_full_img_dir_from_date",
-        return_value=os.path.join("images", "SCALE"),
-    )
+    @mock.patch("abk_bwp.bingwallpaper.get_full_img_dir_from_date", return_value=os.path.join("images", "SCALE"))
     @mock.patch("os.walk", return_value=[("/images", [], ["SCALE_2024-05-01_img.jpg"])])
-    @mock.patch(
-        "abk_bwp.abk_common.read_json_file", return_value={"2024-05-01_img.jpg": "Sample Title"}
-    )
+    @mock.patch("abk_bwp.abk_common.read_json_file", return_value={"2024-05-01_img.jpg": "Sample Title"})
     @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir", return_value="/images")
     @mock.patch("abk_bwp.bingwallpaper.logger._resolve")
     def test_process_manually_downloaded_images(
@@ -1993,30 +1755,21 @@ class TestBingWallPaper(unittest.TestCase):
         # Asserts
         # ----------------------------------
         mock_get_img_dir.assert_called_once()
-        mock_read_json.assert_called_once_with(
-            os.path.join(mock_get_img_dir.return_value, bingwallpaper.BWP_META_DATA_FILE_NAME)
-        )
+        mock_read_json.assert_called_once_with(os.path.join(mock_get_img_dir.return_value, bingwallpaper.BWP_META_DATA_FILE_NAME))
         mock_walk.assert_called_once_with(os.path.join(mock_get_img_dir.return_value))
         mock_get_resized_path.assert_called_once_with(datetime.date(2024, 5, 1))
         mock_ensure_dir.assert_called_once_with(mock_get_resized_path.return_value)
         # print("Calls to Image.open:", mock_img_open.call_args_list)
-        mock_img_open.assert_called_once_with(
-            os.path.join(mock_get_img_dir.return_value, "SCALE_2024-05-01_img.jpg")
-        )
+        mock_img_open.assert_called_once_with(os.path.join(mock_get_img_dir.return_value, "SCALE_2024-05-01_img.jpg"))
         mock_get_quality.assert_called_once()
         mock_img.save.assert_called_once()
-        mock_remove.assert_called_once_with(
-            os.path.join(mock_get_img_dir.return_value, "SCALE_2024-05-01_img.jpg")
-        )
+        mock_remove.assert_called_once_with(os.path.join(mock_get_img_dir.return_value, "SCALE_2024-05-01_img.jpg"))
         mock_logger.exception.assert_not_called()
 
     @mock.patch("abk_bwp.bingwallpaper.get_config_store_jpg_quality", return_value=85)
     @mock.patch("abk_bwp.bingwallpaper.Image.open")
     @mock.patch("abk_bwp.abk_common.ensure_dir")
-    @mock.patch(
-        "abk_bwp.bingwallpaper.get_full_img_dir_from_date",
-        return_value=os.path.join("images", "SCALE"),
-    )
+    @mock.patch("abk_bwp.bingwallpaper.get_full_img_dir_from_date", return_value=os.path.join("images", "SCALE"))
     @mock.patch("os.walk", return_value=[("/images", [], ["SCALE_2024-05-01_img.jpg"])])
     @mock.patch("abk_bwp.abk_common.read_json_file", return_value={})  # No title in metadata
     @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir", return_value="/images")
@@ -2049,61 +1802,39 @@ class TestBingWallPaper(unittest.TestCase):
         # Asserts
         # ----------------------------------
         mock_get_img_dir.assert_called_once()
-        mock_read_json.assert_called_once_with(
-            os.path.join(mock_get_img_dir.return_value, bingwallpaper.BWP_META_DATA_FILE_NAME)
-        )
+        mock_read_json.assert_called_once_with(os.path.join(mock_get_img_dir.return_value, bingwallpaper.BWP_META_DATA_FILE_NAME))
         mock_walk.assert_called_once_with(os.path.join(mock_get_img_dir.return_value))
         mock_get_resized_path.assert_called_once_with(datetime.date(2024, 5, 1))
         mock_ensure_dir.assert_called_once_with(mock_get_resized_path.return_value)
-        mock_img_open.assert_called_once_with(
-            os.path.join(mock_get_img_dir.return_value, "SCALE_2024-05-01_img.jpg")
-        )
+        mock_img_open.assert_called_once_with(os.path.join(mock_get_img_dir.return_value, "SCALE_2024-05-01_img.jpg"))
         mock_get_quality.assert_called_once()
         mock_img.getexif.assert_not_called()
         mock_img.save.assert_called_once_with(
-            os.path.join(mock_get_resized_path.return_value, "2024-05-01_img.jpg"),
-            optimize=True,
-            quality=85,
+            os.path.join(mock_get_resized_path.return_value, "2024-05-01_img.jpg"), optimize=True, quality=85
         )
-        mock_remove.assert_called_once_with(
-            os.path.join(mock_get_img_dir.return_value, "SCALE_2024-05-01_img.jpg")
-        )
+        mock_remove.assert_called_once_with(os.path.join(mock_get_img_dir.return_value, "SCALE_2024-05-01_img.jpg"))
         mock_logger.exception.assert_not_called()
 
     @mock.patch("abk_bwp.bingwallpaper.get_config_store_jpg_quality", return_value=85)
     @mock.patch("abk_bwp.bingwallpaper.Image.open", side_effect=OSError("Cannot open image"))
     @mock.patch("abk_bwp.abk_common.ensure_dir")
-    @mock.patch(
-        "abk_bwp.bingwallpaper.get_full_img_dir_from_date",
-        return_value=os.path.join("images", "SCALE"),
-    )
+    @mock.patch("abk_bwp.bingwallpaper.get_full_img_dir_from_date", return_value=os.path.join("images", "SCALE"))
     @mock.patch("os.walk", return_value=[("/images", [], ["SCALE_2024-05-01_img.jpg"])])
     @mock.patch("abk_bwp.abk_common.read_json_file", return_value={})
     @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir", return_value="/images")
     @mock.patch("abk_bwp.bingwallpaper.logger", new=mock.Mock())
     def test_process_manually_downloaded_images_exception(
-        self,
-        mock_get_img_dir,
-        mock_read_json,
-        mock_walk,
-        mock_get_resized_path,
-        mock_ensure_dir,
-        mock_img_open,
-        mock_get_quality,
+        self, mock_get_img_dir, mock_read_json, mock_walk, mock_get_resized_path, mock_ensure_dir, mock_img_open, mock_get_quality
     ):
         """Test exception handling in process_manually_downloaded_images."""
         bingwallpaper.BingWallPaper.process_manually_downloaded_images()
 
         mock_get_img_dir.assert_called_once()
-        mock_read_json.assert_called_once_with(
-            os.path.join(mock_get_img_dir.return_value, bingwallpaper.BWP_META_DATA_FILE_NAME)
-        )
+        mock_read_json.assert_called_once_with(os.path.join(mock_get_img_dir.return_value, bingwallpaper.BWP_META_DATA_FILE_NAME))
         mock_walk.assert_called_once_with(os.path.join(mock_get_img_dir.return_value))
         mock_get_resized_path.assert_called_once_with(datetime.date(2024, 5, 1))
         mock_ensure_dir.assert_called_once_with(mock_get_resized_path.return_value)
-        mock_img_open.assert_called_once_with(
-            os.path.join(mock_get_img_dir.return_value, "SCALE_2024-05-01_img.jpg")
-        )
+        mock_img_open.assert_called_once_with(os.path.join(mock_get_img_dir.return_value, "SCALE_2024-05-01_img.jpg"))
         mock_get_quality.assert_not_called()  # It should fail before this
         bingwallpaper.logger.exception.assert_called_once()
 
@@ -2112,33 +1843,23 @@ class TestBingWallPaper(unittest.TestCase):
     # -------------------------------------------------------------------------
     def test_exact_match_min_size(self):
         """Returns same size when input matches BWP_RESIZE_MIN_IMG_SIZE."""
-        result = bingwallpaper.BingWallPaper._calculate_image_resizing(
-            bingwallpaper.BWP_RESIZE_MIN_IMG_SIZE
-        )
+        result = bingwallpaper.BingWallPaper._calculate_image_resizing(bingwallpaper.BWP_RESIZE_MIN_IMG_SIZE)
         self.assertEqual(result, bingwallpaper.BWP_RESIZE_MIN_IMG_SIZE)
 
     def test_exact_match_default_size(self):
         """Returns same size when input matches BWP_DEFAULT_IMG_SIZE."""
-        result = bingwallpaper.BingWallPaper._calculate_image_resizing(
-            bingwallpaper.BWP_DEFAULT_IMG_SIZE
-        )
+        result = bingwallpaper.BingWallPaper._calculate_image_resizing(bingwallpaper.BWP_DEFAULT_IMG_SIZE)
         self.assertEqual(result, bingwallpaper.BWP_DEFAULT_IMG_SIZE)
 
     def test_larger_than_mid_threshold(self):
         """Returns default size if either dimension is larger than mid threshold."""
-        larger_img = (
-            bingwallpaper.BWP_RESIZE_MID_IMG_SIZE[0] + 1,
-            bingwallpaper.BWP_RESIZE_MID_IMG_SIZE[1] + 1,
-        )
+        larger_img = (bingwallpaper.BWP_RESIZE_MID_IMG_SIZE[0] + 1, bingwallpaper.BWP_RESIZE_MID_IMG_SIZE[1] + 1)
         result = bingwallpaper.BingWallPaper._calculate_image_resizing(larger_img)
         self.assertEqual(result, bingwallpaper.BWP_DEFAULT_IMG_SIZE)
 
     def test_smaller_than_mid_threshold(self):
         """Returns min size if image is smaller than mid threshold."""
-        smaller_img = (
-            bingwallpaper.BWP_RESIZE_MID_IMG_SIZE[0] - 1,
-            bingwallpaper.BWP_RESIZE_MID_IMG_SIZE[1] - 1,
-        )
+        smaller_img = (bingwallpaper.BWP_RESIZE_MID_IMG_SIZE[0] - 1, bingwallpaper.BWP_RESIZE_MID_IMG_SIZE[1] - 1)
         result = bingwallpaper.BingWallPaper._calculate_image_resizing(smaller_img)
         self.assertEqual(result, bingwallpaper.BWP_RESIZE_MIN_IMG_SIZE)
 
@@ -2174,9 +1895,7 @@ class TestBingWallPaper(unittest.TestCase):
         today = datetime.date.today()
         img_name = f"{today.year:04d}-{today.month:02d}-{today.day:02d}_en-US.jpg"
         dst_file_name = f"{bingwallpaper.BWP_DEFAULT_BACKGROUND_IMG_PREFIX}_{img_name}"
-        full_img_path = os.path.join(
-            "/images", f"{today.year:04d}-{today.month:02d}-{today.day:02d}", img_name
-        )
+        full_img_path = os.path.join("/images", f"{today.year:04d}-{today.month:02d}-{today.day:02d}", img_name)
         dst_full_path = os.path.join("/images", dst_file_name)
 
         mock_get_today_img_path.return_value = os.path.dirname(full_img_path)
@@ -2184,10 +1903,7 @@ class TestBingWallPaper(unittest.TestCase):
             (
                 "/images",
                 [],
-                [
-                    "background_img_old.jpg",
-                    dst_file_name,
-                ],  # simulate both current and old images in the dir
+                ["background_img_old.jpg", dst_file_name],  # simulate both current and old images in the dir
             )
         ]
 
@@ -2214,9 +1930,7 @@ class TestBingWallPaper(unittest.TestCase):
     @mock.patch("abk_bwp.bingwallpaper.BingWallPaper.add_outline_text")
     @mock.patch("abk_bwp.bingwallpaper.abk_common.ensure_dir")
     @mock.patch("abk_bwp.bingwallpaper.logger._resolve")
-    def test_resize_background_image_with_resize_and_exif(
-        self, mock_logger, mock_ensure_dir, mock_add_text, mock_quality
-    ):
+    def test_resize_background_image_with_resize_and_exif(self, mock_logger, mock_ensure_dir, mock_add_text, mock_quality):
         """Test test_resize_background_image_with_resize_and_exif."""
         # Arrange
         # ----------------------------------
@@ -2241,9 +1955,7 @@ class TestBingWallPaper(unittest.TestCase):
             # Act
             # ----------------------------------
             with mock.patch("PIL.Image.open", return_value=mock_img):
-                result = bingwallpaper.BingWallPaper._resize_background_image(
-                    src_path, dst_path, (800, 600)
-                )
+                result = bingwallpaper.BingWallPaper._resize_background_image(src_path, dst_path, (800, 600))
 
         # Asserts
         # ----------------------------------
@@ -2278,9 +1990,7 @@ class TestBingWallPaper(unittest.TestCase):
 
         # Act
         # ----------------------------------
-        result = bingwallpaper.BingWallPaper._resize_background_image(
-            src_path, dst_path, dst_size
-        )
+        result = bingwallpaper.BingWallPaper._resize_background_image(src_path, dst_path, dst_size)
 
         # Asserts
         # ----------------------------------
@@ -2295,9 +2005,7 @@ class TestBingWallPaper(unittest.TestCase):
     @mock.patch("abk_bwp.bingwallpaper.BingWallPaper.add_outline_text")
     @mock.patch("abk_bwp.bingwallpaper.abk_common.ensure_dir")
     @mock.patch("abk_bwp.bingwallpaper.logger", new=mock.Mock())
-    def test_resize_background_image_with_exception(
-        self, mock_ensure_dir, mock_add_text, mock_quality
-    ):
+    def test_resize_background_image_with_exception(self, mock_ensure_dir, mock_add_text, mock_quality):
         """Test test_resize_background_image_with_exception."""
         # Arrange
         # ----------------------------------
@@ -2307,9 +2015,7 @@ class TestBingWallPaper(unittest.TestCase):
 
         # Act
         # ----------------------------------
-        result = bingwallpaper.BingWallPaper._resize_background_image(
-            invalid_src_path, fake_dst_path, (800, 600)
-        )
+        result = bingwallpaper.BingWallPaper._resize_background_image(invalid_src_path, fake_dst_path, (800, 600))
 
         # Asserts
         # ----------------------------------
@@ -2378,18 +2084,10 @@ class TestBingWallPaper(unittest.TestCase):
     @mock.patch("abk_bwp.bingwallpaper.abk_common.delete_dir")
     @mock.patch("abk_bwp.bingwallpaper.abk_common.delete_file")
     @mock.patch("abk_bwp.bingwallpaper.os.path.join", side_effect=lambda a, b: f"{a}/{b}")
-    @mock.patch(
-        "abk_bwp.bingwallpaper.os.path.split", side_effect=lambda p: (f"{p}_parent", "dummy")
-    )
-    @mock.patch(
-        "abk_bwp.bingwallpaper.get_full_img_dir_from_file_name",
-        side_effect=lambda name: f"/images/{name}",
-    )
+    @mock.patch("abk_bwp.bingwallpaper.os.path.split", side_effect=lambda p: (f"{p}_parent", "dummy"))
+    @mock.patch("abk_bwp.bingwallpaper.get_full_img_dir_from_file_name", side_effect=lambda name: f"/images/{name}")
     @mock.patch("abk_bwp.bingwallpaper.get_config_number_of_images_to_keep", return_value=3)
-    @mock.patch(
-        "abk_bwp.bingwallpaper.get_all_background_img_names",
-        return_value=["img1", "img2", "img3", "img4", "img5"],
-    )
+    @mock.patch("abk_bwp.bingwallpaper.get_all_background_img_names", return_value=["img1", "img2", "img3", "img4", "img5"])
     @mock.patch("abk_bwp.bingwallpaper.get_config_img_dir", return_value="/images")
     @mock.patch("abk_bwp.bingwallpaper.logger._resolve")
     def test_trim_number_of_images(
@@ -2418,13 +2116,9 @@ class TestBingWallPaper(unittest.TestCase):
         mock_get_all_img_names.assert_called_once_with("/images")
         mock_get_max_keep.assert_called_once()
         self.assertEqual(mock_get_full_path.call_count, 2)
-        mock_path_join.assert_has_calls(
-            [mock.call("/images/img1", "img1"), mock.call("/images/img2", "img2")]
-        )
+        mock_path_join.assert_has_calls([mock.call("/images/img1", "img1"), mock.call("/images/img2", "img2")])
         mock_path_split.assert_has_calls([mock.call("/images/img1"), mock.call("/images/img2")])
-        mock_delete_file.assert_has_calls(
-            [mock.call("/images/img1/img1"), mock.call("/images/img2/img2")]
-        )
+        mock_delete_file.assert_has_calls([mock.call("/images/img1/img1"), mock.call("/images/img2/img2")])
         mock_delete_dir.assert_has_calls(
             [
                 mock.call("/images/img1"),
@@ -2441,9 +2135,7 @@ class TestBingWallPaper(unittest.TestCase):
     # -------------------------------------------------------------------------
     @mock.patch("abk_bwp.bingwallpaper.BingWallPaper._resize_background_image")
     @mock.patch("abk_bwp.bingwallpaper.os.path.join", side_effect=lambda *args: "/".join(args))
-    @mock.patch(
-        "abk_bwp.bingwallpaper.get_full_img_dir_from_date", return_value="/images/2025-05-26"
-    )
+    @mock.patch("abk_bwp.bingwallpaper.get_full_img_dir_from_date", return_value="/images/2025-05-26")
     @mock.patch("abk_bwp.bingwallpaper.delete_files_in_dir")
     @mock.patch("abk_bwp.bingwallpaper.os.walk")
     @mock.patch("abk_bwp.bingwallpaper.abk_common.ensure_dir")
@@ -2483,31 +2175,17 @@ class TestBingWallPaper(unittest.TestCase):
         mock_path_join.assert_any_call(today_dir, "new2.jpg")
         mock_path_join.assert_any_call(ftv_dir, "new2.jpg")
         mock_ensure_dir.assert_called_once_with(ftv_dir)
-        mock_delete_files.assert_called_once_with(
-            dir_name=ftv_dir, file_list=["old1.jpg", "old2.jpg"]
-        )
+        mock_delete_files.assert_called_once_with(dir_name=ftv_dir, file_list=["old1.jpg", "old2.jpg"])
         mock_get_full_img_dir.assert_called_once_with(datetime.date.today())
         mock_resize_image.assert_has_calls(
             [
-                mock.call(
-                    f"{today_dir}/new1.jpg",
-                    f"{ftv_dir}/new1.jpg",
-                    bingwallpaper.BWP_DEFAULT_IMG_SIZE,
-                ),
-                mock.call(
-                    f"{today_dir}/new2.jpg",
-                    f"{ftv_dir}/new2.jpg",
-                    bingwallpaper.BWP_DEFAULT_IMG_SIZE,
-                ),
+                mock.call(f"{today_dir}/new1.jpg", f"{ftv_dir}/new1.jpg", bingwallpaper.BWP_DEFAULT_IMG_SIZE),
+                mock.call(f"{today_dir}/new2.jpg", f"{ftv_dir}/new2.jpg", bingwallpaper.BWP_DEFAULT_IMG_SIZE),
             ]
         )
         mock_resize_image.assert_called()
-        mock_resize_image.assert_any_call(
-            f"{today_dir}/new1.jpg", f"{ftv_dir}/new1.jpg", mock.ANY
-        )
-        mock_resize_image.assert_any_call(
-            f"{today_dir}/new2.jpg", f"{ftv_dir}/new2.jpg", mock.ANY
-        )
+        mock_resize_image.assert_any_call(f"{today_dir}/new1.jpg", f"{ftv_dir}/new1.jpg", mock.ANY)
+        mock_resize_image.assert_any_call(f"{today_dir}/new2.jpg", f"{ftv_dir}/new2.jpg", mock.ANY)
         mock_resize_image.assert_has_calls(mock_resize_image.mock_calls)  # confirms call order
         self.assertEqual(mock_resize_image.call_count, 2)
         self.assertEqual(result, [f"{ftv_dir}/new1.jpg", f"{ftv_dir}/new2.jpg"])

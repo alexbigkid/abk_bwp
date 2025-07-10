@@ -39,9 +39,7 @@ class TestAbkConfig(unittest.TestCase):
         """
         with (
             patch.dict(config.bwp_config, {"ftv": {"enabled": ftv_enabled}}),
-            patch(
-                "abk_bwp.abk_config.update_enable_field_in_toml_file"
-            ) as mock_update_enable_field_in_toml_file,
+            patch("abk_bwp.abk_config.update_enable_field_in_toml_file") as mock_update_enable_field_in_toml_file,
         ):
             abk_config.handle_ftv_option(ftv_input)
         mock_update_enable_field_in_toml_file.assert_called_once_with(
@@ -74,9 +72,7 @@ class TestAbkConfig(unittest.TestCase):
         """
         with (
             patch.dict(config.bwp_config, {"ftv": {"enabled": ftv_enabled}}),
-            patch(
-                "abk_bwp.abk_config.update_enable_field_in_toml_file"
-            ) as mock_update_enable_field_in_toml_file,
+            patch("abk_bwp.abk_config.update_enable_field_in_toml_file") as mock_update_enable_field_in_toml_file,
         ):
             abk_config.handle_ftv_option(ftv_input)
         mock_update_enable_field_in_toml_file.assert_not_called()
@@ -90,10 +86,7 @@ class TestAbkConfig(unittest.TestCase):
         ]
     )
     def test__handle_desktop_auto_update_option__calls_update_enable_field_in_toml_file(
-        self,
-        desktop_img_input: str | None,
-        desktop_img_enabled: bool,
-        exp_desktop_img_enabled: bool,
+        self, desktop_img_input: str | None, desktop_img_enabled: bool, exp_desktop_img_enabled: bool
     ) -> None:
         """test__handle_desktop_auto_update_option__calls_update_enable_field_in_toml_file.
 
@@ -109,19 +102,14 @@ class TestAbkConfig(unittest.TestCase):
 
         with (
             patch.dict(
-                config.bwp_config,
-                {
-                    "desktop_img": {"enabled": desktop_img_enabled},
-                    "img_auto_fetch": img_auto_fetch_enabled,
-                },
+                config.bwp_config, {"desktop_img": {"enabled": desktop_img_enabled}, "img_auto_fetch": img_auto_fetch_enabled}
             ),
             patch("abk_bwp.abk_config.update_enable_field_in_toml_file") as mock_update_enable,
             patch("abk_bwp.abk_config._handle_automation_setup") as mock_automation_setup,
         ):
             abk_config.handle_desktop_auto_update_option(desktop_img_input)
         mock_update_enable.assert_called_once_with(
-            key_to_update=config.DESKTOP_IMG_KW.DESKTOP_IMG.value,
-            update_to=exp_desktop_img_enabled,
+            key_to_update=config.DESKTOP_IMG_KW.DESKTOP_IMG.value, update_to=exp_desktop_img_enabled
         )
         mock_automation_setup.assert_called_once_with()
         self.assertTrue(desktop_img_enabled != exp_desktop_img_enabled)
@@ -140,10 +128,7 @@ class TestAbkConfig(unittest.TestCase):
         ]
     )
     def test__handle_desktop_auto_update_option__does_not_calls_update_enable_field_in_toml_file(
-        self,
-        desktop_img_input: str | None,
-        desktop_img_enabled: bool,
-        exp_desktop_img_enabled: bool,
+        self, desktop_img_input: str | None, desktop_img_enabled: bool, exp_desktop_img_enabled: bool
     ) -> None:
         """test__handle_desktop_auto_update_option__does_not_calls_update_enable_field_in_toml_file.
 
@@ -168,10 +153,7 @@ class TestAbkConfig(unittest.TestCase):
         ]
     )
     def test__handle_img_auto_fetch_option__calls_update_root_field_in_toml_file(
-        self,
-        img_auto_fetch_input: str | None,
-        img_auto_fetch_enabled: bool,
-        exp_img_auto_fetch_enabled: bool,
+        self, img_auto_fetch_input: str | None, img_auto_fetch_enabled: bool, exp_img_auto_fetch_enabled: bool
     ) -> None:
         """test__handle_img_auto_fetch_option__calls_update_root_field_in_toml_file.
 
@@ -189,8 +171,7 @@ class TestAbkConfig(unittest.TestCase):
         ):
             abk_config.handle_img_auto_fetch_option(img_auto_fetch_input)
         mock_update_root.assert_called_once_with(
-            key_to_update=config.ROOT_KW.IMG_AUTO_FETCH.value,
-            update_to=exp_img_auto_fetch_enabled,
+            key_to_update=config.ROOT_KW.IMG_AUTO_FETCH.value, update_to=exp_img_auto_fetch_enabled
         )
         mock_automation_setup.assert_called_once_with()
         self.assertTrue(img_auto_fetch_enabled != exp_img_auto_fetch_enabled)
@@ -205,10 +186,7 @@ class TestAbkConfig(unittest.TestCase):
         ]
     )
     def test__handle_img_auto_fetch_option__does_not_call_update_root_field_in_toml_file(
-        self,
-        img_auto_fetch_input: str | None,
-        img_auto_fetch_enabled: bool,
-        exp_img_auto_fetch_enabled: bool,
+        self, img_auto_fetch_input: str | None, img_auto_fetch_enabled: bool, exp_img_auto_fetch_enabled: bool
     ) -> None:
         """test__handle_img_auto_fetch_option__does_not_call_update_root_field_in_toml_file.
 
@@ -278,11 +256,7 @@ class TestAbkBwp(unittest.TestCase):
 
     @patch("abk_bwp.abk_config.tomlkit.load")
     @patch("abk_bwp.abk_config.tomlkit.dump")
-    @patch(
-        "builtins.open",
-        new_callable=mock_open,
-        read_data="[desktop_img]\nenabled = false\n[ftv]\nenabled = false\n",
-    )
+    @patch("builtins.open", new_callable=mock_open, read_data="[desktop_img]\nenabled = false\n[ftv]\nenabled = false\n")
     def test_update_enable_field(self, mock_file, mock_dump, mock_load):
         """Test update enable filed in toml file."""
         # Prepare fake config data returned by tomlkit.load
@@ -304,11 +278,7 @@ class TestAbkBwp(unittest.TestCase):
 
     @patch("abk_bwp.abk_config.tomlkit.load")
     @patch("abk_bwp.abk_config.tomlkit.dump")
-    @patch(
-        "builtins.open",
-        new_callable=mock_open,
-        read_data="[desktop_img]\nenabled = true\n[ftv]\nenabled = true\n",
-    )
+    @patch("builtins.open", new_callable=mock_open, read_data="[desktop_img]\nenabled = true\n[ftv]\nenabled = true\n")
     def test_update_ftv_disable(self, mock_file, mock_dump, mock_load):
         """Test update disable filed in toml file."""
         config_data = {"desktop_img": {"enabled": True}, "ftv": {"enabled": True}}

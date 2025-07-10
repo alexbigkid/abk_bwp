@@ -38,11 +38,7 @@ class TestCommandLineOptions(unittest.TestCase):
         """Test that passing '--version' prints version info and exits cleanly."""
         testargs = ["prog", "--version"]
         self.cmd._args = testargs
-        with (
-            patch.object(sys, "argv", testargs),
-            patch("builtins.print") as mock_print,
-            self.assertRaises(SystemExit) as cm,
-        ):
+        with patch.object(sys, "argv", testargs), patch("builtins.print") as mock_print, self.assertRaises(SystemExit) as cm:
             self.cmd.handle_options()
         mock_print.assert_called_once_with(f"{CONST.NAME} version: {CONST.VERSION}")
         self.assertEqual(cm.exception.code, 0)
@@ -55,11 +51,7 @@ class TestCommandLineOptions(unittest.TestCase):
         """Test that passing '--about' prints app metadata and exits cleanly."""
         testargs = ["prog", "--about"]
         self.cmd._args = testargs
-        with (
-            patch.object(sys, "argv", testargs),
-            patch("builtins.print") as mock_print,
-            self.assertRaises(SystemExit) as cm,
-        ):
+        with patch.object(sys, "argv", testargs), patch("builtins.print") as mock_print, self.assertRaises(SystemExit) as cm:
             self.cmd.handle_options()
         mock_print.assert_any_call(f"Name       : {CONST.NAME}")
         mock_print.assert_any_call(f"Version    : {CONST.VERSION}")

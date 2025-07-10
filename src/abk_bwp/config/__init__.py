@@ -55,3 +55,13 @@ class FTV_KW(Enum):
     USB_MODE = "usb_mode"
     JPG_QUALITY = "jpg_quality"
     FTV_DATA = "ftv_data"
+
+
+class RETRY_KW(Enum):
+    """Loads retry key words."""
+
+    RETRY = "retry"
+    ENABLED = "enabled"
+    MAX_ATTEMPTS_PER_DAY = "max_attempts_per_day"
+    DAILY_RESET_TIME = "daily_reset_time"
+    REQUIRE_ALL_OPERATIONS_SUCCESS = "require_all_operations_success"

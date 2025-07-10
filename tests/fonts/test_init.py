@@ -12,9 +12,7 @@ class TestGetTextOverlayFontName(unittest.TestCase):
     @patch("abk_bwp.fonts.os.walk")
     def test_returns_font_path_when_fonts_exist(self, mock_walk):
         """Should return a valid font path if font files exist."""
-        mock_walk.return_value = iter(
-            [("/fake/fonts", [], ["Arial.ttf", "Verdana.otf", "README.txt"])]
-        )
+        mock_walk.return_value = iter([("/fake/fonts", [], ["Arial.ttf", "Verdana.otf", "README.txt"])])
         font_path = get_text_overlay_font_name()
         self.assertTrue(font_path.endswith(("ttf", "otf")))
         self.assertTrue(any(font_path.endswith(ext) for ext in [".ttf", ".otf"]))

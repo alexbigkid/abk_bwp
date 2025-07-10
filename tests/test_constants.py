@@ -54,9 +54,7 @@ class TestConstants(unittest.TestCase):
     @mock.patch("tomllib.load")
     @mock.patch("pathlib.Path.open")
     @mock.patch("abk_bwp.constants._Const._find_project_root")
-    def test_load_from_pyproject_success(
-        self, mock_find_root, mock_open, mock_load, mock_version
-    ):
+    def test_load_from_pyproject_success(self, mock_find_root, mock_open, mock_load, mock_version):
         """Test test_load_from_pyproject_success."""
         fake_project_data = {
             "project": {
@@ -93,9 +91,7 @@ class TestConstants(unittest.TestCase):
         with self.assertRaises(FileNotFoundError):
             const._find_project_root(start=Path("/nonexistent"))
         mock_exists.assert_called()
-        mock_print.assert_called_once_with(
-            "Warning: failed to load pyproject.toml metadata: pyproject.toml not found"
-        )
+        mock_print.assert_called_once_with("Warning: failed to load pyproject.toml metadata: pyproject.toml not found")
 
 
 if __name__ == "__main__":

@@ -50,9 +50,7 @@ class IInstallBase(metaclass=ABCMeta):
     def __init__(self, logger: logging.Logger = None) -> None:  # type: ignore
         """Super class init."""
         self._logger = logger or logging.getLogger(__name__)
-        self._logger.info(
-            f"({__class__.__name__}) Initializing {self.os_type} installation environment ..."
-        )
+        self._logger.info(f"({__class__.__name__}) Initializing {self.os_type} installation environment ...")
 
     @abstractmethod
     def setup_installation(self) -> None:
@@ -103,13 +101,9 @@ class InstallOnMacOS(IInstallBase):
     @abk_common.function_trace
     def setup_installation(self) -> None:
         """Setup installation on MacOS."""
-        time_to_exe: time = bwp_config.get(
-            ROOT_KW.TIME_TO_FETCH.value, datetime.strptime("12:00:00", "%H:%M:%S").time()
-        )
+        time_to_exe: time = bwp_config.get(ROOT_KW.TIME_TO_FETCH.value, datetime.strptime("12:00:00", "%H:%M:%S").time())
 
-        self._logger.debug(
-            f"{time_to_exe.hour = }, {time_to_exe.minute = }, {time_to_exe.second = }"
-        )
+        self._logger.debug(f"{time_to_exe.hour = }, {time_to_exe.minute = }, {time_to_exe.second = }")
         current_path = os.path.dirname(__file__)
         plist_label = self._create_plist_file(time_to_exe, self.shell_file_name)
         # plist_label = self._create_plist_file(time_to_exe, "bingwallpaper.py")
@@ -136,6 +130,13 @@ class InstallOnMacOS(IInstallBase):
         plist_label = f"com.{user_name}.{script_name}"
         self._logger.debug(f"{plist_label = }")
         full_plist_file_name = os.path.join(current_path, f"{plist_label}.plist")
+
+        # Check if retry mechanism is enabled
+        from abk_bwp.config import RETRY_KW, bwp_config
+
+        retry_config = bwp_config.get(RETRY_KW.RETRY.value, {})
+        retry_enabled = retry_config.get(RETRY_KW.ENABLED.value, True)
+
         with open(full_plist_file_name, "w") as fh:
             lines_to_write = [
                 '<?xml version="1.0" encoding="UTF-8"?>\n',
@@ -153,22 +154,40 @@ class InstallOnMacOS(IInstallBase):
                 "    </array>\n",
                 "    <key>RunAtLoad</key>\n",
                 "    <true/>\n",
-                "    <key>StartInterval</key>\n",
-                "    <integer>7200</integer>\n",
-                "    <key>StartCalendarInterval</key>\n",
-                "    <dict>\n",
-                "        <key>Hour</key>\n",
-                f"        <integer>{time_to_exe.hour}</integer>\n",
-                "        <key>Minute</key>\n",
-                f"        <integer>{time_to_exe.minute}</integer>\n",
-                "    </dict>\n",
-                "    <!--\n    <key>StandardErrorPath</key>\n",
-                f"    <string>/tmp/{plist_label}.stderr</string>\n",
-                "    <key>StandardOutPath</key>\n",
-                f"    <string>/tmp/{plist_label}.stdout</string>\n",
-                "    -->\n</dict>\n",
-                "</plist>\n",
             ]
+
+            if retry_enabled:
+                # Use hourly interval (3600 seconds = 1 hour)
+                lines_to_write.extend(["    <key>StartInterval</key>\n", "    <integer>3600</integer>\n"])
+                self._logger.info("Creating hourly plist job (retry enabled): every hour")
+            else:
+                # Use daily schedule with specific time
+                lines_to_write.extend(
+                    [
+                        "    <key>StartInterval</key>\n",
+                        "    <integer>86400</integer>\n",  # 24 hours
+                        "    <key>StartCalendarInterval</key>\n",
+                        "    <dict>\n",
+                        "        <key>Hour</key>\n",
+                        f"        <integer>{time_to_exe.hour}</integer>\n",
+                        "        <key>Minute</key>\n",
+                        f"        <integer>{time_to_exe.minute}</integer>\n",
+                        "    </dict>\n",
+                    ]
+                )
+                self._logger.info(f"Creating daily plist job (retry disabled): {time_to_exe.hour}:{time_to_exe.minute}")
+
+            lines_to_write.extend(
+                [
+                    "    <!--\n    <key>StandardErrorPath</key>\n",
+                    f"    <string>/tmp/{plist_label}.stderr</string>\n",
+                    "    <key>StandardOutPath</key>\n",
+                    f"    <string>/tmp/{plist_label}.stdout</string>\n",
+                    "    -->\n</dict>\n",
+                    "</plist>\n",
+                ]
+            )
+
             fh.writelines(lines_to_write)
         return plist_label
 
@@ -215,9 +234,7 @@ class InstallOnMacOS(IInstallBase):
                 ret_code = subprocess.check_call(cmd, shell=True)  # noqa: S602
                 self._logger.info(f"command '{cmd}' succeeded, returned: {ret_code}")
         except subprocess.CalledProcessError as e:
-            self._logger.info(
-                f"error: {e.returncode=}. It is expected though, not all cmds exec successfully."
-            )
+            self._logger.info(f"error: {e.returncode=}. It is expected though, not all cmds exec successfully.")
 
     @abk_common.function_trace
     def _load_and_start_bingwallpaper_job(self, plist_name: str, plist_label: str) -> None:
@@ -259,13 +276,9 @@ class InstallOnLinux(IInstallBase):
     @abk_common.function_trace
     def setup_installation(self) -> None:
         """Setup installation on Linux."""
-        time_to_exe: time = bwp_config.get(
-            ROOT_KW.TIME_TO_FETCH.value, datetime.strptime("12:00:00", "%H:%M:%S").time()
-        )
+        time_to_exe: time = bwp_config.get(ROOT_KW.TIME_TO_FETCH.value, datetime.strptime("12:00:00", "%H:%M:%S").time())
 
-        self._logger.debug(
-            f"{time_to_exe.hour = }, {time_to_exe.minute = }, {time_to_exe.second = }"
-        )
+        self._logger.debug(f"{time_to_exe.hour = }, {time_to_exe.minute = }, {time_to_exe.second = }")
 
         # Create cron job for Linux automation
         self._create_cron_job(time_to_exe, self.shell_file_name)
@@ -282,8 +295,20 @@ class InstallOnLinux(IInstallBase):
         current_path = os.path.dirname(__file__)
         full_script_name = os.path.join(current_path, script_name)
 
-        # Create cron entry: minute hour * * * command
-        cron_entry = f"{time_to_exe.minute} {time_to_exe.hour} * * * {full_script_name}"
+        # Check if retry mechanism is enabled
+        from abk_bwp.config import RETRY_KW, bwp_config
+
+        retry_config = bwp_config.get(RETRY_KW.RETRY.value, {})
+        retry_enabled = retry_config.get(RETRY_KW.ENABLED.value, True)
+
+        if retry_enabled:
+            # Create hourly cron entry: 0 * * * * command (every hour at minute 0)
+            cron_entry = f"0 * * * * {full_script_name}"
+            self._logger.info(f"Creating hourly cron job (retry enabled): {cron_entry}")
+        else:
+            # Create daily cron entry: minute hour * * * command
+            cron_entry = f"{time_to_exe.minute} {time_to_exe.hour} * * * {full_script_name}"
+            self._logger.info(f"Creating daily cron job (retry disabled): {cron_entry}")
 
         # Get current crontab
         try:

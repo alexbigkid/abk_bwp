@@ -34,16 +34,12 @@ class TestFTV(unittest.TestCase):
         self.assertEqual(actual_value, "[fake_api_key]")
 
     @patch.dict(os.environ, {"ABK_TEST_ENV_VAR": ""})
-    def test_get_environment_variable_value_should_return_empty_given_env_var_value_is_empty(
-        self,
-    ) -> None:
+    def test_get_environment_variable_value_should_return_empty_given_env_var_value_is_empty(self) -> None:
         """get_environment_variable_value returns empty str, given env var is set to empty str."""
         actual_value = self._ftv._get_environment_variable_value("ABK_TEST_ENV_VAR")
         self.assertEqual(actual_value, "")
 
-    def test_get_environment_variable_value_should_return_empty_given_env_var_undefined(
-        self,
-    ) -> None:
+    def test_get_environment_variable_value_should_return_empty_given_env_var_undefined(self) -> None:
         """get_environment_variable_value returns empty string, given env variable is not set."""
         actual_value = self._ftv._get_environment_variable_value("ABK_TEST_ENV_VAR")
         self.assertEqual(actual_value, "")
@@ -54,9 +50,7 @@ class TestFTV(unittest.TestCase):
     @patch("abk_bwp.ftv.bwp_config", {"ftv": {"usb_mode": True}})
     @patch("platform.system")
     @patch.object(ftv.FTV, "_remount_usb_storage_for_tv")
-    def test_change_daily_images_usb_mode_linux_remount_success(
-        self, mock_remount, mock_platform
-    ) -> None:
+    def test_change_daily_images_usb_mode_linux_remount_success(self, mock_remount, mock_platform) -> None:
         """Test USB mode on Linux with successful remount."""
         mock_platform.return_value = "Linux"
         mock_remount.return_value = True
@@ -69,9 +63,7 @@ class TestFTV(unittest.TestCase):
     @patch("abk_bwp.ftv.bwp_config", {"ftv": {"usb_mode": True}})
     @patch("platform.system")
     @patch.object(ftv.FTV, "_remount_usb_storage_for_tv")
-    def test_change_daily_images_usb_mode_linux_remount_failure(
-        self, mock_remount, mock_platform
-    ) -> None:
+    def test_change_daily_images_usb_mode_linux_remount_failure(self, mock_remount, mock_platform) -> None:
         """Test USB mode on Linux with failed remount."""
         mock_platform.return_value = "Linux"
         mock_remount.return_value = False
@@ -639,9 +631,7 @@ class TestFTV(unittest.TestCase):
 
     @patch.object(ftv.FTV, "_get_uploaded_image_files")
     @patch.object(ftv.FTV, "_record_uploaded_image_files")
-    def test_delete_uploaded_images_from_tv_with_valid_tv(
-        self, mock_record, mock_get_uploaded
-    ) -> None:
+    def test_delete_uploaded_images_from_tv_with_valid_tv(self, mock_record, mock_get_uploaded) -> None:
         """Test _delete_uploaded_images_from_tv with valid TV name."""
         mock_ftv_setting = mock.Mock()
         mock_art = mock.Mock()
@@ -674,9 +664,7 @@ class TestFTV(unittest.TestCase):
 
     @patch.object(ftv.FTV, "_get_uploaded_image_files")
     @patch.object(ftv.FTV, "_record_uploaded_image_files")
-    def test_delete_uploaded_images_handles_deletion_errors(
-        self, mock_record, mock_get_uploaded
-    ) -> None:
+    def test_delete_uploaded_images_handles_deletion_errors(self, mock_record, mock_get_uploaded) -> None:
         """Test _delete_uploaded_images_from_tv handles individual deletion errors."""
         mock_ftv_setting = mock.Mock()
         mock_art = mock.Mock()

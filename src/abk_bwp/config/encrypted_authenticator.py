@@ -15,9 +15,7 @@ PORT = 8080
 
 
 async def _get_token(host: str, web_session: aiohttp.ClientSession, port: int) -> tuple[str, str]:
-    authenticator = SamsungTVEncryptedWSAsyncAuthenticator(
-        host, web_session=web_session, port=port
-    )
+    authenticator = SamsungTVEncryptedWSAsyncAuthenticator(host, web_session=web_session, port=port)
     await authenticator.start_pairing()
     token: str | None = None
     while not token:

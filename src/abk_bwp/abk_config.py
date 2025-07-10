@@ -37,9 +37,7 @@ def get_config_enabled_setting(key_to_read: str) -> bool:
 
 
 @abk_common.function_trace
-def update_enable_field_in_toml_file(
-    key_to_update: str, update_to: bool, field: str = "enabled"
-) -> None:
+def update_enable_field_in_toml_file(key_to_update: str, update_to: bool, field: str = "enabled") -> None:
     """Updates field in desktop_img or ftv section.
 
     Args:
@@ -85,9 +83,7 @@ def handle_desktop_auto_update_option(enable_option: str | None) -> None:
     if (enable := enable_option == BWP_ENABLE) or enable_option == BWP_DISABLE:
         is_enabled = get_config_enabled_setting(str(DESKTOP_IMG_KW.DESKTOP_IMG.value))
         if is_enabled != enable:
-            update_enable_field_in_toml_file(
-                key_to_update=DESKTOP_IMG_KW.DESKTOP_IMG.value, update_to=enable
-            )
+            update_enable_field_in_toml_file(key_to_update=DESKTOP_IMG_KW.DESKTOP_IMG.value, update_to=enable)
             # Automation setup is now controlled by auto_img_fetch, not desktop_img
             _handle_automation_setup()
 
@@ -115,9 +111,7 @@ def handle_img_auto_fetch_option(enable_option: str | None) -> None:
     if (enable := enable_option == BWP_ENABLE) or enable_option == BWP_DISABLE:
         is_enabled = bwp_config.get(ROOT_KW.IMG_AUTO_FETCH.value, False)
         if is_enabled != enable:
-            update_root_field_in_toml_file(
-                key_to_update=ROOT_KW.IMG_AUTO_FETCH.value, update_to=enable
-            )
+            update_root_field_in_toml_file(key_to_update=ROOT_KW.IMG_AUTO_FETCH.value, update_to=enable)
             # Automation setup is controlled by img_auto_fetch
             _handle_automation_setup()
 
@@ -149,9 +143,7 @@ def handle_usb_mode_option(enable_option: str | None) -> None:
     if (enable := enable_option == BWP_ENABLE) or enable_option == BWP_DISABLE:
         is_enabled = bwp_config.get(FTV_KW.FTV.value, {}).get(FTV_KW.USB_MODE.value, True)
         if is_enabled != enable:
-            update_enable_field_in_toml_file(
-                key_to_update=FTV_KW.FTV.value, update_to=enable, field=FTV_KW.USB_MODE.value
-            )
+            update_enable_field_in_toml_file(key_to_update=FTV_KW.FTV.value, update_to=enable, field=FTV_KW.USB_MODE.value)
 
 
 def abk_bwp(clo: clo.CommandLineOptions) -> None:

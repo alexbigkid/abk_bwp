@@ -36,9 +36,7 @@ from abk_bwp.config import FTV_KW, bwp_config
 # Local Constants
 # -----------------------------------------------------------------------------
 # FTV_API_TOKEN_FILE_SUFFIX = '_apiToken_secrets.txt'
-FTV_UPLOADED_IMAGE_FILES = (
-    f"{os.path.dirname(os.path.realpath(__file__))}/ftv_uploaded_image_files.json"
-)
+FTV_UPLOADED_IMAGE_FILES = f"{os.path.dirname(os.path.realpath(__file__))}/ftv_uploaded_image_files.json"
 
 
 # -----------------------------------------------------------------------------
@@ -99,10 +97,7 @@ class FTVImageFilters(Enum):
     INK = "ink"
 
 
-FTV_UPLOADED_IMAGE_FILES_SCHEMA = {
-    "type": "object",
-    "additionalProperties": {"type": "array", "items": {"type": "string"}},
-}
+FTV_UPLOADED_IMAGE_FILES_SCHEMA = {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "string"}}}
 
 
 # -----------------------------------------------------------------------------
@@ -194,14 +189,9 @@ class FTV:
 
         # Check if samsungtvws is available for HTTP mode
         if not SAMSUNGTVWS_AVAILABLE:
-            raise ImportError(
-                "samsungtvws library is required for Frame TV HTTP mode. "
-                "Install with: uv sync --extra frametv"
-            )
+            raise ImportError("samsungtvws library is required for Frame TV HTTP mode. Install with: uv sync --extra frametv")
         try:
-            ftv_config_name = os.path.join(
-                os.path.dirname(__file__), "config", self._ftv_data_file
-            )
+            ftv_config_name = os.path.join(os.path.dirname(__file__), "config", self._ftv_data_file)
             with open(ftv_config_name, mode="rb") as file_handler:
                 ftv_config = tomllib.load(file_handler)
             ftv_data = ftv_config.get("ftv_data", {})
@@ -227,11 +217,7 @@ class FTV:
                 if api_token and os.path.isfile(api_token_full_file_name):
                     # Use token file if available
                     ftv = SamsungTVWS(  # type: ignore
-                        host=ip_addr,
-                        port=port,
-                        token_file=api_token_full_file_name,
-                        timeout=10,
-                        name=ftv_name,
+                        host=ip_addr, port=port, token_file=api_token_full_file_name, timeout=10, name=ftv_name
                     )
                 elif api_token:
                     # Use token string directly
@@ -244,9 +230,7 @@ class FTV:
 
                 ftv_settings[ftv_name] = FTVSetting(ftv=ftv, img_rate=img_rate, mac_addr=mac_addr)
         except Exception as exc:
-            self._logger.error(
-                f"Error loading Frame TV settings {exc} from file: {self._ftv_data_file}"
-            )
+            self._logger.error(f"Error loading Frame TV settings {exc} from file: {self._ftv_data_file}")
             raise exc
         return ftv_settings
 
@@ -431,9 +415,7 @@ class FTV:
         return thumbnail
 
     @abk_common.function_trace
-    def _set_current_art_image(
-        self, tv_name: str, file_name: str, show_now: bool = False
-    ) -> None:
+    def _set_current_art_image(self, tv_name: str, file_name: str, show_now: bool = False) -> None:
         """Sets current art image.
 
         Args:
@@ -508,31 +490,21 @@ class FTV:
                 self._logger.warning(f"[{tv_name}]: Could not get API version: {e}")
                 api_version = "unknown"
             self._logger.info(f"[{tv_name}]: {uploaded_file_list = }")
-            files_to_upload_to_target = [
-                os.path.basename(path_file) for path_file in files_to_upload
-            ]
+            files_to_upload_to_target = [os.path.basename(path_file) for path_file in files_to_upload]
             uploaded_images_on_target = self._get_uploaded_image_files(tv_name)
-            files_remaining_to_upload = list(
-                set(files_to_upload_to_target) - set(uploaded_images_on_target)
-            )
+            files_remaining_to_upload = list(set(files_to_upload_to_target) - set(uploaded_images_on_target))
             self._logger.info(f"[{tv_name}]: {files_to_upload_to_target = }")
             self._logger.info(f"[{tv_name}]: {uploaded_images_on_target = }")
             self._logger.info(f"[{tv_name}]: {files_remaining_to_upload = }")
             # update files with path to upload list
-            files_to_upload = [
-                file
-                for file in files_to_upload
-                if os.path.basename(file) in files_remaining_to_upload
-            ]
+            files_to_upload = [file for file in files_to_upload if os.path.basename(file) in files_remaining_to_upload]
 
             # Process files one at a time with delays to avoid overwhelming the TV
             for i, file_to_upload in enumerate(files_remaining_to_upload):
                 if i > 0:
                     # Add delay between uploads to prevent overwhelming the TV
                     time.sleep(1)
-                matching_file_paths = (
-                    fp for fp in files_to_upload if os.path.basename(fp) == file_to_upload
-                )
+                matching_file_paths = (fp for fp in files_to_upload if os.path.basename(fp) == file_to_upload)
                 matching_file_path = next(matching_file_paths, None)
                 if matching_file_path:
                     file_type = self._get_file_type(file_to_upload)
@@ -544,49 +516,32 @@ class FTV:
                         for attempt in range(3):
                             try:
                                 if attempt > 0:
-                                    self._logger.info(
-                                        f"[{tv_name}]: Retry attempt {attempt + 1} for "
-                                        f"{file_to_upload}"
-                                    )
+                                    self._logger.info(f"[{tv_name}]: Retry attempt {attempt + 1} for {file_to_upload}")
                                     # Wait before retry
                                     time.sleep(2 * attempt)
 
                                 with open(matching_file_path, "rb") as fh:
                                     data = fh.read()
 
-                                ftv_setting.ftv.art().upload(
-                                    data, file_type=file_type.value, matte="none"
-                                )
+                                ftv_setting.ftv.art().upload(data, file_type=file_type.value, matte="none")
                                 uploaded_file_list.append(file_to_upload)
                                 upload_success = True
-                                self._logger.info(
-                                    f"[{tv_name}]: Successfully uploaded {file_to_upload}"
-                                )
+                                self._logger.info(f"[{tv_name}]: Successfully uploaded {file_to_upload}")
                                 break
 
                             except (BrokenPipeError, ConnectionError) as exp:
                                 if attempt < 2:  # Don't log as error on last attempt
-                                    self._logger.warning(
-                                        f"[{tv_name}]: Upload failed for {file_to_upload}, "
-                                        f"will retry: {exp}"
-                                    )
+                                    self._logger.warning(f"[{tv_name}]: Upload failed for {file_to_upload}, will retry: {exp}")
                                 else:
                                     self._logger.error(
-                                        f"[{tv_name}]: Upload failed after all retries for "
-                                        f"{file_to_upload}: {exp}"
+                                        f"[{tv_name}]: Upload failed after all retries for {file_to_upload}: {exp}"
                                     )
                             except Exception as exp:
-                                self._logger.error(
-                                    f"[{tv_name}]: Unexpected error uploading "
-                                    f"{file_to_upload}: {exp}"
-                                )
+                                self._logger.error(f"[{tv_name}]: Unexpected error uploading {file_to_upload}: {exp}")
                                 break
 
                         if not upload_success:
-                            self._logger.error(
-                                f"[{tv_name}]: Failed to upload {file_to_upload} "
-                                f"after all attempts"
-                            )
+                            self._logger.error(f"[{tv_name}]: Failed to upload {file_to_upload} after all attempts")
             uploaded_images_on_target = list(set(uploaded_images_on_target + uploaded_file_list))
             self._logger.info(f"[{tv_name}]: {uploaded_images_on_target = }")
             self._record_uploaded_image_files(tv_name, uploaded_images_on_target)
@@ -624,9 +579,7 @@ class FTV:
                         # ftv_setting.ftv.art().delete_list(image_list) # not working
                         deleted_images.append(image_to_delete)
                     except Exception as exp:
-                        self._logger.error(
-                            f"[{tv_name}]: image NOT deleted: {image_to_delete} {exp = }"
-                        )
+                        self._logger.error(f"[{tv_name}]: image NOT deleted: {image_to_delete} {exp = }")
                 remaining_images = list(set(uploaded_images) - set(deleted_images))
                 self._logger.debug(f"[{tv_name}]: {deleted_images = }")
                 self._logger.debug(f"[{tv_name}]: {remaining_images = }")
@@ -713,9 +666,7 @@ class FTV:
         return available_filter_list
 
     @abk_common.function_trace
-    def _apply_filter_to_art(
-        self, tv_name: str, file_name: str, filter_name: FTVImageFilters
-    ) -> None:
+    def _apply_filter_to_art(self, tv_name: str, file_name: str, filter_name: FTVImageFilters) -> None:
         """Apply a filter to a specific piece of art on Frame TV.
 
         Args:
@@ -759,10 +710,7 @@ class FTV:
                 ftv_setting.reachable = True
             except Exception as exc:
                 self._logger.error(f"[{tv_name}]: Connection failed: {exc}")
-                self._logger.error(
-                    f"[{tv_name}]: Make sure the TV is on and accessible "
-                    f"at the configured IP address"
-                )
+                self._logger.error(f"[{tv_name}]: Make sure the TV is on and accessible at the configured IP address")
                 ftv_setting.reachable = False
         return ftv_setting.reachable if ftv_setting else False
 
@@ -807,25 +755,17 @@ class FTV:
         usb_mode = bwp_config.get(FTV_KW.FTV.value, {}).get(FTV_KW.USB_MODE.value, False)
 
         if usb_mode:
-            self._logger.info(
-                "FTV USB mode enabled - images are already prepared in ftv_images_today directory"
-            )
+            self._logger.info("FTV USB mode enabled - images are already prepared in ftv_images_today directory")
 
             # Check if running on Linux (Raspberry Pi)
             import platform
 
             if platform.system().lower() == "linux":
-                self._logger.info(
-                    "Linux detected - triggering USB remount for Frame TV detection"
-                )
+                self._logger.info("Linux detected - triggering USB remount for Frame TV detection")
                 if self._remount_usb_storage_for_tv():
-                    self._logger.info(
-                        "USB remount successful - Frame TV should detect new images"
-                    )
+                    self._logger.info("USB remount successful - Frame TV should detect new images")
                 else:
-                    self._logger.warning(
-                        "USB remount failed - Frame TV may not detect new images"
-                    )
+                    self._logger.warning("USB remount failed - Frame TV may not detect new images")
             else:
                 self._logger.info("Images will be available to Frame TV via USB mass storage")
 
@@ -855,9 +795,7 @@ class FTV:
 
                 self._logger.info(f"[{tv_name}]: Uploading new images...")
                 uploaded_images = self._upload_image_list_to_tv(tv_name, image_list)
-                self._logger.info(
-                    f"[{tv_name}]: Successfully uploaded {len(uploaded_images)} new images"
-                )
+                self._logger.info(f"[{tv_name}]: Successfully uploaded {len(uploaded_images)} new images")
 
                 if uploaded_images:
                     success_count += 1
@@ -868,13 +806,9 @@ class FTV:
             except Exception as exc:
                 self._logger.error(f"[{tv_name}]: Error during image update: {exc}")
 
-        self._logger.info(
-            f"FTV HTTP upload completed. Success: {success_count}/{len(self.ftvs)} TVs"
-        )
+        self._logger.info(f"FTV HTTP upload completed. Success: {success_count}/{len(self.ftvs)} TVs")
         return success_count > 0
 
 
 if __name__ == "__main__":
-    raise RuntimeError(
-        f"{__file__}: This module should not be executed directly. Only for imports"
-    )
+    raise RuntimeError(f"{__file__}: This module should not be executed directly. Only for imports")

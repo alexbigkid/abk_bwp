@@ -1,12 +1,12 @@
 # -----------------------------------------------------------------------------
 # Sets up automated image download, if enabled
 # -----------------------------------------------------------------------------
-img_auto_fetch = false
+img_auto_fetch = true
 
 # -----------------------------------------------------------------------------
 # if you set the time too early in the day, the API might not have the image yet.
 # -----------------------------------------------------------------------------
-time_to_fetch = 12:08:09
+time_to_fetch = 12:00:00
 
 # -----------------------------------------------------------------------------
 # directory where in users home directory images will be stored
@@ -47,7 +47,7 @@ region = "us"
 # This feature works only on MacOS right now.
 # if enabled the app will try to set the image as desktop. If false the image just going to be downloaded but not set as desktop image
 # -----------------------------------------------------------------------------
-enabled = false
+enabled = true
 
 # -----------------------------------------------------------------------------
 # if height or width is configured to not supported size, it will be defaulted to 4K resolution: 3840x2160
@@ -98,12 +98,41 @@ bing_url = "http://www.bing.com/HPImageArchive.aspx"
 
 
 # =============================================================================
+[retry]
+# =============================================================================
+# -----------------------------------------------------------------------------
+# Enable hourly retry mechanism for Frame TV uploads and desktop wallpaper setting
+# When enabled, the app will retry every hour until success, then wait until next day
+# -----------------------------------------------------------------------------
+enabled = true
+
+# -----------------------------------------------------------------------------
+# Maximum number of retry attempts per day (24 = every hour)
+# After this many attempts, wait until the next day
+# -----------------------------------------------------------------------------
+max_attempts_per_day = 12
+
+# -----------------------------------------------------------------------------
+# Time when daily retry counter resets (24-hour format)
+# Set to early morning when TV is likely to be off
+# -----------------------------------------------------------------------------
+daily_reset_time = "06:00:00"
+
+# -----------------------------------------------------------------------------
+# Require all enabled operations to succeed before marking day as successful
+# If false, partial success (e.g., download only) will stop retries
+# -----------------------------------------------------------------------------
+require_all_operations_success = true
+
+
+
+# =============================================================================
 [ftv]
 # =============================================================================
 # -----------------------------------------------------------------------------
 # if true, images for each day will be produced and pushed to Samsung Frame TV. This is still WIP, though!
 # -----------------------------------------------------------------------------
-enabled = false
+enabled = true
 
 # -----------------------------------------------------------------------------
 # if true - images will be copied to ftv_images_today folder (USB mass storage mode for Raspberry Pi)

@@ -29,9 +29,7 @@ class DbEntry(TypedDict):
 
 
 DEFAULT_DB_NAME = "bwp_metadata.db"
-DB_BWP_FILE_NAME = os.getenv("BWP_DB_PATH") or os.path.join(
-    os.path.dirname(__file__), DEFAULT_DB_NAME
-)  # noqa: E501
+DB_BWP_FILE_NAME = os.getenv("BWP_DB_PATH") or os.path.join(os.path.dirname(__file__), DEFAULT_DB_NAME)  # noqa: E501
 DB_BWP_TABLE = "pages"
 
 SQL_CREATE_TABLE = f"""
