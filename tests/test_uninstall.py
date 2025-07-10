@@ -5,6 +5,7 @@ import logging
 import os
 import subprocess  # noqa: S404
 import unittest
+from pathlib import Path
 from unittest import mock
 
 from abk_bwp import abk_common
@@ -389,15 +390,16 @@ class TestUninstallOnLinux(unittest.TestCase):
     def test_cleanup_image_dir_logs_message(self, mock_get_home_dir):
         """Test test_cleanup_image_dir_logs_message."""
         mock_logger = mock.Mock()
-        mock_get_home_dir.return_value = "/home/testuser"
+        home_dir = str(Path("home") / "testuser")
+        mock_get_home_dir.return_value = home_dir
         uninstall = UninstallOnLinux(logger=mock_logger)
         image_dir = "Pictures/BingWallpapers"
 
         uninstall.cleanup_image_dir(image_dir)
 
         # The actual implementation calls _delete_image_dir which logs images_dir, not image_dir
-        # Use os.path.join to get platform-appropriate path separator
-        expected_path = os.path.join("/home/testuser", image_dir)
+        # Use pathlib.Path for platform-appropriate path handling
+        expected_path = str(Path(home_dir) / image_dir)
         mock_logger.debug.assert_called_once_with(f"images_dir='{expected_path}'")
 
 
