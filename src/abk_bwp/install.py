@@ -331,8 +331,8 @@ class InstallOnLinux(IInstallBase):
             filtered_lines = [line for line in lines if script_name not in line]
             current_crontab = "\n".join(filtered_lines).strip()
 
-        # Add new cron entry
-        new_crontab = current_crontab + "\n" + cron_entry if current_crontab else cron_entry
+        # Add new cron entry (ensure it ends with newline for crontab compatibility)
+        new_crontab = current_crontab + "\n" + cron_entry + "\n" if current_crontab else cron_entry + "\n"
 
         # Install new crontab
         try:

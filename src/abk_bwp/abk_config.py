@@ -91,7 +91,14 @@ def handle_desktop_auto_update_option(enable_option: str | None) -> None:
 @abk_common.function_trace
 def _handle_automation_setup() -> None:
     """Handles automation setup based on auto_img_fetch setting."""
-    auto_fetch_enabled = bwp_config.get(ROOT_KW.IMG_AUTO_FETCH.value, False)
+    # Reload config to get the updated value after file modification
+    import tomllib
+    import pathlib
+    config_file = pathlib.Path(__file__).parent / BWP_CONFIG_RELATIVE_PATH
+    with config_file.open(mode="rb") as fh:
+        updated_config = tomllib.load(fh)
+
+    auto_fetch_enabled = updated_config.get(ROOT_KW.IMG_AUTO_FETCH.value, False)
 
     if auto_fetch_enabled:
         install.bwp_install()
