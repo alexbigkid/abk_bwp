@@ -84,8 +84,8 @@ def handle_desktop_auto_update_option(enable_option: str | None) -> None:
         is_enabled = get_config_enabled_setting(str(DESKTOP_IMG_KW.DESKTOP_IMG.value))
         if is_enabled != enable:
             update_enable_field_in_toml_file(key_to_update=DESKTOP_IMG_KW.DESKTOP_IMG.value, update_to=enable)
-            # Automation setup is now controlled by auto_img_fetch, not desktop_img
-            _handle_automation_setup()
+            # Note: Automation setup (cron/plist) is controlled by img_auto_fetch, not desktop_img
+            # Desktop setting only controls whether wallpaper gets set, not scheduling
 
 
 @abk_common.function_trace
