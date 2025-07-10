@@ -2,7 +2,6 @@
 
 # Standard library imports
 import logging
-import os
 import subprocess  # noqa: S404
 import unittest
 from pathlib import Path
