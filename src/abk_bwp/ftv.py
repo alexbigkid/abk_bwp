@@ -651,6 +651,111 @@ class FTV:
             return False
 
     @abk_common.function_trace
+    def _copy_images_to_usb_disk(self, image_list: list) -> bool:
+        """Copy images from ftv_images_today directory to USB disk image.
+
+        This method:
+        1. Creates a temporary mount point
+        2. Mounts the USB disk image as a loop device
+        3. Copies images from ftv_images_today to the mounted filesystem
+        4. Unmounts the disk image properly
+
+        Args:
+            image_list (list): List of image files to copy
+
+        Returns:
+            bool: True if copy successful, False otherwise
+        """
+        import subprocess  # noqa: S404
+        import tempfile
+        import shutil
+
+        if not image_list:
+            self._logger.warning("No images to copy to USB disk")
+            return False
+
+        usb_disk_path = os.path.expanduser("~/ftv_images/ftv_disk.img")
+        if not os.path.exists(usb_disk_path):
+            self._logger.error(f"USB disk image not found: {usb_disk_path}")
+            return False
+
+        temp_mount_dir = None
+        loop_device = None
+
+        try:
+            self._logger.debug(f"Starting copy of {len(image_list)} images to USB disk...")
+
+            # Step 1: Create temporary mount directory
+            temp_mount_dir = tempfile.mkdtemp(prefix="ftv_usb_mount_")
+            self._logger.debug(f"Created temporary mount directory: {temp_mount_dir}")
+
+            # Step 2: Set up loop device for disk image
+            result = subprocess.run(  # noqa: S603
+                ["sudo", "losetup", "--find", "--show", usb_disk_path],  # noqa: S607
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            loop_device = result.stdout.strip()
+            self._logger.debug(f"Loop device created: {loop_device}")
+
+            # Step 3: Mount the loop device
+            subprocess.run(  # noqa: S603
+                ["sudo", "mount", loop_device, temp_mount_dir],  # noqa: S607
+                check=True,
+            )
+            self._logger.debug(f"USB disk mounted at: {temp_mount_dir}")
+
+            # Step 4: Clear existing files from USB disk
+            for existing_file in os.listdir(temp_mount_dir):
+                if existing_file.lower().endswith((".jpg", ".jpeg", ".png")):
+                    existing_path = os.path.join(temp_mount_dir, existing_file)
+                    os.remove(existing_path)
+                    self._logger.debug(f"Removed existing file: {existing_file}")
+
+            # Step 5: Copy new images to USB disk
+            copied_count = 0
+            for image_path in image_list:
+                if os.path.exists(image_path):
+                    filename = os.path.basename(image_path)
+                    dest_path = os.path.join(temp_mount_dir, filename)
+                    shutil.copy2(image_path, dest_path)
+                    self._logger.debug(f"Copied {filename} to USB disk")
+                    copied_count += 1
+                else:
+                    self._logger.warning(f"Source image not found: {image_path}")
+
+            # Step 6: Sync filesystem to ensure all data is written
+            subprocess.run(["sync"], check=True)  # noqa: S607
+            self._logger.info(f"Successfully copied {copied_count} images to USB disk")
+
+            return copied_count > 0
+
+        except subprocess.CalledProcessError as e:
+            self._logger.error(f"Failed to copy images to USB disk: {e}")
+            return False
+        except Exception as e:
+            self._logger.error(f"Unexpected error copying images to USB disk: {e}")
+            return False
+        finally:
+            # Cleanup: Always unmount and detach loop device
+            try:
+                if temp_mount_dir and os.path.ismount(temp_mount_dir):
+                    subprocess.run(["sudo", "umount", temp_mount_dir], check=False)  # noqa: S603, S607
+                    self._logger.debug("USB disk unmounted")
+
+                if loop_device:
+                    subprocess.run(["sudo", "losetup", "--detach", loop_device], check=False)  # noqa: S603, S607
+                    self._logger.debug(f"Loop device detached: {loop_device}")
+
+                if temp_mount_dir and os.path.exists(temp_mount_dir):
+                    os.rmdir(temp_mount_dir)
+                    self._logger.debug("Temporary mount directory removed")
+
+            except Exception as cleanup_error:
+                self._logger.warning(f"Error during cleanup: {cleanup_error}")
+
+    @abk_common.function_trace
     def _list_available_filters(self, tv_name: str) -> list:
         """List available photo filters on Frame TV.
 
@@ -761,16 +866,27 @@ class FTV:
             import platform
 
             if platform.system().lower() == "linux":
-                self._logger.info("Linux detected - triggering USB remount for Frame TV detection")
-                if self._remount_usb_storage_for_tv():
-                    self._logger.info("USB remount successful - Frame TV should detect new images")
+                self._logger.info("Linux detected - copying images to USB disk and triggering remount")
+
+                # Step 1: Copy images to USB disk image
+                if self._copy_images_to_usb_disk(image_list):
+                    self._logger.info("Images successfully copied to USB disk")
+
+                    # Step 2: Trigger USB remount for Frame TV detection
+                    if self._remount_usb_storage_for_tv():
+                        self._logger.info("USB remount successful - Frame TV should detect new images")
+                        return True
+                    else:
+                        self._logger.warning("USB remount failed - Frame TV may not detect new images")
+                        return False
                 else:
-                    self._logger.warning("USB remount failed - Frame TV may not detect new images")
+                    self._logger.error("Failed to copy images to USB disk")
+                    return False
             else:
                 self._logger.info("Images will be available to Frame TV via USB mass storage")
-
-            self._logger.info(f"Processed {len(image_list)} images for USB mass storage")
-            return len(image_list) > 0
+                # On non-Linux systems, just indicate images are ready
+                self._logger.info(f"Processed {len(image_list)} images for USB mass storage")
+                return len(image_list) > 0
 
         # HTTP mode - use existing upload logic
         success_count = 0

@@ -49,29 +49,48 @@ class TestFTV(unittest.TestCase):
     # -------------------------------------------------------------------------
     @patch("abk_bwp.ftv.bwp_config", {"ftv": {"usb_mode": True}})
     @patch("platform.system")
+    @patch.object(ftv.FTV, "_copy_images_to_usb_disk")
     @patch.object(ftv.FTV, "_remount_usb_storage_for_tv")
-    def test_change_daily_images_usb_mode_linux_remount_success(self, mock_remount, mock_platform) -> None:
+    def test_change_daily_images_usb_mode_linux_remount_success(self, mock_remount, mock_copy, mock_platform) -> None:
         """Test USB mode on Linux with successful remount."""
         mock_platform.return_value = "Linux"
+        mock_copy.return_value = True
         mock_remount.return_value = True
 
         result = self._ftv.change_daily_images(["test_image.jpg"])
 
         self.assertTrue(result)
+        mock_copy.assert_called_once_with(["test_image.jpg"])
         mock_remount.assert_called_once()
 
     @patch("abk_bwp.ftv.bwp_config", {"ftv": {"usb_mode": True}})
     @patch("platform.system")
+    @patch.object(ftv.FTV, "_copy_images_to_usb_disk")
     @patch.object(ftv.FTV, "_remount_usb_storage_for_tv")
-    def test_change_daily_images_usb_mode_linux_remount_failure(self, mock_remount, mock_platform) -> None:
+    def test_change_daily_images_usb_mode_linux_remount_failure(self, mock_remount, mock_copy, mock_platform) -> None:
         """Test USB mode on Linux with failed remount."""
         mock_platform.return_value = "Linux"
-        mock_remount.return_value = False
+        mock_copy.return_value = True  # Copy succeeds
+        mock_remount.return_value = False  # But remount fails
 
         result = self._ftv.change_daily_images(["test_image.jpg"])
 
-        self.assertTrue(result)  # Still returns True even if remount fails
+        self.assertFalse(result)  # Now correctly returns False when remount fails
+        mock_copy.assert_called_once_with(["test_image.jpg"])
         mock_remount.assert_called_once()
+
+    @patch("abk_bwp.ftv.bwp_config", {"ftv": {"usb_mode": True}})
+    @patch("platform.system")
+    @patch.object(ftv.FTV, "_copy_images_to_usb_disk")
+    def test_change_daily_images_usb_mode_linux_copy_failure(self, mock_copy, mock_platform) -> None:
+        """Test USB mode on Linux with failed image copy."""
+        mock_platform.return_value = "Linux"
+        mock_copy.return_value = False  # Copy fails
+
+        result = self._ftv.change_daily_images(["test_image.jpg"])
+
+        self.assertFalse(result)  # Returns False when copy fails
+        mock_copy.assert_called_once_with(["test_image.jpg"])
 
     @patch("abk_bwp.ftv.bwp_config", {"ftv": {"usb_mode": True}})
     @patch("platform.system")

@@ -112,7 +112,7 @@ class UninstallOnMacOS(IUninstallBase):
         """
         # Ensure cross-platform path handling by properly normalizing the image_dir
         # Convert any Windows-style backslashes to forward slashes first, then normalize
-        normalized_image_dir = image_dir.replace('\\', '/')
+        normalized_image_dir = image_dir.replace("\\", "/")
         image_full_path = str(Path(abk_common.get_home_dir()) / Path(normalized_image_dir))
         self._delete_image_dir(image_full_path)
 
@@ -265,7 +265,7 @@ class UninstallOnLinux(IUninstallBase):
         """
         # Ensure cross-platform path handling by properly normalizing the image_dir
         # Convert any Windows-style backslashes to forward slashes first, then normalize
-        normalized_image_dir = image_dir.replace('\\', '/')
+        normalized_image_dir = image_dir.replace("\\", "/")
         image_full_path = str(Path(abk_common.get_home_dir()) / Path(normalized_image_dir))
         self._delete_image_dir(image_full_path)
 
