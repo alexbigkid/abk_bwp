@@ -154,20 +154,113 @@ optimize_memory() {
 # USB Mass Storage Setup (for Frame TV)
 # =============================================================================
 
+setup_usb_gadget_configfs() {
+    local disk_image="$1"
+    log_step "Setting up USB gadget using configfs..."
+
+    # Create USB gadget configuration script
+    local gadget_script="/usr/local/bin/setup_ftv_gadget.sh"
+    sudo tee "$gadget_script" > /dev/null << 'EOF'
+#!/bin/bash
+# USB Gadget setup script for Frame TV
+
+GADGET_DIR="/sys/kernel/config/usb_gadget/ftv_gadget"
+DISK_IMAGE="$1"
+
+# Check if gadget already exists
+if [ -d "$GADGET_DIR" ]; then
+    echo "USB gadget already configured"
+    exit 0
+fi
+
+# Create the gadget directory
+mkdir -p "$GADGET_DIR"
+cd "$GADGET_DIR"
+
+# Configure USB device descriptor
+echo 0x1d6b > idVendor    # Linux Foundation
+echo 0x0104 > idProduct   # Multifunction Composite Gadget
+echo 0x0100 > bcdDevice   # v1.0.0
+echo 0x0200 > bcdUSB      # USB2
+
+# Configure device strings
+mkdir -p strings/0x409
+echo "Raspberry Pi Foundation" > strings/0x409/manufacturer
+echo "Frame TV USB Storage" > strings/0x409/product
+echo "$(cat /proc/cpuinfo | grep Serial | cut -d ' ' -f 2)" > strings/0x409/serialnumber
+
+# Create configuration
+mkdir -p configs/c.1/strings/0x409
+echo "Config 1: Mass Storage" > configs/c.1/strings/0x409/configuration
+echo 250 > configs/c.1/MaxPower
+
+# Create mass storage function
+mkdir -p functions/mass_storage.usb0
+echo 1 > functions/mass_storage.usb0/stall
+echo 0 > functions/mass_storage.usb0/lun.0/cdrom
+echo 0 > functions/mass_storage.usb0/lun.0/ro
+echo 1 > functions/mass_storage.usb0/lun.0/removable
+echo "$DISK_IMAGE" > functions/mass_storage.usb0/lun.0/file
+
+# Link function to configuration
+ln -s functions/mass_storage.usb0 configs/c.1/
+
+# Enable gadget
+UDC=$(ls /sys/class/udc | head -1)
+echo "$UDC" > UDC
+
+echo "USB gadget configured successfully"
+EOF
+
+    sudo chmod +x "$gadget_script"
+    log "Created USB gadget setup script: $gadget_script"
+
+    # Create systemd service for USB gadget
+    local service_file="/etc/systemd/system/ftv-usb-gadget.service"
+    sudo tee "$service_file" > /dev/null << EOF
+[Unit]
+Description=Frame TV USB Gadget Setup
+After=network.target
+Wants=network.target
+
+[Service]
+Type=oneshot
+ExecStart=$gadget_script $disk_image
+RemainAfterExit=yes
+User=root
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    # Enable the service
+    sudo systemctl daemon-reload
+    sudo systemctl enable ftv-usb-gadget.service
+    log "Created and enabled USB gadget systemd service"
+}
+
 setup_usb_gadget() {
     log_step "Setting up USB mass storage gadget for Frame TV..."
 
     # Enable dwc2 overlay for USB gadget mode
     if ! grep -q "^dtoverlay=dwc2" /boot/config.txt; then
         log "Enabling USB gadget mode..."
-        echo "dtoverlay=dwc2" | sudo tee -a /boot/config.txt > /dev/null
+        echo "dtoverlay=dwc2,dr_mode=otg" | sudo tee -a /boot/config.txt > /dev/null
+    elif grep -q "^dtoverlay=dwc2,dr_mode=host" /boot/config.txt; then
+        log "Fixing dwc2 mode from host to otg..."
+        sudo sed -i 's/^dtoverlay=dwc2,dr_mode=host/dtoverlay=dwc2,dr_mode=otg/' /boot/config.txt
     fi
 
-    # Enable g_mass_storage module
-    if ! grep -q "g_mass_storage" /etc/modules; then
-        echo "g_mass_storage" | sudo tee -a /etc/modules > /dev/null
-        log "USB mass storage module enabled"
-    fi
+    # Configure g_mass_storage module with disk image parameter
+    local disk_image="$HOME/ftv_images/ftv_disk.img"
+    local g_mass_storage_line="g_mass_storage file=$disk_image removable=1 ro=0 stall=0"
+    
+    # Remove any existing g_mass_storage entries
+    sudo sed -i '/g_mass_storage/d' /etc/modules
+    
+    # Add new g_mass_storage configuration
+    echo "$g_mass_storage_line" | sudo tee -a /etc/modules > /dev/null
+    log "USB mass storage module configured with disk image"
 
     # Create image directory for Frame TV
     local ftv_images_dir="$HOME/ftv_images"
@@ -187,6 +280,31 @@ setup_usb_gadget() {
         log "Created and formatted disk image: $disk_image"
     fi
 
+    # Set up USB gadget using configfs (modern approach)
+    setup_usb_gadget_configfs "$disk_image"
+    
+    # Install USB helper script
+    local usb_helper_script="$BWP_DIR/scripts/usb_helper.sh"
+    if [ -f "$usb_helper_script" ]; then
+        sudo cp "$usb_helper_script" /usr/local/bin/
+        sudo chmod +x /usr/local/bin/usb_helper.sh
+        log "Installed USB helper script to /usr/local/bin/"
+        
+        # Configure sudo permissions for USB helper script
+        local sudoers_file="/etc/sudoers.d/bwp-usb-helper"
+        echo "$USER ALL=(root) NOPASSWD: /usr/local/bin/usb_helper.sh" | sudo tee "$sudoers_file" > /dev/null
+        sudo chmod 440 "$sudoers_file"
+        log "Configured sudo permissions for USB helper script"
+    else
+        log_warning "USB helper script not found: $usb_helper_script"
+    fi
+    
+    # Add user to required groups for USB operations
+    if ! groups "$USER" | grep -q disk; then
+        sudo usermod -a -G disk "$USER"
+        log "Added user to disk group for USB operations"
+    fi
+    
     log "USB mass storage setup completed"
     log_warning "Reboot required for USB gadget changes to take effect"
 }

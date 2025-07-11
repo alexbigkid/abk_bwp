@@ -605,38 +605,17 @@ class FTV:
         try:
             self._logger.debug("Starting USB mass storage remount sequence...")
 
-            # Step 1: Remove USB mass storage module (simulates USB removal)
-            result = subprocess.run(
-                ["sudo", "rmmod", "g_mass_storage"],  # noqa: S607
-                capture_output=True,
-                text=True,
-                check=False,
-            )
-            if result.returncode != 0:
-                self._logger.debug(f"rmmod result: {result.stderr}")
-
-            # Step 2: Wait for system to process removal
-            time.sleep(2)
-
-            # Step 3: Re-load USB mass storage module (simulates USB insertion)
+            # Use helper script for USB gadget remount
             usb_storage_file = os.path.expanduser("~/ftv_images/ftv_disk.img")
-
+            usb_helper_script = os.path.join(os.path.dirname(os.path.dirname(__file__)), "..", "scripts", "usb_helper.sh")
+            usb_helper_script = os.path.abspath(usb_helper_script)
+            
             subprocess.run(  # noqa: S603
-                [  # noqa: S607
-                    "sudo",
-                    "modprobe",
-                    "g_mass_storage",
-                    f"file={usb_storage_file}",
-                    "stall=0",
-                    "removable=1",
-                ],
+                ["sudo", usb_helper_script, "remount", usb_storage_file],  # noqa: S607
                 check=True,
             )
-
-            self._logger.debug("USB mass storage module reloaded successfully")
-
-            # Step 4: Brief pause to allow system to recognize device
-            time.sleep(1)
+            
+            self._logger.debug("USB gadget remount completed using helper script")
 
             return True
 
@@ -644,7 +623,7 @@ class FTV:
             self._logger.error(f"Failed to remount USB storage: {e}")
             return False
         except FileNotFoundError:
-            self._logger.error("sudo or modprobe command not found - not running on Linux?")
+            self._logger.error("USB helper script or required commands not found - not running on Linux?")
             return False
         except Exception as e:
             self._logger.error(f"Unexpected error during USB remount: {e}")
@@ -689,22 +668,18 @@ class FTV:
             temp_mount_dir = tempfile.mkdtemp(prefix="ftv_usb_mount_")
             self._logger.debug(f"Created temporary mount directory: {temp_mount_dir}")
 
-            # Step 2: Set up loop device for disk image
+            # Step 2 & 3: Mount USB disk using helper script
+            usb_helper_script = os.path.join(os.path.dirname(os.path.dirname(__file__)), "..", "scripts", "usb_helper.sh")
+            usb_helper_script = os.path.abspath(usb_helper_script)
+            
             result = subprocess.run(  # noqa: S603
-                ["sudo", "losetup", "--find", "--show", usb_disk_path],  # noqa: S607
+                ["sudo", usb_helper_script, "mount", usb_disk_path, temp_mount_dir],  # noqa: S607
                 capture_output=True,
                 text=True,
                 check=True,
             )
             loop_device = result.stdout.strip()
-            self._logger.debug(f"Loop device created: {loop_device}")
-
-            # Step 3: Mount the loop device
-            subprocess.run(  # noqa: S603
-                ["sudo", "mount", loop_device, temp_mount_dir],  # noqa: S607
-                check=True,
-            )
-            self._logger.debug(f"USB disk mounted at: {temp_mount_dir}")
+            self._logger.debug(f"USB disk mounted at: {temp_mount_dir} using loop device: {loop_device}")
 
             # Step 4: Clear existing files from USB disk
             for existing_file in os.listdir(temp_mount_dir):
@@ -740,17 +715,13 @@ class FTV:
         finally:
             # Cleanup: Always unmount and detach loop device
             try:
-                if temp_mount_dir and os.path.ismount(temp_mount_dir):
-                    subprocess.run(["sudo", "umount", temp_mount_dir], check=False)  # noqa: S603, S607
-                    self._logger.debug("USB disk unmounted")
-
-                if loop_device:
-                    subprocess.run(["sudo", "losetup", "--detach", loop_device], check=False)  # noqa: S603, S607
-                    self._logger.debug(f"Loop device detached: {loop_device}")
-
-                if temp_mount_dir and os.path.exists(temp_mount_dir):
-                    os.rmdir(temp_mount_dir)
-                    self._logger.debug("Temporary mount directory removed")
+                if temp_mount_dir:
+                    # Use helper script for cleanup
+                    usb_helper_script = os.path.join(os.path.dirname(os.path.dirname(__file__)), "..", "scripts", "usb_helper.sh")
+                    usb_helper_script = os.path.abspath(usb_helper_script)
+                    
+                    subprocess.run(["sudo", usb_helper_script, "unmount", temp_mount_dir, loop_device or ""], check=False)  # noqa: S603, S607
+                    self._logger.debug("USB disk unmounted using helper script")
 
             except Exception as cleanup_error:
                 self._logger.warning(f"Error during cleanup: {cleanup_error}")
