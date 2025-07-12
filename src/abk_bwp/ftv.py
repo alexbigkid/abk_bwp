@@ -600,7 +600,6 @@ class FTV:
             bool: True if remount successful, False otherwise
         """
         import subprocess  # noqa: S404
-        import time
 
         try:
             self._logger.debug("Starting USB mass storage remount sequence...")
@@ -609,12 +608,12 @@ class FTV:
             usb_storage_file = os.path.expanduser("~/ftv_images/ftv_disk.img")
             usb_helper_script = os.path.join(os.path.dirname(os.path.dirname(__file__)), "..", "scripts", "usb_helper.sh")
             usb_helper_script = os.path.abspath(usb_helper_script)
-            
+
             subprocess.run(  # noqa: S603
                 ["sudo", usb_helper_script, "remount", usb_storage_file],  # noqa: S607
                 check=True,
             )
-            
+
             self._logger.debug("USB gadget remount completed using helper script")
 
             return True
@@ -671,7 +670,7 @@ class FTV:
             # Step 2 & 3: Mount USB disk using helper script
             usb_helper_script = os.path.join(os.path.dirname(os.path.dirname(__file__)), "..", "scripts", "usb_helper.sh")
             usb_helper_script = os.path.abspath(usb_helper_script)
-            
+
             result = subprocess.run(  # noqa: S603
                 ["sudo", usb_helper_script, "mount", usb_disk_path, temp_mount_dir],  # noqa: S607
                 capture_output=True,
@@ -719,7 +718,7 @@ class FTV:
                     # Use helper script for cleanup
                     usb_helper_script = os.path.join(os.path.dirname(os.path.dirname(__file__)), "..", "scripts", "usb_helper.sh")
                     usb_helper_script = os.path.abspath(usb_helper_script)
-                    
+
                     subprocess.run(["sudo", usb_helper_script, "unmount", temp_mount_dir, loop_device or ""], check=False)  # noqa: S603, S607
                     self._logger.debug("USB disk unmounted using helper script")
 

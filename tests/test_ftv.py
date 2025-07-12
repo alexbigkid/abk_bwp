@@ -117,26 +117,21 @@ class TestFTV(unittest.TestCase):
     @patch("subprocess.run")
     def test_remount_usb_storage_for_tv_success(self, mock_subprocess) -> None:
         """Test successful USB storage remount."""
-        # Mock successful subprocess calls
-        mock_subprocess.side_effect = [
-            MagicMock(returncode=0),  # rmmod success
-            MagicMock(returncode=0),  # modprobe success
-        ]
+        # Mock successful subprocess call to usb_helper.sh
+        mock_subprocess.return_value = MagicMock(returncode=0)
 
         result = self._ftv._remount_usb_storage_for_tv()
 
         self.assertTrue(result)
-        self.assertEqual(mock_subprocess.call_count, 2)
+        self.assertEqual(mock_subprocess.call_count, 1)
 
     @patch("subprocess.run")
     def test_remount_usb_storage_for_tv_modprobe_failure(self, mock_subprocess) -> None:
-        """Test USB remount with modprobe failure."""
+        """Test USB remount with helper script failure."""
         from subprocess import CalledProcessError  # noqa: S404
 
-        mock_subprocess.side_effect = [
-            MagicMock(returncode=0),  # rmmod success
-            CalledProcessError(1, "modprobe"),  # modprobe failure
-        ]
+        # Mock failed subprocess call to usb_helper.sh
+        mock_subprocess.side_effect = CalledProcessError(1, "usb_helper.sh")
 
         result = self._ftv._remount_usb_storage_for_tv()
 
