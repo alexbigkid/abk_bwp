@@ -7,7 +7,6 @@
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG_PREFIX="[usb_helper]"
 
 log() {
@@ -41,7 +40,7 @@ mount_usb_disk() {
     
     log "Mounting $loop_device to $mount_point"
     mkdir -p "$mount_point"
-    mount "$loop_device" "$mount_point"
+    mount -o uid=1000,gid=1000 "$loop_device" "$mount_point"
     
     echo "$loop_device"
 }

@@ -25,6 +25,17 @@ SCRIPT_NAME="BWP Pi Zero Setup"
 BWP_DIR=""  # Will be set to current directory
 LOG_FILE="/tmp/bwp_setup.log"
 
+# Boot configuration file detection (varies by Pi OS version)
+BOOT_CONFIG=""
+if [ -f "/boot/firmware/config.txt" ]; then
+    BOOT_CONFIG="/boot/firmware/config.txt"
+elif [ -f "/boot/config.txt" ]; then
+    BOOT_CONFIG="/boot/config.txt"
+else
+    log_error "Could not find boot config file"
+    exit 1
+fi
+
 # =============================================================================
 # Helper Functions
 # =============================================================================
@@ -143,9 +154,9 @@ optimize_memory() {
     fi
 
     # GPU memory split optimization for headless operation
-    if ! grep -q "gpu_mem=16" /boot/config.txt; then
+    if ! grep -q "gpu_mem=16" "$BOOT_CONFIG"; then
         log "Optimizing GPU memory for headless operation..."
-        echo "gpu_mem=16" | sudo tee -a /boot/config.txt > /dev/null
+        echo "gpu_mem=16" | sudo tee -a "$BOOT_CONFIG" > /dev/null
         log "GPU memory set to 16MB (requires reboot to take effect)"
     fi
 }
@@ -157,6 +168,15 @@ optimize_memory() {
 setup_usb_gadget_configfs() {
     local disk_image="$1"
     log_step "Setting up USB gadget using configfs..."
+
+    # Ensure configfs is mounted
+    if ! mountpoint -q /sys/kernel/config; then
+        log "Mounting configfs at /sys/kernel/config..."
+        sudo mount -t configfs none /sys/kernel/config || {
+            log_error "Failed to mount configfs"
+            return 1
+        }
+    fi
 
     # Create USB gadget configuration script
     local gadget_script="/usr/local/bin/setup_ftv_gadget.sh"
@@ -243,14 +263,23 @@ setup_usb_gadget() {
     log_step "Setting up USB mass storage gadget for Frame TV..."
 
     # Enable dwc2 overlay for USB gadget mode
-    if ! grep -q "^dtoverlay=dwc2" /boot/config.txt; then
+    if ! grep -q "^dtoverlay=dwc2" "$BOOT_CONFIG"; then
         log "Enabling USB gadget mode..."
-        echo "dtoverlay=dwc2,dr_mode=otg" | sudo tee -a /boot/config.txt > /dev/null
-    elif grep -q "^dtoverlay=dwc2,dr_mode=host" /boot/config.txt; then
+        echo "dtoverlay=dwc2,dr_mode=otg" | sudo tee -a "$BOOT_CONFIG" > /dev/null
+    elif grep -q "^dtoverlay=dwc2,dr_mode=host" "$BOOT_CONFIG"; then
         log "Fixing dwc2 mode from host to otg..."
-        sudo sed -i 's/^dtoverlay=dwc2,dr_mode=host/dtoverlay=dwc2,dr_mode=otg/' /boot/config.txt
+        sudo sed -i 's/^dtoverlay=dwc2,dr_mode=host/dtoverlay=dwc2,dr_mode=otg/' "$BOOT_CONFIG"
+    elif grep -q "^dtoverlay=dwc2" "$BOOT_CONFIG" && ! grep -q "dr_mode=otg" "$BOOT_CONFIG"; then
+        log "Updating dwc2 overlay to use OTG mode..."
+        sudo sed -i 's/^dtoverlay=dwc2.*/dtoverlay=dwc2,dr_mode=otg/' "$BOOT_CONFIG"
     fi
 
+    # Enable libcomposite module for modern USB gadget support
+    if ! grep -q "^libcomposite" /etc/modules; then
+        echo "libcomposite" | sudo tee -a /etc/modules > /dev/null
+        log "Added libcomposite module to /etc/modules"
+    fi
+    
     # Configure g_mass_storage module with disk image parameter
     local disk_image="$HOME/ftv_images/ftv_disk.img"
     local g_mass_storage_line="g_mass_storage file=$disk_image removable=1 ro=0 stall=0"
@@ -292,9 +321,26 @@ setup_usb_gadget() {
         
         # Configure sudo permissions for USB helper script
         local sudoers_file="/etc/sudoers.d/bwp-usb-helper"
-        echo "$USER ALL=(root) NOPASSWD: /usr/local/bin/usb_helper.sh" | sudo tee "$sudoers_file" > /dev/null
+        
+        # Create sudoers file with proper validation
+        {
+            echo "# BWP USB Helper Script Permissions"
+            echo "# Allows $USER to run USB helper script without password"
+            echo "$USER ALL=(root) NOPASSWD: /usr/local/bin/usb_helper.sh"
+            echo "# Also allow basic mount/umount commands for troubleshooting"
+            echo "$USER ALL=(root) NOPASSWD: /bin/mount, /bin/umount, /sbin/losetup"
+        } | sudo tee "$sudoers_file" > /dev/null
+        
         sudo chmod 440 "$sudoers_file"
-        log "Configured sudo permissions for USB helper script"
+        
+        # Validate sudoers file
+        if sudo visudo -c -f "$sudoers_file"; then
+            log "Configured sudo permissions for USB helper script"
+        else
+            log_error "Invalid sudoers configuration created"
+            sudo rm -f "$sudoers_file"
+            return 1
+        fi
     else
         log_warning "USB helper script not found: $usb_helper_script"
     fi
@@ -427,9 +473,30 @@ setup_automation() {
 
     # Install BWP automation (cron job)
     log "Setting up automated daily wallpaper download..."
-    uv run python -m abk_bwp --config desktop_enable
+    
+    # Create logs directory if it doesn't exist
+    local logs_dir="$HOME/logs"
+    if [ ! -d "$logs_dir" ]; then
+        mkdir -p "$logs_dir"
+        log "Created logs directory: $logs_dir"
+    fi
+    
+    # Setup cron job with proper error handling
+    if make desktop_enable; then
+        log "BWP automation configured successfully"
+        
+        # Verify cron job was created
+        if crontab -l 2>/dev/null | grep -q bwp; then
+            log "Cron job verified in user's crontab"
+        else
+            log_warning "Cron job may not have been created properly"
+        fi
+    else
+        log_error "Failed to configure BWP automation"
+        log_info "You can manually set up automation later with: make desktop_enable"
+    fi
 
-    log "BWP automation configured"
+    log "BWP automation setup completed"
 }
 
 # =============================================================================
@@ -463,7 +530,7 @@ verify_installation() {
     log_step "Verifying BWP installation..."
 
     # Test BWP import
-    if uv run python -c "from abk_bwp import bingwallpaper; print('BWP import successful')"; then
+    if uv run python -c "from abk_bwp import bingwallpaper; print('BWP import successful')" 2>/dev/null; then
         log "BWP module imports successfully"
     else
         log_error "BWP module import failed"
@@ -478,7 +545,133 @@ verify_installation() {
         return 1
     fi
 
-    log "BWP installation verified successfully"
+    # Verify USB helper script
+    if [ -x "/usr/local/bin/usb_helper.sh" ]; then
+        log "USB helper script installed and executable"
+    else
+        log_warning "USB helper script not found or not executable"
+    fi
+
+    # Verify sudoers configuration
+    if sudo -n -l /usr/local/bin/usb_helper.sh >/dev/null 2>&1; then
+        log "Sudo permissions for USB helper verified"
+    else
+        log_warning "Sudo permissions for USB helper may not be configured correctly"
+    fi
+
+    # Check boot configuration
+    if grep -q "dtoverlay=dwc2,dr_mode=otg" "$BOOT_CONFIG"; then
+        log "USB gadget mode enabled in boot config"
+    else
+        log_warning "USB gadget mode may not be properly configured"
+    fi
+
+    # Check modules configuration
+    if grep -q "g_mass_storage" /etc/modules; then
+        log "Mass storage module configured"
+    else
+        log_warning "Mass storage module not found in /etc/modules"
+    fi
+
+    log "BWP installation verification completed"
+}
+
+create_test_script() {
+    log_step "Creating post-installation test script..."
+    
+    local test_script="$BWP_DIR/test_setup.sh"
+    
+    cat > "$test_script" << 'EOF'
+#!/bin/bash
+# BWP Pi Zero W Setup Test Script
+# Run this script after reboot to verify the installation
+
+set -e
+
+echo "=========================================="
+echo "BWP Pi Zero W Setup Verification"
+echo "=========================================="
+
+# Check if USB gadget modules are loaded
+echo -n "USB gadget modules: "
+if lsmod | grep -q dwc2 && lsmod | grep -q g_mass_storage; then
+    echo "✓ Loaded"
+else
+    echo "✗ Not loaded"
+    echo "  Expected modules: dwc2, g_mass_storage"
+    echo "  Loaded modules:"
+    lsmod | grep -E "(dwc2|g_mass_storage|libcomposite)" || echo "  None found"
+fi
+
+# Check configfs gadget
+echo -n "USB gadget configfs: "
+if [ -d "/sys/kernel/config/usb_gadget/ftv_gadget" ]; then
+    echo "✓ Configured"
+else
+    echo "✗ Not configured"
+fi
+
+# Check USB helper script
+echo -n "USB helper script: "
+if [ -x "/usr/local/bin/usb_helper.sh" ]; then
+    echo "✓ Installed"
+else
+    echo "✗ Missing"
+fi
+
+# Check sudo permissions
+echo -n "Sudo permissions: "
+if sudo -n -l /usr/local/bin/usb_helper.sh >/dev/null 2>&1; then
+    echo "✓ Configured"
+else
+    echo "✗ Not configured"
+fi
+
+# Check disk image
+echo -n "USB disk image: "
+if [ -f "$HOME/ftv_images/ftv_disk.img" ]; then
+    echo "✓ Present ($(du -h "$HOME/ftv_images/ftv_disk.img" | cut -f1))"
+else
+    echo "✗ Missing"
+fi
+
+# Test BWP import
+echo -n "BWP module import: "
+if cd ~/abk_bwp && uv run python -c "from abk_bwp import bingwallpaper" 2>/dev/null; then
+    echo "✓ Working"
+else
+    echo "✗ Failed"
+fi
+
+# Test BWP CLI
+echo -n "BWP CLI: "
+if cd ~/abk_bwp && uv run bwp --help >/dev/null 2>&1; then
+    echo "✓ Working"
+else
+    echo "✗ Failed"
+fi
+
+# Check cron job
+echo -n "Automation (cron): "
+if crontab -l 2>/dev/null | grep -q bwp; then
+    echo "✓ Configured"
+else
+    echo "✗ Not configured"
+fi
+
+echo "=========================================="
+echo "Test BWP manually:"
+echo "  cd ~/abk_bwp"
+echo "  uv run bwp"
+echo ""
+echo "Check logs:"
+echo "  tail -f ~/logs/bingwallpaper.log"
+echo "=========================================="
+EOF
+    
+    chmod +x "$test_script"
+    log "Created test script: $test_script"
+    log_info "Run './test_setup.sh' after reboot to verify the installation"
 }
 
 print_summary() {
@@ -498,17 +691,21 @@ print_summary() {
     echo "  1. Reboot the Pi Zero W to activate USB gadget mode:"
     echo "     sudo reboot"
     echo
-    echo "  2. Test BWP manually:"
+    echo "  2. Run the verification test:"
+    echo "     cd $BWP_DIR"
+    echo "     ./test_setup.sh"
+    echo
+    echo "  3. Test BWP manually:"
     echo "     cd $BWP_DIR"
     echo "     uv run bwp"
     echo
-    echo "  3. Configure Frame TV settings in:"
+    echo "  4. Configure Frame TV settings in:"
     echo "     $BWP_DIR/src/abk_bwp/config/ftv_data.toml"
     echo
-    echo "  4. Read the setup documentation:"
+    echo "  5. Read the setup documentation:"
     echo "     $BWP_DIR/docs/PI_ZERO_SETUP.md"
     echo
-    echo "  5. Monitor logs:"
+    echo "  6. Monitor logs:"
     echo "     tail -f $HOME/logs/bingwallpaper.log"
     echo
     log_info "Setup log saved to: $LOG_FILE"
@@ -551,6 +748,7 @@ main() {
         configure_bwp
         setup_automation
         verify_installation
+        create_test_script
     )
 
     # Cleanup and final summary
