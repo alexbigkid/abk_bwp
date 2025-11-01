@@ -835,8 +835,29 @@ class PeapixDownloadService(DownLoadServiceBase):
             for entry in img_items:
                 page_id = entry[DBColumns.PAGE_ID.value]
 
+                # Check if API already provided a date field
+                api_date_str = entry.get(DBColumns.DATE.value)
+
+                # Calculate date based on pageId (fallback or verification)
                 offset_days = (page_id - base_id) // country_count
-                entry[DBColumns.DATE.value] = (base_date + timedelta(days=offset_days)).strftime(BWP_DATE_FORMAT)
+                calculated_date_str = (base_date + timedelta(days=offset_days)).strftime(BWP_DATE_FORMAT)
+
+                # Trust API date if available, otherwise use calculated date
+                if api_date_str:
+                    # API provided date, use it
+                    final_date_str = api_date_str
+                    # Log warning if calculated date differs from API date
+                    if calculated_date_str != api_date_str:
+                        self._logger.warning(
+                            f"Date mismatch for pageId {page_id}: API={api_date_str}, "
+                            f"Calculated={calculated_date_str}. Using API date."
+                        )
+                else:
+                    # API didn't provide date, use calculated date (backward compatibility)
+                    final_date_str = calculated_date_str
+                    self._logger.debug(f"No API date for pageId {page_id}, using calculated date: {final_date_str}")
+
+                entry[DBColumns.DATE.value] = final_date_str
                 entry[DBColumns.COUNTRY.value] = country
                 new_data.append(entry)
 

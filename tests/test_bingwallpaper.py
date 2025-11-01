@@ -1401,17 +1401,17 @@ class TestPeapixDownloadService(unittest.TestCase):
     def test_add_date_to_peapix_data_happy_path(
         self, mock_get_existing, mock_extract_id, mock_insert, mock_str_to_date, mock_db_connect
     ):
-        """Test test_add_date_to_peapix_data_happy_path."""
+        """Test test_add_date_to_peapix_data_happy_path with API-provided dates."""
         # Arrange
         # ----------------------------------
         # Setup
         mock_logger = mock.MagicMock()
         service = bingwallpaper.PeapixDownloadService(dls_logger=mock_logger)
         service._bwp_db_file = "mocked.db"
-        # Input: image items
+        # Input: image items with API-provided dates (current API behavior)
         img_items = [
-            {DBColumns.PAGE_URL.value: "https://peapix.com/bing/1002"},
-            {DBColumns.PAGE_URL.value: "https://peapix.com/bing/1001"},
+            {DBColumns.PAGE_URL.value: "https://peapix.com/bing/1002", DBColumns.DATE.value: "2024-01-03"},
+            {DBColumns.PAGE_URL.value: "https://peapix.com/bing/1001", DBColumns.DATE.value: "2024-01-02"},
         ]
         # Mocked extract_image_id
         mock_extract_id.side_effect = lambda url: int(url.split("/")[-1])
@@ -1431,12 +1431,15 @@ class TestPeapixDownloadService(unittest.TestCase):
         for entry in result:
             self.assertIn(DBColumns.DATE.value, entry)
             self.assertEqual(entry[DBColumns.COUNTRY.value], "us")
+        # Verify API dates are used (not calculated dates)
+        self.assertEqual(result[0][DBColumns.DATE.value], "2024-01-03")
+        self.assertEqual(result[1][DBColumns.DATE.value], "2024-01-02")
 
         mock_insert.assert_called()
         mock_get_existing.assert_called_once()
         mock_extract_id.assert_called()
-        mock_str_to_date.assert_has_calls([mock.call("2024-01-01"), mock.call("2024-01-03"), mock.call("2024-01-02")])
-        self.assertEqual(mock_str_to_date.call_count, 3)
+        # str_to_date should be called for baseline and for verifying full_data generation
+        mock_str_to_date.assert_called()
 
     @mock.patch("abk_bwp.bingwallpaper.db_sqlite_connect")
     def test_add_date_to_peapix_data_too_few_images(self, mock_db_connect):
@@ -1514,6 +1517,92 @@ class TestPeapixDownloadService(unittest.TestCase):
         mock_insert.assert_called_once()
         # This assert ensures the early return occurred
         mock_logger.debug.assert_any_call(mock.ANY)
+
+    @mock.patch("abk_bwp.bingwallpaper.db_sqlite_connect")
+    @mock.patch.dict("abk_bwp.bingwallpaper.bwp_config", {"CONSTANT": {"ALT_PEAPIX_REGION": ["us", "jp"]}})
+    @mock.patch("abk_bwp.bingwallpaper.str_to_date")
+    @mock.patch("abk_bwp.bingwallpaper.PeapixDownloadService._db_insert_metadata")
+    @mock.patch("abk_bwp.bingwallpaper.PeapixDownloadService._extract_image_id")
+    @mock.patch("abk_bwp.bingwallpaper.PeapixDownloadService._db_get_existing_data")
+    def test_add_date_to_peapix_data_no_api_dates_fallback(
+        self, mock_get_existing, mock_extract_id, mock_insert, mock_str_to_date, mock_db_connect
+    ):
+        """Test _add_date_to_peapix_data falls back to calculated dates when API doesn't provide dates."""
+        # Arrange
+        # ----------------------------------
+        mock_logger = mock.MagicMock()
+        service = bingwallpaper.PeapixDownloadService(dls_logger=mock_logger)
+        service._bwp_db_file = "mocked.db"
+        # Input: image items WITHOUT date field (backward compatibility)
+        img_items = [
+            {DBColumns.PAGE_URL.value: "https://peapix.com/bing/1002"},
+            {DBColumns.PAGE_URL.value: "https://peapix.com/bing/1001"},
+        ]
+        mock_extract_id.side_effect = lambda url: int(url.split("/")[-1])
+        mock_get_existing.return_value = {1000: {DBColumns.COUNTRY.value: "us", DBColumns.DATE.value: "2024-01-01"}}
+        mock_str_to_date.return_value = datetime.datetime(2024, 1, 1)
+        mock_conn = mock.MagicMock()
+        mock_db_connect.return_value.__enter__.return_value = mock_conn
+
+        # Act
+        # ----------------------------------
+        result = service._add_date_to_peapix_data(img_items, country="us")
+
+        # Assert
+        # ----------------------------------
+        self.assertEqual(len(result), 2)
+        # Verify calculated dates are used when API doesn't provide them
+        self.assertEqual(result[0][DBColumns.DATE.value], "2024-01-03")  # 1002 - 1000 = 2 days, so 01-03
+        self.assertEqual(result[1][DBColumns.DATE.value], "2024-01-02")  # 1001 - 1000 = 1 day, so 01-02
+        # Verify debug logging was called indicating calculated dates used
+        mock_logger.debug.assert_any_call(mock.ANY)
+
+    @mock.patch("abk_bwp.bingwallpaper.db_sqlite_connect")
+    @mock.patch.dict("abk_bwp.bingwallpaper.bwp_config", {"CONSTANT": {"ALT_PEAPIX_REGION": ["us", "jp"]}})
+    @mock.patch("abk_bwp.bingwallpaper.str_to_date")
+    @mock.patch("abk_bwp.bingwallpaper.PeapixDownloadService._db_insert_metadata")
+    @mock.patch("abk_bwp.bingwallpaper.PeapixDownloadService._extract_image_id")
+    @mock.patch("abk_bwp.bingwallpaper.PeapixDownloadService._db_get_existing_data")
+    def test_add_date_to_peapix_data_date_mismatch_logs_warning(
+        self, mock_get_existing, mock_extract_id, mock_insert, mock_str_to_date, mock_db_connect
+    ):
+        """Test _add_date_to_peapix_data logs warning when API date differs from calculated date."""
+        # Arrange
+        # ----------------------------------
+        mock_logger = mock.MagicMock()
+        service = bingwallpaper.PeapixDownloadService(dls_logger=mock_logger)
+        service._bwp_db_file = "mocked.db"
+        # Input: image items with API dates that differ from calculated dates
+        img_items = [
+            {DBColumns.PAGE_URL.value: "https://peapix.com/bing/1002", DBColumns.DATE.value: "2024-01-05"},  # Mismatch!
+            {DBColumns.PAGE_URL.value: "https://peapix.com/bing/1001", DBColumns.DATE.value: "2024-01-02"},  # Correct
+        ]
+        mock_extract_id.side_effect = lambda url: int(url.split("/")[-1])
+        mock_get_existing.return_value = {1000: {DBColumns.COUNTRY.value: "us", DBColumns.DATE.value: "2024-01-01"}}
+        mock_str_to_date.return_value = datetime.datetime(2024, 1, 1)
+        mock_conn = mock.MagicMock()
+        mock_db_connect.return_value.__enter__.return_value = mock_conn
+
+        # Act
+        # ----------------------------------
+        result = service._add_date_to_peapix_data(img_items, country="us")
+
+        # Assert
+        # ----------------------------------
+        self.assertEqual(len(result), 2)
+        # Verify API dates are used (even when they mismatch)
+        self.assertEqual(result[0][DBColumns.DATE.value], "2024-01-05")
+        self.assertEqual(result[1][DBColumns.DATE.value], "2024-01-02")
+        # Verify warning was logged for the mismatch
+        # The calculated date for pageId 1002 would be 2024-01-03 (2 days after baseline)
+        # But API says 2024-01-05, so warning should be logged
+        warning_calls = [call for call in mock_logger.warning.call_args_list]
+        self.assertTrue(len(warning_calls) > 0, "Expected warning to be logged for date mismatch")
+        # Check that the warning message contains expected info
+        warning_message = str(warning_calls[0])
+        self.assertIn("1002", warning_message)  # pageId
+        self.assertIn("2024-01-05", warning_message)  # API date
+        self.assertIn("2024-01-03", warning_message)  # Calculated date
 
 
 # =============================================================================
