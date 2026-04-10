@@ -178,62 +178,19 @@ setup_usb_gadget_configfs() {
         }
     fi
 
-    # Create USB gadget configuration script
+    # Install USB gadget setup script from repo (single source of truth).
+    # BWP_DIR is set later by setup_bwp_directory, so resolve from this script's location.
+    local script_dir
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     local gadget_script="/usr/local/bin/setup_ftv_gadget.sh"
-    sudo tee "$gadget_script" > /dev/null << 'EOF'
-#!/bin/bash
-# USB Gadget setup script for Frame TV
-
-GADGET_DIR="/sys/kernel/config/usb_gadget/ftv_gadget"
-DISK_IMAGE="$1"
-
-# Check if gadget already exists
-if [ -d "$GADGET_DIR" ]; then
-    echo "USB gadget already configured"
-    exit 0
-fi
-
-# Create the gadget directory
-mkdir -p "$GADGET_DIR"
-cd "$GADGET_DIR"
-
-# Configure USB device descriptor
-echo 0x1d6b > idVendor    # Linux Foundation
-echo 0x0104 > idProduct   # Multifunction Composite Gadget
-echo 0x0100 > bcdDevice   # v1.0.0
-echo 0x0200 > bcdUSB      # USB2
-
-# Configure device strings
-mkdir -p strings/0x409
-echo "Raspberry Pi Foundation" > strings/0x409/manufacturer
-echo "Frame TV USB Storage" > strings/0x409/product
-echo "$(cat /proc/cpuinfo | grep Serial | cut -d ' ' -f 2)" > strings/0x409/serialnumber
-
-# Create configuration
-mkdir -p configs/c.1/strings/0x409
-echo "Config 1: Mass Storage" > configs/c.1/strings/0x409/configuration
-echo 250 > configs/c.1/MaxPower
-
-# Create mass storage function
-mkdir -p functions/mass_storage.usb0
-echo 1 > functions/mass_storage.usb0/stall
-echo 0 > functions/mass_storage.usb0/lun.0/cdrom
-echo 0 > functions/mass_storage.usb0/lun.0/ro
-echo 1 > functions/mass_storage.usb0/lun.0/removable
-echo "$DISK_IMAGE" > functions/mass_storage.usb0/lun.0/file
-
-# Link function to configuration
-ln -s functions/mass_storage.usb0 configs/c.1/
-
-# Enable gadget
-UDC=$(ls /sys/class/udc | head -1)
-echo "$UDC" > UDC
-
-echo "USB gadget configured successfully"
-EOF
-
+    local gadget_script_src="$script_dir/scripts/setup_ftv_gadget.sh"
+    if [ ! -f "$gadget_script_src" ]; then
+        log_error "Gadget setup script not found in repo: $gadget_script_src"
+        return 1
+    fi
+    sudo cp "$gadget_script_src" "$gadget_script"
     sudo chmod +x "$gadget_script"
-    log "Created USB gadget setup script: $gadget_script"
+    log "Installed USB gadget setup script: $gadget_script"
 
     # Create systemd service for USB gadget
     local service_file="/etc/systemd/system/ftv-usb-gadget.service"
