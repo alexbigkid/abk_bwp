@@ -219,16 +219,19 @@ EOF
 setup_usb_gadget() {
     log_step "Setting up USB mass storage gadget for Frame TV..."
 
-    # Enable dwc2 overlay for USB gadget mode
+    # Enable dwc2 overlay for USB gadget mode.
+    # Both dr_mode=peripheral and dr_mode=otg work for USB gadget mode:
+    #   - peripheral: always acts as USB device (preferred for thumb-drive emulation)
+    #   - otg: lets the controller decide based on the cable
+    # Only dr_mode=host needs to be fixed (it disables gadget mode entirely).
     if ! grep -q "^dtoverlay=dwc2" "$BOOT_CONFIG"; then
         log "Enabling USB gadget mode..."
-        echo "dtoverlay=dwc2,dr_mode=otg" | sudo tee -a "$BOOT_CONFIG" > /dev/null
+        echo "dtoverlay=dwc2,dr_mode=peripheral" | sudo tee -a "$BOOT_CONFIG" > /dev/null
     elif grep -q "^dtoverlay=dwc2,dr_mode=host" "$BOOT_CONFIG"; then
-        log "Fixing dwc2 mode from host to otg..."
-        sudo sed -i 's/^dtoverlay=dwc2,dr_mode=host/dtoverlay=dwc2,dr_mode=otg/' "$BOOT_CONFIG"
-    elif grep -q "^dtoverlay=dwc2" "$BOOT_CONFIG" && ! grep -q "dr_mode=otg" "$BOOT_CONFIG"; then
-        log "Updating dwc2 overlay to use OTG mode..."
-        sudo sed -i 's/^dtoverlay=dwc2.*/dtoverlay=dwc2,dr_mode=otg/' "$BOOT_CONFIG"
+        log "Fixing dwc2 mode from host to peripheral..."
+        sudo sed -i 's/^dtoverlay=dwc2,dr_mode=host/dtoverlay=dwc2,dr_mode=peripheral/' "$BOOT_CONFIG"
+    else
+        log "dwc2 overlay already present (peripheral or otg) — leaving as-is"
     fi
 
     # Enable libcomposite module for modern USB gadget support
@@ -516,8 +519,8 @@ verify_installation() {
         log_warning "Sudo permissions for USB helper may not be configured correctly"
     fi
 
-    # Check boot configuration
-    if grep -q "dtoverlay=dwc2,dr_mode=otg" "$BOOT_CONFIG"; then
+    # Check boot configuration — accept either peripheral or otg mode
+    if grep -qE "^dtoverlay=dwc2,dr_mode=(peripheral|otg)" "$BOOT_CONFIG"; then
         log "USB gadget mode enabled in boot config"
     else
         log_warning "USB gadget mode may not be properly configured"
