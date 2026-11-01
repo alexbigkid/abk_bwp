@@ -343,6 +343,31 @@ install_uv() {
     fi
 }
 
+configure_uv_python() {
+    log_step "Configuring UV to use system Python..."
+
+    # .python-version pins the latest Python for development, but UV has no
+    # managed Python builds for armv6 (Pi Zero W), so use the OS Python instead.
+    # UV_PYTHON takes precedence over .python-version.
+    local system_python
+    system_python="$(command -v python3 || true)"
+    if [ -z "$system_python" ]; then
+        log_error "python3 not found - install it with: sudo apt install -y python3"
+        exit 1
+    fi
+
+    export UV_PYTHON="$system_python"
+    log "Using system Python: $UV_PYTHON ($("$UV_PYTHON" --version 2>&1))"
+
+    # Persist for interactive shells
+    if ! grep -q "^export UV_PYTHON=" "$HOME/.bashrc" 2>/dev/null; then
+        echo "export UV_PYTHON=\"$UV_PYTHON\"" >> "$HOME/.bashrc"
+        log "Added UV_PYTHON to $HOME/.bashrc"
+    else
+        log "UV_PYTHON already set in $HOME/.bashrc"
+    fi
+}
+
 # =============================================================================
 # BWP Application Setup
 # =============================================================================
@@ -450,6 +475,16 @@ setup_automation() {
             log "Cron job verified in user's crontab"
         else
             log_warning "Cron job may not have been created properly"
+        fi
+
+        # Cron does not read ~/.bashrc, so set UV_PYTHON in the crontab itself
+        local current_crontab
+        current_crontab="$(crontab -l 2>/dev/null || true)"
+        if ! echo "$current_crontab" | grep -q "^UV_PYTHON="; then
+            printf 'UV_PYTHON=%s\n%s\n' "$UV_PYTHON" "$current_crontab" | crontab -
+            log "Added UV_PYTHON=$UV_PYTHON to user's crontab"
+        else
+            log "UV_PYTHON already set in user's crontab"
         fi
     else
         log_error "Failed to configure BWP automation"
@@ -699,7 +734,8 @@ main() {
 
     # Package manager installation
     install_uv
-    
+    configure_uv_python
+
     # Setup and configure BWP (run in BWP directory)
     setup_bwp_directory
     (

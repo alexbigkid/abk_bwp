@@ -91,7 +91,15 @@ sudo apt install -y \
 # Install UV package manager
 curl -LsSf https://astral.sh/uv/install.sh | sh
 source ~/.bashrc
+
+# Use the system Python: .python-version pins the latest Python for development,
+# but UV has no managed Python builds for armv6 (Pi Zero W)
+echo "export UV_PYTHON=\"$(command -v python3)\"" >> ~/.bashrc
+source ~/.bashrc
 ```
+
+> **Note:** cron does not read `~/.bashrc`. After `make desktop_enable`, add
+> `UV_PYTHON=/usr/bin/python3` as the first line of `crontab -e`.
 
 ### 2. Enable USB Gadget Mode
 

@@ -39,7 +39,7 @@ class IUninstallBase(metaclass=ABCMeta):
 
     @property
     def shell_file_name(self) -> str:
-        """Gets Shell File name.
+        """Shell File name.
 
         Returns:
             str: shell file name

@@ -13,7 +13,7 @@ Please do not download or use any image that violates its copyright terms.
 ### Prerequisites
 In order to successfully run <code>abk_bwp</code> app, you would need:
 - MacOS computer
-- Python >=3.12
+- Python >=3.11 (development and CI default: 3.15)
 - Install python dependencies
 
 ### Python and Python dependencies installation on MacOS.
@@ -105,16 +105,16 @@ The project contains com.abk.bingwallpaper_debug.sh.plist file, which can be use
 
 
 #### App runs on:
-- [x] MacOS Sequoia (local machine) / Python 3.13.5
+- [x] MacOS (26, 27) / Python 3.15.2
 - [x] Raspberry Pi Zero W / Python 3.11.x ([Setup Guide](docs/PI_ZERO_SETUP.md))
 - [ ] Linux Ubuntu 20.04  / Python 3.12.x
 - [ ] Windows 10 / Python 3.12.x
 
 
 #### Pipeline Unit Tests ran on:
-- [x] Linux latest / Python 3.11.x, 3.12.x, 3.13.x
-- [x] MacOS latest / Python 3.11.x, 3.12.x, 3.131.x
-- [x] Windows latest / Python 3.11.x, 3.12.x, 3.13.x
+- [x] Linux latest / Python 3.11.x, 3.12.x, 3.13.x, 3.14.x, 3.15.x
+- [x] MacOS latest / Python 3.11.x, 3.12.x, 3.13.x, 3.14.x, 3.15.x
+- [x] Windows latest / Python 3.11.x, 3.12.x, 3.13.x, 3.14.x, 3.15.x
 
 
 ## Git branch rename from master to main

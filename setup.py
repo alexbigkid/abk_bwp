@@ -30,11 +30,14 @@ setup(
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate you support Python 3. These classifiers are *not*
         # checked by 'pip install'. See instead 'python_requires' below.
+        "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
-        "Programming Language :: Python :: 3..13",
+        "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
+        "Programming Language :: Python :: 3.15",
         "Programming Language :: Python :: 3 :: Only",
     ],
-    python_requires=">=3.8, <4",
+    python_requires=">=3.11, <4",
     keywords="Bing Wallpaper images, Desktop images",
     # package_dir={"": "abk_bwp"},
     # packages=["abk_bwp"],
@@ -42,15 +45,17 @@ setup(
     packages=find_packages(where="abk_bwp", include=["config/*", "fonts/*"]),
     install_requires=[
         "colorama",
-        "optparse-pretty",
+        "jsonschema",
         "pillow",
         "PyYAML",
+        "reactivex>=4.0.4",
         "requests",
-        "samsungtvws[async,encrypted]",
         "tomlkit",
         "urllib3",
+        "wakeonlan",
     ],
     extras_require={  # Optional
+        "frametv": ["samsungtvws[async,encrypted]"],
         "dev": ["build", "setuptools", "twine", "wheel", "pip-check", "pip-date", "pip-chill", "pipdeptree"],
         "test": ["coverage", "parameterized"],
     },

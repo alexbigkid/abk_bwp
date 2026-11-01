@@ -40,7 +40,7 @@ class IInstallBase(metaclass=ABCMeta):
 
     @property
     def shell_file_name(self) -> str:
-        """Returns the name of the shell file to be created for the installation."""
+        """Name of the shell file to be created for the installation."""
         if self._shell_file_name is None:
             extension = ("sh", "ps1")[self.os_type == abk_common.OsType.WINDOWS_OS]
             self._shell_file_name = f"{abk_common.BWP_APP_NAME}.{extension}"

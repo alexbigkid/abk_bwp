@@ -787,11 +787,11 @@ class PeapixDownloadService(DownLoadServiceBase):
             img_items (list[dict[str, str]]): image json data
             country (str): country code
 
-        Raises:
-            RuntimeError: if errors
-
         Returns:
             list[dict[str, str]]: json list with date included
+
+        Raises:
+            RuntimeError: if errors
         """
         # conn = sqlite3.connect(self._bwp_db_file)
         with db_sqlite_connect(self._bwp_db_file) as conn:
